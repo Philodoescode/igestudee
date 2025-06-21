@@ -6,14 +6,15 @@ from pathlib import Path
 
 DEFAULT_OUTPUT_FILENAME = "compiled_code.txt"
 DEFAULT_PROG_FILENAME = "copierv1.py"
+LANDING = ["about", "courses", "contact"]
 DEFAULT_EXTENSIONS = [
     ".py", ".js", ".ts", ".jsx", ".tsx", ".html", ".css", ".scss", ".java",
     ".c", ".cpp", ".h", ".hpp", ".cs", ".go", ".rs", ".swift", ".kt", ".php",
     ".rb", ".pl", ".sh", ".md", ".txt", ".json", ".xml", ".yaml", ".yml",
     ".sql" # Add or remove extensions as needed
 ]
-EXCLUDE_DIRS = [".git", ".vscode", ".idea", "node_modules", "__pycache__", "venv", ".env", "build", "dist", "cmake-build-debug", "ui"]
-EXCLUDE_FILES = [DEFAULT_OUTPUT_FILENAME, DEFAULT_PROG_FILENAME, "README.md"] # Initially, just exclude the output file itself
+EXCLUDE_DIRS = [".git", ".vscode", ".idea", "node_modules", "__pycache__", "venv", ".env", "build", "dist", "cmake-build-debug", "ui", ".next"] + LANDING
+EXCLUDE_FILES = [DEFAULT_OUTPUT_FILENAME, DEFAULT_PROG_FILENAME, "README.md", "next-env.d.ts", "pnpm-lock.yaml"] # Initially, just exclude the output file itself
 
 def compile_project_to_text(project_dir: Path, output_file_name: str, extensions: list, exclude_dirs: list, exclude_files: list):
     """

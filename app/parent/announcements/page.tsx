@@ -9,64 +9,14 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Bell, Search, Filter, Calendar, AlertCircle, Info, CheckCircle, Clock, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import { parentAnnouncements } from "@/lib/database"
 
 export default function AnnouncementsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterPriority, setFilterPriority] = useState("all")
   const [filterCategory, setFilterCategory] = useState("all")
 
-  const mockAnnouncements = [
-    {
-      id: 1,
-      title: "Term 2 Assessment Schedule Released",
-      content:
-        "We are pleased to announce that the assessment schedule for Term 2 has been finalized and is now available. Please review the dates carefully and ensure your child is prepared for upcoming evaluations. The schedule includes mid-term assessments, project deadlines, and final examinations for both ICT and Mathematics courses.",
-      date: "2024-01-15",
-      time: "09:30 AM",
-      priority: "high",
-      category: "academic",
-      author: "Dr. Sarah Johnson",
-      read: false,
-    },
-    {
-      id: 2,
-      title: "Parent-Teacher Conference Invitations",
-      content:
-        "We invite all parents to schedule one-on-one sessions with instructors to discuss your child's progress, strengths, and areas for improvement. These conferences provide valuable insights into your child's learning journey and offer opportunities to address any concerns or questions you may have.",
-      date: "2024-01-12",
-      time: "02:15 PM",
-      priority: "medium",
-      category: "events",
-      author: "Academic Coordinator",
-      read: true,
-    },
-    {
-      id: 3,
-      title: "Platform Maintenance Notice",
-      content:
-        "Our learning platform will undergo scheduled maintenance this weekend from 2:00 AM to 4:00 AM EST on Saturday. During this time, the platform may be temporarily unavailable. We apologize for any inconvenience and appreciate your understanding as we work to improve our services.",
-      date: "2024-01-10",
-      time: "04:45 PM",
-      priority: "low",
-      category: "technical",
-      author: "IT Support Team",
-      read: true,
-    },
-    {
-      id: 4,
-      title: "New Study Resources Available",
-      content:
-        "We've added new interactive study materials and practice exercises to both ICT and Mathematics courses. These resources include video tutorials, interactive quizzes, and downloadable worksheets designed to enhance your child's learning experience and provide additional practice opportunities.",
-      date: "2024-01-08",
-      time: "11:20 AM",
-      priority: "medium",
-      category: "academic",
-      author: "Curriculum Team",
-      read: true,
-    },
-  ]
-
-  const filteredAnnouncements = mockAnnouncements.filter((announcement) => {
+  const filteredAnnouncements = parentAnnouncements.filter((announcement) => {
     const matchesSearch =
       announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       announcement.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -163,13 +113,20 @@ export default function AnnouncementsPage() {
                 <label className="text-sm font-medium text-gray-700">Search</label>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input placeholder="Search announcements..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10"/>
+                  <Input
+                    placeholder="Search announcements..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Priority</label>
                 <Select value={filterPriority} onValueChange={setFilterPriority}>
-                  <SelectTrigger><SelectValue placeholder="All priorities" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All priorities" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Priorities</SelectItem>
                     <SelectItem value="high">High Priority</SelectItem>
@@ -181,7 +138,9 @@ export default function AnnouncementsPage() {
               <div className="space-y-2">
                 <label className="text-sm font-medium text-gray-700">Category</label>
                 <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger><SelectValue placeholder="All categories" /></SelectTrigger>
+                  <SelectTrigger>
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     <SelectItem value="academic">Academic</SelectItem>
@@ -200,25 +159,55 @@ export default function AnnouncementsPage() {
         <div className="space-y-6">
           <AnimatePresence>
             {filteredAnnouncements.map((announcement, index) => (
-              <motion.div key={announcement.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3, delay: index * 0.1 }} whileHover={{ y: -2, scale: 1.01 }}>
-                <Card className={`${!announcement.read ? "border-emerald-200 bg-emerald-50/30" : ""} hover:shadow-lg transition-all duration-300`}>
+              <motion.div
+                key={announcement.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                transition={{ duration: 0.3, delay: index * 0.1 }}
+                whileHover={{ y: -2, scale: 1.01 }}
+              >
+                <Card
+                  className={`${
+                    !announcement.read ? "border-emerald-200 bg-emerald-50/30" : ""
+                  } hover:shadow-lg transition-all duration-300`}
+                >
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           {getPriorityIcon(announcement.priority)}
                           <CardTitle className="text-lg font-poppins">{announcement.title}</CardTitle>
-                          {!announcement.read && (<motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="w-2 h-2 bg-emerald-500 rounded-full"/>)}
+                          {!announcement.read && (
+                            <motion.div
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              className="w-2 h-2 bg-emerald-500 rounded-full"
+                            />
+                          )}
                         </div>
                         <div className="flex items-center space-x-4 text-sm text-gray-500">
-                          <div className="flex items-center space-x-1"><Calendar className="h-4 w-4" /><span>{announcement.date}</span></div>
-                          <div className="flex items-center space-x-1"><Clock className="h-4 w-4" /><span>{announcement.time}</span></div>
-                          <div className="flex items-center space-x-1"><User className="h-4 w-4" /><span>{announcement.author}</span></div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>{announcement.date}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Clock className="h-4 w-4" />
+                            <span>{announcement.time}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <User className="h-4 w-4" />
+                            <span>{announcement.author}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="flex flex-col items-end space-y-2">
-                        <Badge variant="outline" className={getPriorityColor(announcement.priority)}>{announcement.priority}</Badge>
-                        <Badge variant="secondary" className={getCategoryColor(announcement.category)}>{announcement.category}</Badge>
+                        <Badge variant="outline" className={getPriorityColor(announcement.priority)}>
+                          {announcement.priority}
+                        </Badge>
+                        <Badge variant="secondary" className={getCategoryColor(announcement.category)}>
+                          {announcement.category}
+                        </Badge>
                       </div>
                     </div>
                   </CardHeader>
@@ -226,7 +215,11 @@ export default function AnnouncementsPage() {
                     <p className="text-gray-700 leading-relaxed mb-4">{announcement.content}</p>
                     <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                       <div className="text-xs text-gray-500">{announcement.read ? "Read" : "New"}</div>
-                      {!announcement.read && <Button variant="outline" size="sm">Mark as Read</Button>}
+                      {!announcement.read && (
+                        <Button variant="outline" size="sm">
+                          Mark as Read
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

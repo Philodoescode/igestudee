@@ -9,114 +9,7 @@ import { Progress } from "@/components/ui/progress"
 import { Users, TrendingUp, Clock, BookOpen, MessageSquare, Calendar, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
-
-// Mock data for student management
-const mockStudentData = {
-  groups: [
-    {
-      id: "group-1",
-      name: "ICT Fundamentals - Group A",
-      course: "ICT Fundamentals",
-      studentCount: 12,
-      averageProgress: 78,
-      strugglingStudents: 2,
-      nextSession: "2024-01-15T14:00:00Z",
-      recentActivity: "2 hours ago",
-      students: [
-        {
-          id: "student-1",
-          name: "Emma Johnson",
-          email: "emma.johnson@example.com",
-          progress: 85,
-          lastActive: "1 hour ago",
-          strugglingAreas: [],
-          status: "active",
-        },
-        {
-          id: "student-2",
-          name: "Michael Chen",
-          email: "michael.chen@example.com",
-          progress: 92,
-          lastActive: "30 minutes ago",
-          strugglingAreas: [],
-          status: "active",
-        },
-        {
-          id: "student-3",
-          name: "Sarah Wilson",
-          email: "sarah.wilson@example.com",
-          progress: 45,
-          lastActive: "2 days ago",
-          strugglingAreas: ["Python Loops", "Data Structures"],
-          status: "struggling",
-        },
-      ],
-    },
-    {
-      id: "group-2",
-      name: "Mathematics - Group B",
-      course: "Mathematics",
-      studentCount: 8,
-      averageProgress: 82,
-      strugglingStudents: 1,
-      nextSession: "2024-01-16T10:00:00Z",
-      recentActivity: "4 hours ago",
-      students: [
-        {
-          id: "student-4",
-          name: "David Brown",
-          email: "david.brown@example.com",
-          progress: 88,
-          lastActive: "2 hours ago",
-          strugglingAreas: [],
-          status: "active",
-        },
-        {
-          id: "student-5",
-          name: "Lisa Garcia",
-          email: "lisa.garcia@example.com",
-          progress: 76,
-          lastActive: "1 day ago",
-          strugglingAreas: ["Calculus"],
-          status: "struggling",
-        },
-      ],
-    },
-    {
-      id: "group-3",
-      name: "ICT Practical - Group C",
-      course: "ICT Practical",
-      studentCount: 15,
-      averageProgress: 71,
-      strugglingStudents: 5,
-      nextSession: "2024-01-17T16:00:00Z",
-      recentActivity: "1 hour ago",
-      students: [
-        {
-          id: "student-6",
-          name: "Alex Thompson",
-          email: "alex.thompson@example.com",
-          progress: 95,
-          lastActive: "30 minutes ago",
-          strugglingAreas: [],
-          status: "active",
-        },
-      ],
-    },
-  ],
-  progressInsights: {
-    totalStudents: 35,
-    averageProgress: 77,
-    strugglingStudents: 8,
-    activeStudents: 27,
-    commonStrugglingAreas: [
-      { topic: "Python Loops", studentCount: 5 },
-      { topic: "Database Design", studentCount: 4 },
-      { topic: "Calculus Integration", studentCount: 3 },
-      { topic: "Data Structures", studentCount: 3 },
-    ],
-  },
-}
+import { taStudentManagementData } from "@/lib/database"
 
 export default function TAStudentsPage() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -156,7 +49,7 @@ export default function TAStudentsPage() {
             <p className="text-gray-600 mt-1">Monitor your student groups and track their progress.</p>
           </div>
           <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-            {mockStudentData.progressInsights.totalStudents} Total Students
+            {taStudentManagementData.progressInsights.totalStudents} Total Students
           </Badge>
         </div>
       </motion.div>
@@ -173,7 +66,7 @@ export default function TAStudentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100">Total Students</p>
-                <p className="text-3xl font-bold">{mockStudentData.progressInsights.totalStudents}</p>
+                <p className="text-3xl font-bold">{taStudentManagementData.progressInsights.totalStudents}</p>
               </div>
               <Users className="h-8 w-8 text-blue-200" />
             </div>
@@ -185,7 +78,7 @@ export default function TAStudentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100">Average Progress</p>
-                <p className="text-3xl font-bold">{mockStudentData.progressInsights.averageProgress}%</p>
+                <p className="text-3xl font-bold">{taStudentManagementData.progressInsights.averageProgress}%</p>
               </div>
               <TrendingUp className="h-8 w-8 text-green-200" />
             </div>
@@ -197,7 +90,7 @@ export default function TAStudentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-orange-100">Need Help</p>
-                <p className="text-3xl font-bold">{mockStudentData.progressInsights.strugglingStudents}</p>
+                <p className="text-3xl font-bold">{taStudentManagementData.progressInsights.strugglingStudents}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-200" />
             </div>
@@ -209,7 +102,7 @@ export default function TAStudentsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100">Active Students</p>
-                <p className="text-3xl font-bold">{mockStudentData.progressInsights.activeStudents}</p>
+                <p className="text-3xl font-bold">{taStudentManagementData.progressInsights.activeStudents}</p>
               </div>
               <Users className="h-8 w-8 text-purple-200" />
             </div>
@@ -234,7 +127,7 @@ export default function TAStudentsPage() {
               <CardDescription>Overview of all assigned student groups</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              {mockStudentData.groups.map((group) => (
+              {taStudentManagementData.groups.map((group) => (
                 <div key={group.id} className="border rounded-lg p-6 hover:bg-gray-50 transition-colors">
                   <div className="flex items-center justify-between mb-4">
                     <div>
@@ -335,7 +228,7 @@ export default function TAStudentsPage() {
               <CardDescription>Topics where students need the most help</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {mockStudentData.progressInsights.commonStrugglingAreas.map((area, index) => (
+              {taStudentManagementData.progressInsights.commonStrugglingAreas.map((area, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <h4 className="font-medium text-gray-900">{area.topic}</h4>

@@ -23,76 +23,14 @@ import {
   FileText,
 } from "lucide-react"
 import { motion } from "framer-motion"
-
-// Mock financial data
-const financialStats = {
-  totalRevenue: 45750,
-  monthlyRevenue: 12450,
-  pendingPayments: 3200,
-  overduePayments: 850,
-  totalStudents: 156,
-  paidStudents: 142,
-}
-
-const transactions = [
-  {
-    id: "txn-001",
-    studentName: "Emma Johnson",
-    amount: 450,
-    status: "completed",
-    date: "2024-03-12",
-    method: "Credit Card",
-    course: "ICT Fundamentals",
-    invoiceId: "INV-2024-001",
-  },
-  {
-    id: "txn-002",
-    studentName: "Michael Chen",
-    amount: 380,
-    status: "completed",
-    date: "2024-03-11",
-    method: "Bank Transfer",
-    course: "Advanced Mathematics",
-    invoiceId: "INV-2024-002",
-  },
-  {
-    id: "txn-003",
-    studentName: "Sarah Williams",
-    amount: 450,
-    status: "pending",
-    date: "2024-03-10",
-    method: "Credit Card",
-    course: "ICT Fundamentals",
-    invoiceId: "INV-2024-003",
-  },
-  {
-    id: "txn-004",
-    studentName: "David Brown",
-    amount: 380,
-    status: "overdue",
-    date: "2024-02-28",
-    method: "Bank Transfer",
-    course: "Statistics",
-    invoiceId: "INV-2024-004",
-  },
-  {
-    id: "txn-005",
-    studentName: "Lisa Wilson",
-    amount: 450,
-    status: "completed",
-    date: "2024-03-09",
-    method: "Credit Card",
-    course: "Web Development",
-    invoiceId: "INV-2024-005",
-  },
-]
+import { instructorFinancialStats, instructorTransactions } from "@/lib/database"
 
 export default function FinancialPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [dateFilter, setDateFilter] = useState("all")
 
-  const filteredTransactions = transactions.filter((transaction) => {
+  const filteredTransactions = instructorTransactions.filter((transaction) => {
     const matchesSearch =
       transaction.studentName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       transaction.course.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -152,17 +90,13 @@ export default function FinancialPage() {
 
       {/* Financial Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
           <Card className="bg-gradient-to-br from-green-600 to-emerald-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium">Total Revenue</p>
-                  <p className="text-3xl font-bold">${financialStats.totalRevenue.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">${instructorFinancialStats.totalRevenue.toLocaleString()}</p>
                   <p className="text-green-100 text-sm">All time</p>
                 </div>
                 <DollarSign className="h-12 w-12 text-green-200" />
@@ -171,17 +105,13 @@ export default function FinancialPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Monthly Revenue</p>
-                  <p className="text-3xl font-bold">${financialStats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">${instructorFinancialStats.monthlyRevenue.toLocaleString()}</p>
                   <p className="text-blue-100 text-sm">+15% from last month</p>
                 </div>
                 <TrendingUp className="h-12 w-12 text-blue-200" />
@@ -190,17 +120,13 @@ export default function FinancialPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
           <Card className="bg-gradient-to-br from-yellow-600 to-orange-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-100 text-sm font-medium">Pending Payments</p>
-                  <p className="text-3xl font-bold">${financialStats.pendingPayments.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">${instructorFinancialStats.pendingPayments.toLocaleString()}</p>
                   <p className="text-yellow-100 text-sm">Awaiting payment</p>
                 </div>
                 <Clock className="h-12 w-12 text-yellow-200" />
@@ -209,17 +135,13 @@ export default function FinancialPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
           <Card className="bg-gradient-to-br from-red-600 to-pink-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-red-100 text-sm font-medium">Overdue Payments</p>
-                  <p className="text-3xl font-bold">${financialStats.overduePayments.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">${instructorFinancialStats.overduePayments.toLocaleString()}</p>
                   <p className="text-red-100 text-sm">Requires attention</p>
                 </div>
                 <AlertCircle className="h-12 w-12 text-red-200" />
@@ -247,9 +169,9 @@ export default function FinancialPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-2xl font-bold text-green-600">{financialStats.paidStudents}</p>
+                  <p className="text-2xl font-bold text-green-600">{instructorFinancialStats.paidStudents}</p>
                   <p className="text-sm text-green-600">
-                    {Math.round((financialStats.paidStudents / financialStats.totalStudents) * 100)}%
+                    {Math.round((instructorFinancialStats.paidStudents / instructorFinancialStats.totalStudents) * 100)}%
                   </p>
                 </div>
               </div>
@@ -285,6 +207,7 @@ export default function FinancialPage() {
           </CardContent>
         </Card>
 
+        {/* Quick Actions */}
         <Card>
           <CardHeader>
             <CardTitle className="font-poppins">Quick Actions</CardTitle>

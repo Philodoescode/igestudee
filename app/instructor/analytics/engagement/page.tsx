@@ -7,104 +7,21 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { TrendingUp, Users, BookOpen, MessageSquare, Clock, Download, Eye, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
-
-// Mock analytics data
-const engagementStats = {
-  totalStudents: 156,
-  activeStudents: 142,
-  avgSessionTime: "45m",
-  completionRate: 78,
-  forumPosts: 234,
-  videoViews: 1847,
-}
-
-const courseEngagement = [
-  {
-    id: "course-001",
-    title: "ICT Fundamentals",
-    students: 45,
-    completionRate: 78,
-    avgTimeSpent: "3.2h",
-    forumActivity: 89,
-    lastAccessed: "2024-03-12",
-    trend: "up",
-  },
-  {
-    id: "course-002",
-    title: "Advanced Mathematics",
-    students: 32,
-    completionRate: 65,
-    avgTimeSpent: "4.1h",
-    forumActivity: 67,
-    lastAccessed: "2024-03-12",
-    trend: "down",
-  },
-  {
-    id: "course-003",
-    title: "Web Development Basics",
-    students: 28,
-    completionRate: 82,
-    avgTimeSpent: "2.8h",
-    forumActivity: 45,
-    lastAccessed: "2024-03-11",
-    trend: "up",
-  },
-  {
-    id: "course-004",
-    title: "Statistics and Probability",
-    students: 25,
-    completionRate: 71,
-    avgTimeSpent: "3.5h",
-    forumActivity: 33,
-    lastAccessed: "2024-03-10",
-    trend: "stable",
-  },
-]
-
-const studentActivity = [
-  {
-    id: "student-001",
-    name: "Emma Johnson",
-    course: "ICT Fundamentals",
-    lastActive: "2 hours ago",
-    completionRate: 85,
-    timeSpent: "12.5h",
-    forumPosts: 15,
-    status: "active",
-  },
-  {
-    id: "student-002",
-    name: "Michael Chen",
-    course: "Advanced Mathematics",
-    lastActive: "1 day ago",
-    completionRate: 92,
-    timeSpent: "18.2h",
-    forumPosts: 8,
-    status: "active",
-  },
-  {
-    id: "student-003",
-    name: "Sarah Williams",
-    course: "Web Development",
-    lastActive: "3 hours ago",
-    completionRate: 67,
-    timeSpent: "8.7h",
-    forumPosts: 22,
-    status: "active",
-  },
-  {
-    id: "student-004",
-    name: "David Brown",
-    course: "Statistics",
-    lastActive: "1 week ago",
-    completionRate: 34,
-    timeSpent: "4.2h",
-    forumPosts: 2,
-    status: "inactive",
-  },
-]
+import {
+  instructorDashboardStats,
+  instructorRecentActivity,
+  instructorUpcomingSessions,
+  instructorQuickActions,
+  instructorEngagementStats,
+  instructorCourseEngagement,
+  instructorStudentActivity,
+} from "@/lib/database"
 
 export default function EngagementAnalyticsPage() {
+  const engagementStats = instructorEngagementStats
+  const courseEngagement = instructorCourseEngagement
+  const studentActivity = instructorStudentActivity
+
   const getTrendIcon = (trend: string) => {
     switch (trend) {
       case "up":
@@ -159,11 +76,7 @@ export default function EngagementAnalyticsPage() {
 
       {/* Engagement Stats */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
           <Card className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -181,11 +94,7 @@ export default function EngagementAnalyticsPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <Card className="bg-gradient-to-br from-green-600 to-emerald-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -200,11 +109,7 @@ export default function EngagementAnalyticsPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
           <Card className="bg-gradient-to-br from-purple-600 to-pink-600 text-white border-0">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -219,11 +124,7 @@ export default function EngagementAnalyticsPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -238,11 +139,7 @@ export default function EngagementAnalyticsPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -257,11 +154,7 @@ export default function EngagementAnalyticsPage() {
           </Card>
         </motion.div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.6 }}
-        >
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
@@ -306,44 +199,20 @@ export default function EngagementAnalyticsPage() {
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     className="hover:bg-gray-50"
                   >
-                    <TableCell>
-                      <div className="font-medium text-gray-900">{course.title}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Users className="h-4 w-4 mr-1 text-gray-400" />
-                        {course.students}
-                      </div>
-                    </TableCell>
+                    <TableCell><div className="font-medium text-gray-900">{course.title}</div></TableCell>
+                    <TableCell><div className="flex items-center"><Users className="h-4 w-4 mr-1 text-gray-400" />{course.students}</div></TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-green-600 h-2 rounded-full"
-                            style={{ width: `${course.completionRate}%` }}
-                          ></div>
+                          <div className="bg-green-600 h-2 rounded-full" style={{ width: `${course.completionRate}%` }} />
                         </div>
                         <span className="text-sm text-gray-600">{course.completionRate}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                        {course.avgTimeSpent}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-1 text-gray-400" />
-                        {course.forumActivity} posts
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {new Date(course.lastAccessed).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">{getTrendIcon(course.trend)}</div>
-                    </TableCell>
+                    <TableCell><div className="flex items-center"><Clock className="h-4 w-4 mr-1 text-gray-400" />{course.avgTimeSpent}</div></TableCell>
+                    <TableCell><div className="flex items-center"><MessageSquare className="h-4 w-4 mr-1 text-gray-400" />{course.forumActivity} posts</div></TableCell>
+                    <TableCell className="text-sm text-gray-500">{new Date(course.lastAccessed).toLocaleDateString()}</TableCell>
+                    <TableCell><div className="flex items-center">{getTrendIcon(course.trend)}</div></TableCell>
                   </motion.tr>
                 ))}
               </TableBody>
@@ -381,36 +250,19 @@ export default function EngagementAnalyticsPage() {
                     transition={{ duration: 0.3, delay: index * 0.1 }}
                     className="hover:bg-gray-50"
                   >
-                    <TableCell>
-                      <div className="font-medium text-gray-900">{student.name}</div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="text-sm text-gray-600">{student.course}</div>
-                    </TableCell>
+                    <TableCell><div className="font-medium text-gray-900">{student.name}</div></TableCell>
+                    <TableCell><div className="text-sm text-gray-600">{student.course}</div></TableCell>
                     <TableCell>{getStatusBadge(student.status)}</TableCell>
                     <TableCell>
                       <div className="flex items-center space-x-2">
                         <div className="w-16 bg-gray-200 rounded-full h-2">
-                          <div
-                            className="bg-blue-600 h-2 rounded-full"
-                            style={{ width: `${student.completionRate}%` }}
-                          ></div>
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${student.completionRate}%` }} />
                         </div>
                         <span className="text-sm text-gray-600">{student.completionRate}%</span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <Clock className="h-4 w-4 mr-1 text-gray-400" />
-                        {student.timeSpent}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center">
-                        <MessageSquare className="h-4 w-4 mr-1 text-gray-400" />
-                        {student.forumPosts}
-                      </div>
-                    </TableCell>
+                    <TableCell><div className="flex items-center"><Clock className="h-4 w-4 mr-1 text-gray-400" />{student.timeSpent}</div></TableCell>
+                    <TableCell><div className="flex items-center"><MessageSquare className="h-4 w-4 mr-1 text-gray-400" />{student.forumPosts}</div></TableCell>
                     <TableCell className="text-sm text-gray-500">{student.lastActive}</TableCell>
                   </motion.tr>
                 ))}

@@ -1,4 +1,3 @@
-// app/parent/layout.tsx
 "use client"
 
 import type React from "react"
@@ -9,18 +8,13 @@ import { LayoutDashboard, TrendingUp, Megaphone, CreditCard, Heart, Calendar } f
 
 const navigation = [
   {
-    title: "Overview",
+    title: "MENU",
     items: [
       {
         title: "Dashboard",
         href: "/parent",
         icon: LayoutDashboard,
       },
-    ],
-  },
-  {
-    title: "Monitoring",
-    items: [
       {
         title: "Progress Reports",
         href: "/parent/progress",
@@ -39,7 +33,7 @@ const navigation = [
     ],
   },
   {
-    title: "Account",
+    title: "GENERAL",
     items: [
       {
         title: "Billing",
@@ -49,13 +43,6 @@ const navigation = [
     ],
   },
 ]
-
-const colorScheme = {
-  primary: "from-emerald-500",
-  secondary: "to-teal-600",
-  accent: "emerald-400",
-  gradient: "from-emerald-500 to-teal-600",
-}
 
 export default function ParentLayout({
   children,
@@ -77,15 +64,13 @@ export default function ParentLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-white">
       <PortalSidebar
         title="Parent Portal"
-        subtitle="Family Dashboard"
         icon={Heart}
         navigation={navigation}
-        colorScheme={colorScheme}
       />
-      <main className="flex-1 overflow-y-auto lg:ml-0">
+      <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>
     </div>

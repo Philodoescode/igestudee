@@ -11,21 +11,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { User, Mail, Phone, MapPin, Calendar, Award, Edit, Save, X } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
+import { taDefaultProfileData, taProfileAchievements, taProfileStats } from "@/lib/database"
 
 export default function TAProfilePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({
-    firstName: "Alex",
-    lastName: "Smith",
-    email: "ta.test@example.com",
-    phone: "+1 (555) 987-6543",
-    address: "456 University Ave, College Town, ST 12345",
-    bio: "Passionate teaching assistant with expertise in computer science and mathematics. I enjoy helping students understand complex concepts and achieve their academic goals.",
-    specializations: ["Python Programming", "Data Structures", "Web Development", "Mathematics"],
-    experience: "2 years",
-    education: "Bachelor's in Computer Science, Master's in Education",
-  })
+  const [formData, setFormData] = useState(taDefaultProfileData)
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -38,36 +29,9 @@ export default function TAProfilePage() {
 
   const handleCancel = () => {
     // Reset form data to original values
+    setFormData(taDefaultProfileData)
     setIsEditing(false)
   }
-
-  const achievements = [
-    {
-      title: "Outstanding TA Award",
-      description: "Recognized for exceptional student support",
-      date: "Fall 2023",
-      icon: Award,
-    },
-    {
-      title: "Student Favorite",
-      description: "Highest student satisfaction ratings",
-      date: "Spring 2023",
-      icon: Award,
-    },
-    {
-      title: "Innovation in Teaching",
-      description: "Developed new interactive learning methods",
-      date: "Fall 2022",
-      icon: Award,
-    },
-  ]
-
-  const stats = [
-    { label: "Students Helped", value: "150+", color: "text-blue-600" },
-    { label: "Sessions Conducted", value: "85", color: "text-green-600" },
-    { label: "Average Rating", value: "4.9/5", color: "text-purple-600" },
-    { label: "Response Time", value: "< 2hrs", color: "text-orange-600" },
-  ]
 
   return (
     <div className="p-6 space-y-6">
@@ -273,7 +237,7 @@ export default function TAProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {stats.map((stat, index) => (
+              {taProfileStats.map((stat, index) => (
                 <div key={index} className="flex items-center justify-between">
                   <span className="text-sm text-gray-600">{stat.label}</span>
                   <span className={`font-semibold ${stat.color}`}>{stat.value}</span>
@@ -292,7 +256,7 @@ export default function TAProfilePage() {
               <CardDescription>Recognition and awards received</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {achievements.map((achievement, index) => (
+              {taProfileAchievements.map((achievement, index) => (
                 <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
                   <div className="p-2 bg-yellow-100 rounded-lg">
                     <achievement.icon className="h-4 w-4 text-yellow-600" />

@@ -11,42 +11,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Globe, Bell, Shield, Mail, Database, Save, RefreshCw, AlertTriangle } from "lucide-react"
 import { motion } from "framer-motion"
+import { defaultPlatformSettings } from "@/lib/database"
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState({
-    // General Settings
-    siteName: "EduTech Academy",
-    siteDescription: "ICT & Mathematics Tutoring Program",
-    contactEmail: "admin@edutech.academy",
-    supportEmail: "support@edutech.academy",
-    timezone: "UTC-5",
-    language: "en",
-
-    // Notification Settings
-    emailNotifications: true,
-    smsNotifications: false,
-    pushNotifications: true,
-    weeklyReports: true,
-    paymentAlerts: true,
-
-    // Security Settings
-    twoFactorAuth: false,
-    sessionTimeout: 24,
-    passwordExpiry: 90,
-    loginAttempts: 5,
-
-    // Course Settings
-    autoEnrollment: false,
-    courseApproval: true,
-    maxStudentsPerCourse: 50,
-    allowGuestAccess: false,
-
-    // Payment Settings
-    currency: "USD",
-    paymentGateway: "stripe",
-    autoInvoicing: true,
-    lateFeePercentage: 5,
-  })
+  const [settings, setSettings] = useState(defaultPlatformSettings)
 
   const handleSettingChange = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }))

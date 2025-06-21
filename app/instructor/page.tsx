@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { instructorDashboardStats, instructorRecentActivity, instructorUpcomingSessions, instructorQuickActions } from "@/lib/database";
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -19,107 +20,6 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-
-// Mock data for the dashboard
-const dashboardStats = {
-  totalStudents: 156,
-  totalCourses: 8,
-  monthlyRevenue: 12450,
-  engagementRate: 87,
-  newStudentsThisMonth: 23,
-  activeDiscussions: 34,
-}
-
-const recentActivity = [
-  {
-    id: 1,
-    type: "enrollment",
-    user: "Emma Johnson",
-    action: "enrolled in ICT Fundamentals",
-    time: "2 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 2,
-    type: "completion",
-    user: "Michael Chen",
-    action: "completed Module 3 - Web Development",
-    time: "4 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 3,
-    type: "question",
-    user: "Sarah Williams",
-    action: "posted a question in Mathematics Forum",
-    time: "6 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 4,
-    type: "payment",
-    user: "David Brown",
-    action: "completed payment for Q1 tuition",
-    time: "1 day ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-  {
-    id: 5,
-    type: "assignment",
-    user: "Alex Smith (TA)",
-    action: "graded 15 assignments",
-    time: "1 day ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-  },
-]
-
-const upcomingSessions = [
-  {
-    id: 1,
-    title: "ICT Q&A Session",
-    time: "Today, 3:00 PM",
-    participants: 12,
-    type: "Q&A",
-  },
-  {
-    id: 2,
-    title: "Mathematics Workshop",
-    time: "Tomorrow, 10:00 AM",
-    participants: 8,
-    type: "Workshop",
-  },
-  {
-    id: 3,
-    title: "Web Development Lab",
-    time: "Friday, 2:00 PM",
-    participants: 15,
-    type: "Lab",
-  },
-]
-
-const quickActions = [
-  {
-    title: "Create Announcement",
-    description: "Send updates to students and parents",
-    icon: Megaphone,
-    href: "/instructor/announcements/create",
-    color: "from-blue-600 to-indigo-600",
-  },
-  {
-    title: "Add Student",
-    description: "Enroll new students in courses",
-    icon: UserPlus,
-    href: "/instructor/users/create",
-    color: "from-green-600 to-emerald-600",
-  },
-  {
-    title: "Create Course",
-    description: "Set up new course content",
-    icon: Plus,
-    href: "/instructor/courses/create",
-    color: "from-purple-600 to-pink-600",
-  },
-]
 
 export default function InstructorDashboard() {
   return (
@@ -150,8 +50,8 @@ export default function InstructorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-100 text-sm font-medium">Total Students</p>
-                  <p className="text-3xl font-bold">{dashboardStats.totalStudents}</p>
-                  <p className="text-blue-100 text-sm">+{dashboardStats.newStudentsThisMonth} this month</p>
+                  <p className="text-3xl font-bold">{instructorDashboardStats.totalStudents}</p>
+                  <p className="text-blue-100 text-sm">+{instructorDashboardStats.newStudentsThisMonth} this month</p>
                 </div>
                 <Users className="h-12 w-12 text-blue-200" />
               </div>
@@ -169,7 +69,7 @@ export default function InstructorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-100 text-sm font-medium">Active Courses</p>
-                  <p className="text-3xl font-bold">{dashboardStats.totalCourses}</p>
+                  <p className="text-3xl font-bold">{instructorDashboardStats.totalCourses}</p>
                   <p className="text-green-100 text-sm">All courses running</p>
                 </div>
                 <BookOpen className="h-12 w-12 text-green-200" />
@@ -188,7 +88,7 @@ export default function InstructorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-purple-100 text-sm font-medium">Monthly Revenue</p>
-                  <p className="text-3xl font-bold">${dashboardStats.monthlyRevenue.toLocaleString()}</p>
+                  <p className="text-3xl font-bold">${instructorDashboardStats.monthlyRevenue.toLocaleString()}</p>
                   <p className="text-purple-100 text-sm">+12% from last month</p>
                 </div>
                 <DollarSign className="h-12 w-12 text-purple-200" />
@@ -207,7 +107,7 @@ export default function InstructorDashboard() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-100 text-sm font-medium">Engagement Rate</p>
-                  <p className="text-3xl font-bold">{dashboardStats.engagementRate}%</p>
+                  <p className="text-3xl font-bold">{instructorDashboardStats.engagementRate}%</p>
                   <p className="text-orange-100 text-sm">+5% from last week</p>
                 </div>
                 <TrendingUp className="h-12 w-12 text-orange-200" />
@@ -225,7 +125,7 @@ export default function InstructorDashboard() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {quickActions.map((action, index) => (
+            {instructorQuickActions.map((action, index) => (
               <motion.div
                 key={action.title}
                 initial={{ opacity: 0, y: 20 }}
@@ -264,7 +164,7 @@ export default function InstructorDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {recentActivity.map((activity, index) => (
+              {instructorRecentActivity.map((activity, index) => (
                 <motion.div
                   key={activity.id}
                   initial={{ opacity: 0, x: -20 }}
@@ -328,7 +228,7 @@ export default function InstructorDashboard() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {upcomingSessions.map((session, index) => (
+              {instructorUpcomingSessions.map((session, index) => (
                 <motion.div
                   key={session.id}
                   initial={{ opacity: 0, x: 20 }}

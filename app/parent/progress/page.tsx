@@ -19,55 +19,9 @@ import {
 import { motion } from "framer-motion"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { parentProgressData } from "@/lib/database"
 
 export default function ChildProgressPage() {
-  const mockData = {
-    courses: [
-      {
-        id: "ict",
-        name: "ICT Course",
-        overallGrade: 92,
-        gradeTrend: "up",
-        gradeBreakdown: [
-          { category: "Homework", weight: 20, score: 95 },
-          { category: "Quizzes", weight: 30, score: 88 },
-          { category: "Mid-term Exam", weight: 20, score: 90 },
-          { category: "Final Project", weight: 30, score: 94 },
-        ],
-        assignments: [
-          { id: 1, title: "HTML Basics", status: "graded", grade: "95/100" },
-          { id: 2, title: "CSS Styling", status: "graded", grade: "92/100" },
-          { id: 3, title: "JS Fundamentals", status: "on time", grade: "Pending" },
-          { id: 4, title: "Web Portfolio Project", status: "missing", grade: "0/100" },
-        ],
-        assessments: [
-          { id: 1, title: "Networking Quiz", score: 85, total: 100, classAvg: 78 },
-          { id: 2, title: "Mid-term Exam", score: 90, total: 100, classAvg: 82 },
-        ],
-      },
-      {
-        id: "math",
-        name: "Mathematics Course",
-        overallGrade: 85,
-        gradeTrend: "stable",
-        gradeBreakdown: [
-          { category: "Homework", weight: 30, score: 88 },
-          { category: "Quizzes", weight: 40, score: 82 },
-          { category: "Final Exam", weight: 30, score: 87 },
-        ],
-        assignments: [
-          { id: 1, title: "Algebra Problem Set", status: "graded", grade: "88/100" },
-          { id: 2, title: "Geometry Proofs", status: "graded", grade: "90/100" },
-          { id: 3, title: "Calculus Derivatives", status: "on time", grade: "Pending" },
-        ],
-        assessments: [
-          { id: 1, title: "Trigonometry Quiz", score: 80, total: 100, classAvg: 75 },
-          { id: 2, title: "Statistics Test", score: 84, total: 100, classAvg: 80 },
-        ],
-      },
-    ],
-  }
-
   const getStatusIcon = (status: string) => {
     switch (status) {
       case "graded":
@@ -114,14 +68,14 @@ export default function ChildProgressPage() {
 
       <Tabs defaultValue="ict" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
-          {mockData.courses.map((course) => (
+          {parentProgressData.courses.map((course) => (
             <TabsTrigger key={course.id} value={course.id}>
               {course.name}
             </TabsTrigger>
           ))}
         </TabsList>
 
-        {mockData.courses.map((course) => (
+        {parentProgressData.courses.map((course) => (
           <TabsContent key={course.id} value={course.id} className="space-y-6">
             {/* Grade Overview */}
             <motion.div variants={itemVariants}>

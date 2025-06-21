@@ -10,95 +10,7 @@ import { MessageSquare, Search, Filter, Clock, User, Pin, Lock } from "lucide-re
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { useState } from "react"
-
-// Mock data for forum
-const mockForumData = {
-  courses: [
-    {
-      id: "ict-fundamentals",
-      name: "ICT Fundamentals",
-      totalTopics: 45,
-      unansweredQuestions: 8,
-      recentActivity: "2 hours ago",
-    },
-    {
-      id: "mathematics",
-      name: "Mathematics",
-      totalTopics: 32,
-      unansweredQuestions: 3,
-      recentActivity: "4 hours ago",
-    },
-    {
-      id: "ict-practical",
-      name: "ICT Practical",
-      totalTopics: 28,
-      unansweredQuestions: 12,
-      recentActivity: "1 hour ago",
-    },
-  ],
-  recentQuestions: [
-    {
-      id: "q1",
-      title: "Help with Python loops and iteration",
-      course: "ICT Fundamentals",
-      student: "Emma Johnson",
-      timeAgo: "2 hours ago",
-      priority: "high",
-      replies: 0,
-      status: "unanswered",
-      isPinned: false,
-      isLocked: false,
-    },
-    {
-      id: "q2",
-      title: "Algebra equation solving methods",
-      course: "Mathematics",
-      student: "Michael Chen",
-      timeAgo: "4 hours ago",
-      priority: "medium",
-      replies: 3,
-      status: "answered",
-      isPinned: true,
-      isLocked: false,
-    },
-    {
-      id: "q3",
-      title: "Database design best practices",
-      course: "ICT Practical",
-      student: "Sarah Wilson",
-      timeAgo: "6 hours ago",
-      priority: "low",
-      replies: 5,
-      status: "resolved",
-      isPinned: false,
-      isLocked: false,
-    },
-    {
-      id: "q4",
-      title: "JavaScript async/await confusion",
-      course: "ICT Fundamentals",
-      student: "David Brown",
-      timeAgo: "8 hours ago",
-      priority: "high",
-      replies: 1,
-      status: "answered",
-      isPinned: false,
-      isLocked: false,
-    },
-    {
-      id: "q5",
-      title: "Calculus integration problems",
-      course: "Mathematics",
-      student: "Lisa Garcia",
-      timeAgo: "1 day ago",
-      priority: "medium",
-      replies: 7,
-      status: "resolved",
-      isPinned: false,
-      isLocked: true,
-    },
-  ],
-}
+import { taForumData } from "@/lib/database"
 
 export default function TAForumPage() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -110,7 +22,7 @@ export default function TAForumPage() {
     return <div>Loading...</div>
   }
 
-  const filteredQuestions = mockForumData.recentQuestions.filter((question) => {
+  const filteredQuestions = taForumData.recentQuestions.filter((question) => {
     const matchesSearch =
       question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       question.student.toLowerCase().includes(searchTerm.toLowerCase())
@@ -168,7 +80,7 @@ export default function TAForumPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.1 }}
       >
-        {mockForumData.courses.map((course) => (
+        {taForumData.courses.map((course) => (
           <Card key={course.id} className="hover:shadow-lg transition-shadow">
             <CardHeader>
               <CardTitle className="flex items-center justify-between">
@@ -233,7 +145,7 @@ export default function TAForumPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Courses</SelectItem>
-                  {mockForumData.courses.map((course) => (
+                  {taForumData.courses.map((course) => (
                     <SelectItem key={course.id} value={course.name}>
                       {course.name}
                     </SelectItem>

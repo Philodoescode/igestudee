@@ -8,88 +8,12 @@ import { MessageSquare, Search, Plus, TrendingUp, Pin, ArrowRight } from "lucide
 import Link from "next/link"
 import { useState } from "react"
 import { motion } from "framer-motion"
-
-// Mock data
-const courseForums = [
-  {
-    id: "ict-101",
-    name: "ICT Fundamentals Forum",
-    description: "Discuss ICT concepts, ask questions, and share insights",
-    totalTopics: 45,
-    totalPosts: 234,
-    lastActivity: "2 hours ago",
-    color: "from-blue-500 to-cyan-500",
-    participants: 28,
-  },
-  {
-    id: "math-201",
-    name: "Advanced Mathematics Forum",
-    description: "Mathematical discussions, problem solving, and study groups",
-    totalTopics: 67,
-    totalPosts: 412,
-    lastActivity: "1 hour ago",
-    color: "from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)]",
-    participants: 35,
-  },
-  {
-    id: "physics-101",
-    name: "Physics Fundamentals Forum",
-    description: "Physics concepts, experiments, and theoretical discussions",
-    totalTopics: 32,
-    totalPosts: 189,
-    lastActivity: "4 hours ago",
-    color: "from-purple-500 to-pink-500",
-    participants: 22,
-  },
-]
-
-const recentTopics = [
-  {
-    id: "1",
-    title: "Database Normalization Best Practices",
-    author: "Emma Johnson",
-    course: "ICT Fundamentals",
-    replies: 12,
-    lastReply: "30 minutes ago",
-    isPinned: true,
-    isHot: true,
-  },
-  {
-    id: "2",
-    title: "Calculus Integration Techniques Help",
-    author: "Michael Chen",
-    course: "Advanced Mathematics",
-    replies: 8,
-    lastReply: "1 hour ago",
-    isPinned: false,
-    isHot: true,
-  },
-  {
-    id: "3",
-    title: "Newton's Laws Practical Applications",
-    author: "Sarah Wilson",
-    course: "Physics Fundamentals",
-    replies: 15,
-    lastReply: "2 hours ago",
-    isPinned: false,
-    isHot: false,
-  },
-  {
-    id: "4",
-    title: "Network Security Fundamentals Discussion",
-    author: "Alex Rodriguez",
-    course: "ICT Fundamentals",
-    replies: 6,
-    lastReply: "3 hours ago",
-    isPinned: false,
-    isHot: false,
-  },
-]
+import { studentCourseForums, studentRecentForumTopics } from "@/lib/database"
 
 export default function ForumHomePage() {
   const [searchTerm, setSearchTerm] = useState("")
 
-  const filteredForums = courseForums.filter(
+  const filteredForums = studentCourseForums.filter(
     (forum) =>
       forum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       forum.description.toLowerCase().includes(searchTerm.toLowerCase()),
@@ -217,7 +141,7 @@ export default function ForumHomePage() {
               <CardDescription>Latest discussions across all forums</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recentTopics.map((topic) => (
+              {studentRecentForumTopics.map((topic) => (
                 <div key={topic.id} className="p-3 border rounded-lg hover:bg-gray-50 transition-colors">
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center space-x-2">

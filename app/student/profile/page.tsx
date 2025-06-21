@@ -12,37 +12,12 @@ import { User, Calendar, Edit, Save, X, Camera, Award, BookOpen, Clock, Trending
 import { useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { motion } from "framer-motion"
-
-// Mock data
-const studentProfile = {
-  id: "student-001",
-  name: "Emma Johnson",
-  email: "emma.johnson@example.com",
-  phone: "+1 (555) 987-6543",
-  address: "456 Oak Street, Springfield, IL 62701",
-  dateOfBirth: "2005-03-15",
-  enrollmentDate: "2024-01-01",
-  studentId: "ST2024001",
-  bio: "Passionate about technology and mathematics. Currently pursuing advanced studies in ICT and looking forward to a career in software development.",
-  achievements: [
-    { name: "Database Design Expert", date: "2024-01-10", course: "ICT Fundamentals" },
-    { name: "Calculus Master", date: "2024-01-05", course: "Advanced Mathematics" },
-    { name: "Perfect Attendance", date: "2024-01-01", course: "General" },
-  ],
-  stats: {
-    totalCourses: 3,
-    completedModules: 22,
-    totalModules: 37,
-    averageProgress: 68,
-    studyHours: 45,
-    forumPosts: 28,
-  },
-}
+import { studentProfileData } from "@/lib/database"
 
 export default function StudentProfilePage() {
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState(studentProfile)
+  const [formData, setFormData] = useState(studentProfileData)
 
   const handleSave = () => {
     // In a real app, this would save to the backend
@@ -51,7 +26,7 @@ export default function StudentProfilePage() {
   }
 
   const handleCancel = () => {
-    setFormData(studentProfile)
+    setFormData(studentProfileData)
     setIsEditing(false)
   }
 
@@ -246,20 +221,20 @@ export default function StudentProfilePage() {
             <CardContent className="space-y-4">
               <div className="text-center">
                 <div className="text-3xl font-bold text-[var(--color-gossamer-600)]">
-                  {studentProfile.stats.averageProgress}%
+                  {studentProfileData.stats.averageProgress}%
                 </div>
                 <div className="text-sm text-gray-600">Overall Progress</div>
               </div>
 
-              <Progress value={studentProfile.stats.averageProgress} className="h-3" />
+              <Progress value={studentProfileData.stats.averageProgress} className="h-3" />
 
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div className="p-3 border rounded-lg">
-                  <div className="text-lg font-bold text-blue-600">{studentProfile.stats.completedModules}</div>
+                  <div className="text-lg font-bold text-blue-600">{studentProfileData.stats.completedModules}</div>
                   <div className="text-xs text-gray-600">Completed</div>
                 </div>
                 <div className="p-3 border rounded-lg">
-                  <div className="text-lg font-bold text-gray-600">{studentProfile.stats.totalModules}</div>
+                  <div className="text-lg font-bold text-gray-600">{studentProfileData.stats.totalModules}</div>
                   <div className="text-xs text-gray-600">Total Modules</div>
                 </div>
               </div>
@@ -277,7 +252,7 @@ export default function StudentProfilePage() {
                   <BookOpen className="h-4 w-4 text-[var(--color-gossamer-600)]" />
                   <span className="text-sm">Enrolled Courses</span>
                 </div>
-                <span className="font-bold">{studentProfile.stats.totalCourses}</span>
+                <span className="font-bold">{studentProfileData.stats.totalCourses}</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -285,7 +260,7 @@ export default function StudentProfilePage() {
                   <Clock className="h-4 w-4 text-blue-600" />
                   <span className="text-sm">Study Hours</span>
                 </div>
-                <span className="font-bold">{studentProfile.stats.studyHours}h</span>
+                <span className="font-bold">{studentProfileData.stats.studyHours}h</span>
               </div>
 
               <div className="flex items-center justify-between">
@@ -293,7 +268,7 @@ export default function StudentProfilePage() {
                   <User className="h-4 w-4 text-purple-600" />
                   <span className="text-sm">Forum Posts</span>
                 </div>
-                <span className="font-bold">{studentProfile.stats.forumPosts}</span>
+                <span className="font-bold">{studentProfileData.stats.forumPosts}</span>
               </div>
             </CardContent>
           </Card>
@@ -307,7 +282,7 @@ export default function StudentProfilePage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {studentProfile.achievements.map((achievement, index) => (
+              {studentProfileData.achievements.map((achievement, index) => (
                 <div key={index} className="flex items-start space-x-3 p-3 border rounded-lg">
                   <Award className="h-5 w-5 text-yellow-500 mt-0.5" />
                   <div>

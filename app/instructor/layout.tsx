@@ -18,18 +18,13 @@ import {
 
 const navigation = [
   {
-    title: "Overview",
+    title: "MENU",
     items: [
       {
         title: "Admin Dashboard",
         href: "/instructor",
         icon: LayoutDashboard,
       },
-    ],
-  },
-  {
-    title: "Management",
-    items: [
       {
         title: "Course Management",
         href: "/instructor/courses",
@@ -45,51 +40,34 @@ const navigation = [
         href: "/instructor/tas",
         icon: UserCheck,
       },
-    ],
-  },
-  {
-    title: "Communication",
-    items: [
       {
-        title: "Announcement Management",
+        title: "Announcements",
         href: "/instructor/announcements",
         icon: Megaphone,
       },
     ],
   },
   {
-    title: "Business",
+    title: "GENERAL",
     items: [
       {
-        title: "Financial Management",
+        title: "Financials",
         href: "/instructor/financial",
         icon: DollarSign,
       },
       {
-        title: "Analytics & Reporting",
+        title: "Analytics",
         href: "/instructor/analytics",
         icon: BarChart3,
       },
-    ],
-  },
-  {
-    title: "System",
-    items: [
       {
-        title: "Platform Settings",
+        title: "Settings",
         href: "/instructor/settings",
         icon: Settings,
       },
     ],
   },
 ]
-
-const colorScheme = {
-  primary: "from-blue-600",
-  secondary: "to-indigo-700",
-  accent: "blue-500",
-  gradient: "from-blue-600 to-indigo-700",
-}
 
 export default function InstructorLayout({
   children,
@@ -101,7 +79,7 @@ export default function InstructorLayout({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
@@ -111,15 +89,13 @@ export default function InstructorLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-white">
       <PortalSidebar
         title="Instructor Portal"
-        subtitle="Admin Dashboard"
         icon={Shield}
         navigation={navigation}
-        colorScheme={colorScheme}
       />
-      <main className="flex-1 overflow-y-auto lg:ml-0">
+      <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>
     </div>

@@ -9,87 +9,14 @@ import { BookOpen, Calendar, Clock, MessageSquare, TrendingUp, Bell, ArrowRight 
 import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { motion } from "framer-motion"
-
-// Mock data
-const enrolledCourses = [
-  {
-    id: "ict-101",
-    name: "ICT Fundamentals",
-    instructor: "Dr. Sarah Johnson",
-    progress: 75,
-    totalModules: 12,
-    completedModules: 9,
-    nextModule: "Database Design Principles",
-    color: "from-blue-500 to-cyan-500",
-  },
-  {
-    id: "math-201",
-    name: "Advanced Mathematics",
-    instructor: "Prof. Michael Chen",
-    progress: 60,
-    totalModules: 15,
-    completedModules: 9,
-    nextModule: "Calculus Applications",
-    color: "from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)]",
-  },
-  {
-    id: "physics-101",
-    name: "Physics Fundamentals",
-    instructor: "Dr. Emily Rodriguez",
-    progress: 40,
-    totalModules: 10,
-    completedModules: 4,
-    nextModule: "Newton's Laws of Motion",
-    color: "from-purple-500 to-pink-500",
-  },
-]
-
-const upcomingSessions = [
-  {
-    id: "1",
-    title: "ICT Q&A Session",
-    instructor: "Dr. Sarah Johnson",
-    date: "Today",
-    time: "3:00 PM",
-    type: "Q&A",
-    course: "ICT Fundamentals",
-  },
-  {
-    id: "2",
-    title: "Math Lab Help",
-    instructor: "Alex Smith (TA)",
-    date: "Tomorrow",
-    time: "2:00 PM",
-    type: "Lab Help",
-    course: "Advanced Mathematics",
-  },
-]
-
-const recentAnnouncements = [
-  {
-    id: "1",
-    title: "New ICT Module Released",
-    content: "Module 10: Database Design Principles is now available with practical exercises.",
-    date: "2 hours ago",
-    course: "ICT Fundamentals",
-    priority: "high",
-  },
-  {
-    id: "2",
-    title: "Math Assignment Due Reminder",
-    content: "Don't forget to submit your calculus problem set by Friday 11:59 PM.",
-    date: "1 day ago",
-    course: "Advanced Mathematics",
-    priority: "medium",
-  },
-]
+import { studentEnrolledCourses, studentUpcomingSessions, studentRecentAnnouncements } from "@/lib/database"
 
 export default function StudentDashboard() {
   const { user } = useAuth()
 
   const firstName = user?.name?.split(" ")[0] || "Student"
   const totalProgress = Math.round(
-    enrolledCourses.reduce((acc, course) => acc + course.progress, 0) / enrolledCourses.length,
+    studentEnrolledCourses.reduce((acc, course) => acc + course.progress, 0) / studentEnrolledCourses.length,
   )
 
   return (
@@ -130,7 +57,7 @@ export default function StudentDashboard() {
               <CardDescription>Continue your learning journey</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {enrolledCourses.map((course) => (
+              {studentEnrolledCourses.map((course) => (
                 <motion.div
                   key={course.id}
                   className="p-4 border rounded-lg hover:shadow-md transition-shadow"
@@ -192,7 +119,7 @@ export default function StudentDashboard() {
               <CardDescription>Live Q&A and Lab Help sessions</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {upcomingSessions.map((session) => (
+              {studentUpcomingSessions.map((session) => (
                 <div key={session.id} className="p-3 border rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <div>
@@ -230,7 +157,7 @@ export default function StudentDashboard() {
               <CardDescription>Stay updated with the latest news</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {recentAnnouncements.slice(0, 2).map((announcement) => (
+              {studentRecentAnnouncements.slice(0, 2).map((announcement) => (
                 <div key={announcement.id} className="p-3 border rounded-lg">
                   <div className="flex items-start justify-between mb-2">
                     <h4 className="font-medium text-sm">{announcement.title}</h4>
@@ -239,8 +166,8 @@ export default function StudentDashboard() {
                         announcement.priority === "high"
                           ? "destructive"
                           : announcement.priority === "medium"
-                            ? "default"
-                            : "secondary"
+                          ? "default"
+                          : "secondary"
                       }
                       className="text-xs"
                     >

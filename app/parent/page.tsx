@@ -19,54 +19,12 @@ import {
 import { motion } from "framer-motion"
 import Link from "next/link"
 import { AnimatedCounter } from "@/components/animated-counter"
+import { parentDashboardChildren, parentDashboardData } from "@/lib/database"
 
 export default function ParentDashboard() {
   const [currentChild, setCurrentChild] = useState("Emma Johnson")
-  const children = ["Emma Johnson", "Liam Johnson"] // Mock data for multiple children
 
-  const mockData = {
-    "Emma Johnson": {
-      keyMetrics: {
-        overallGrade: 88,
-        attendanceRate: 98,
-        upcomingDeadlines: 3,
-      },
-      courses: [
-        { name: "ICT Course", grade: 92, trend: "up" },
-        { name: "Mathematics Course", grade: 85, trend: "stable" },
-      ],
-      upcoming: [
-        { type: "Assignment", title: "Web Portfolio Project", due: "3 days" },
-        { type: "Exam", title: "Calculus Mid-term", due: "5 days" },
-        { type: "Quiz", title: "Network Security Quiz", due: "6 days" },
-      ],
-      attendanceAlerts: [{ type: "Unexcused Absence", date: "Yesterday" }],
-      recentAnnouncements: [
-        { id: 1, title: "Term 2 Assessment Schedule Released", priority: "high" },
-        { id: 2, title: "Parent-Teacher Conference Invitations", priority: "medium" },
-      ],
-    },
-    // Mock data for a second child
-    "Liam Johnson": {
-      keyMetrics: {
-        overallGrade: 91,
-        attendanceRate: 100,
-        upcomingDeadlines: 2,
-      },
-      courses: [
-        { name: "Intro to Programming", grade: 94, trend: "up" },
-        { name: "Algebra II", grade: 88, trend: "up" },
-      ],
-      upcoming: [
-        { type: "Project", title: "Python Game Final Project", due: "1 week" },
-        { type: "Test", title: "Algebra Chapter 5 Test", due: "2 weeks" },
-      ],
-      attendanceAlerts: [],
-      recentAnnouncements: [{ id: 1, title: "School Robotics Club Sign-ups", priority: "low" }],
-    },
-  }
-
-  const selectedChildData = mockData[currentChild as keyof typeof mockData]
+  const selectedChildData = parentDashboardData[currentChild as keyof typeof parentDashboardData]
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -104,7 +62,7 @@ export default function ParentDashboard() {
                 <SelectValue placeholder="Select a child" />
               </SelectTrigger>
               <SelectContent>
-                {children.map((child) => (
+                {parentDashboardChildren.map((child) => (
                   <SelectItem key={child} value={child}>
                     {child}
                   </SelectItem>

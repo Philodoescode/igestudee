@@ -24,89 +24,14 @@ import {
 } from "lucide-react"
 import { motion } from "framer-motion"
 import Link from "next/link"
-
-// Mock user data
-const users = [
-  {
-    id: "user-001",
-    name: "Emma Johnson",
-    email: "emma.johnson@example.com",
-    role: "student",
-    status: "active",
-    enrolledCourses: 3,
-    joinDate: "2024-01-15",
-    lastLogin: "2024-03-12",
-    phone: "+1 (555) 123-4567",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "user-002",
-    name: "Sarah Johnson",
-    email: "parent.test@example.com",
-    role: "parent",
-    status: "active",
-    enrolledCourses: 0,
-    joinDate: "2024-01-15",
-    lastLogin: "2024-03-11",
-    phone: "+1 (555) 123-4567",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "user-003",
-    name: "Michael Chen",
-    email: "michael.chen@example.com",
-    role: "student",
-    status: "active",
-    enrolledCourses: 2,
-    joinDate: "2024-02-01",
-    lastLogin: "2024-03-12",
-    phone: "+1 (555) 234-5678",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "user-004",
-    name: "Alex Smith",
-    email: "ta.test@example.com",
-    role: "ta",
-    status: "active",
-    enrolledCourses: 0,
-    joinDate: "2024-01-10",
-    lastLogin: "2024-03-12",
-    phone: "+1 (555) 345-6789",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "user-005",
-    name: "David Brown",
-    email: "david.brown@example.com",
-    role: "student",
-    status: "inactive",
-    enrolledCourses: 1,
-    joinDate: "2023-12-15",
-    lastLogin: "2024-02-28",
-    phone: "+1 (555) 456-7890",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-  {
-    id: "user-006",
-    name: "Lisa Wilson",
-    email: "lisa.wilson@example.com",
-    role: "parent",
-    status: "active",
-    enrolledCourses: 0,
-    joinDate: "2024-02-10",
-    lastLogin: "2024-03-10",
-    phone: "+1 (555) 567-8901",
-    avatar: "/placeholder.svg?height=40&width=40",
-  },
-]
+import { instructorUsers } from "@/lib/database"
 
 export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [roleFilter, setRoleFilter] = useState("all")
   const [statusFilter, setStatusFilter] = useState("all")
 
-  const filteredUsers = users.filter((user) => {
+  const filteredUsers = instructorUsers.filter((user) => {
     const matchesSearch =
       user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -146,11 +71,11 @@ export default function UsersPage() {
   }
 
   const userStats = {
-    total: users.length,
-    students: users.filter((u) => u.role === "student").length,
-    parents: users.filter((u) => u.role === "parent").length,
-    tas: users.filter((u) => u.role === "ta").length,
-    active: users.filter((u) => u.status === "active").length,
+    total: instructorUsers.length,
+    students: instructorUsers.filter((u) => u.role === "student").length,
+    parents: instructorUsers.filter((u) => u.role === "parent").length,
+    tas: instructorUsers.filter((u) => u.role === "ta").length,
+    active: instructorUsers.filter((u) => u.status === "active").length,
   }
 
   return (

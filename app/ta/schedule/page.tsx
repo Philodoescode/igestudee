@@ -8,80 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Calendar, Clock, Users, Video, MapPin } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
-
-// Mock data for TA schedule
-const mockScheduleData = {
-  sessions: [
-    {
-      id: "session-1",
-      title: "ICT Q&A Session",
-      course: "ICT Fundamentals",
-      type: "Q&A",
-      date: "2024-01-15",
-      time: "14:00",
-      duration: "1 hour",
-      students: 12,
-      location: "Virtual - Zoom Room 1",
-      status: "upcoming",
-      description: "Weekly Q&A session for ICT Fundamentals students",
-    },
-    {
-      id: "session-2",
-      title: "Math Problem Solving",
-      course: "Mathematics",
-      type: "Tutorial",
-      date: "2024-01-16",
-      time: "10:00",
-      duration: "45 minutes",
-      students: 8,
-      location: "Virtual - Zoom Room 2",
-      status: "upcoming",
-      description: "Help session for algebra and calculus problems",
-    },
-    {
-      id: "session-3",
-      title: "Lab Help Session",
-      course: "ICT Practical",
-      type: "Lab Help",
-      date: "2024-01-17",
-      time: "16:00",
-      duration: "2 hours",
-      students: 15,
-      location: "Virtual - Zoom Room 3",
-      status: "upcoming",
-      description: "Hands-on help with practical assignments",
-    },
-    {
-      id: "session-4",
-      title: "Office Hours",
-      course: "General",
-      type: "Office Hours",
-      date: "2024-01-18",
-      time: "13:00",
-      duration: "2 hours",
-      students: 0,
-      location: "Virtual - Personal Room",
-      status: "upcoming",
-      description: "Open office hours for any questions",
-    },
-    {
-      id: "session-5",
-      title: "ICT Review Session",
-      course: "ICT Fundamentals",
-      type: "Review",
-      date: "2024-01-12",
-      time: "15:00",
-      duration: "1.5 hours",
-      students: 10,
-      location: "Virtual - Zoom Room 1",
-      status: "completed",
-      description: "Review session for Module 3 concepts",
-    },
-  ],
-  weeklyHours: 8,
-  totalSessions: 12,
-  averageAttendance: 85,
-}
+import { taScheduleData } from "@/lib/database"
 
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -122,8 +49,8 @@ export default function TASchedulePage() {
     }
   }
 
-  const upcomingSessions = mockScheduleData.sessions.filter((session) => session.status === "upcoming")
-  const completedSessions = mockScheduleData.sessions.filter((session) => session.status === "completed")
+  const upcomingSessions = taScheduleData.sessions.filter((session) => session.status === "upcoming")
+  const completedSessions = taScheduleData.sessions.filter((session) => session.status === "completed")
 
   return (
     <div className="p-6 space-y-6">
@@ -161,7 +88,7 @@ export default function TASchedulePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-blue-100">Weekly Hours</p>
-                <p className="text-3xl font-bold">{mockScheduleData.weeklyHours}</p>
+                <p className="text-3xl font-bold">{taScheduleData.weeklyHours}</p>
               </div>
               <Clock className="h-8 w-8 text-blue-200" />
             </div>
@@ -173,7 +100,7 @@ export default function TASchedulePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-green-100">Total Sessions</p>
-                <p className="text-3xl font-bold">{mockScheduleData.totalSessions}</p>
+                <p className="text-3xl font-bold">{taScheduleData.totalSessions}</p>
               </div>
               <Calendar className="h-8 w-8 text-green-200" />
             </div>
@@ -185,7 +112,7 @@ export default function TASchedulePage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-purple-100">Avg Attendance</p>
-                <p className="text-3xl font-bold">{mockScheduleData.averageAttendance}%</p>
+                <p className="text-3xl font-bold">{taScheduleData.averageAttendance}%</p>
               </div>
               <Users className="h-8 w-8 text-purple-200" />
             </div>

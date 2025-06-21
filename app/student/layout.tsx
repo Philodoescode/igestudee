@@ -4,12 +4,17 @@ import type React from "react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { BookOpen, Calendar, MessageSquare, GraduationCap } from "lucide-react"
+import { BookOpen, Calendar, MessageSquare, GraduationCap, Settings, User , LayoutDashboard} from "lucide-react"
 
 const navigation = [
   {
-    title: "Learning",
+    title: "MENU",
     items: [
+      {
+        title: "Dashboard",
+        href: "/student",
+        icon: LayoutDashboard,
+      },
       {
         title: "My Courses",
         href: "/student/courses",
@@ -20,11 +25,6 @@ const navigation = [
         href: "/student/schedule",
         icon: Calendar,
       },
-    ],
-  },
-  {
-    title: "Community",
-    items: [
       {
         title: "Discussion Forum",
         href: "/student/forum",
@@ -32,14 +32,22 @@ const navigation = [
       },
     ],
   },
+  {
+    title: "GENERAL",
+    items: [
+      {
+        title: "My Profile",
+        href: "/student/profile",
+        icon: User,
+      },
+      {
+        title: "Settings",
+        href: "/student/settings",
+        icon: Settings,
+      },
+    ],
+  },
 ]
-
-const colorScheme = {
-  primary: "from-gossamer-500",
-  secondary: "to-gossamer-600",
-  accent: "gossamer-400",
-  gradient: "from-gossamer-500 to-gossamer-600",
-}
 
 export default function StudentLayout({
   children,
@@ -51,7 +59,7 @@ export default function StudentLayout({
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gossamer-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
@@ -61,15 +69,13 @@ export default function StudentLayout({
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-white">
       <PortalSidebar
         title="Student Portal"
-        subtitle="Learning Dashboard"
         icon={GraduationCap}
         navigation={navigation}
-        colorScheme={colorScheme}
       />
-      <main className="flex-1 overflow-y-auto lg:ml-0">
+      <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>
     </div>

@@ -10,32 +10,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CalendarCheck, User, Check, X, AlertTriangle } from "lucide-react"
 import { motion } from "framer-motion"
 import { AnimatedCounter } from "@/components/animated-counter"
+import { parentAttendanceData } from "@/lib/database"
 
 export default function AttendancePage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date())
   const [currentChild, setCurrentChild] = useState("Emma Johnson")
 
-  const mockAttendance = {
-    "Emma Johnson": {
-      summary: {
-        present: 125,
-        excused: 3,
-        unexcused: 1,
-        tardy: 2,
-        totalDays: 131,
-      },
-      events: [
-        { date: "2024-03-12", status: "unexcused", period: "Period 2", course: "Mathematics" },
-        { date: "2024-03-05", status: "tardy", period: "Period 1", course: "ICT Course" },
-        { date: "2024-02-28", status: "excused", period: "Full Day", course: "N/A" },
-        { date: "2024-02-27", status: "excused", period: "Full Day", course: "N/A" },
-        { date: "2024-02-15", status: "tardy", period: "Period 4", course: "Mathematics" },
-        { date: "2024-02-01", status: "excused", period: "Period 1-2", course: "ICT Course" },
-      ],
-    },
-  }
-
-  const attendanceData = mockAttendance[currentChild as keyof typeof mockAttendance]
+  const attendanceData = parentAttendanceData[currentChild as keyof typeof parentAttendanceData]
 
   const getStatusBadge = (status: string) => {
     switch (status) {

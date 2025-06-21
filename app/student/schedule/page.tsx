@@ -8,96 +8,23 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { CalendarIcon, Clock, Video, Users, MapPin, Bell } from "lucide-react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-
-// Mock data
-const upcomingSessions = [
-  {
-    id: "1",
-    title: "ICT Q&A Session",
-    instructor: "Dr. Sarah Johnson",
-    course: "ICT Fundamentals",
-    date: "2024-01-15",
-    time: "15:00",
-    duration: "60 min",
-    type: "Q&A",
-    location: "Virtual Room A",
-    description: "Weekly Q&A session covering database design and network fundamentals",
-    attendees: 24,
-    maxAttendees: 30,
-  },
-  {
-    id: "2",
-    title: "Math Lab Help Session",
-    instructor: "Alex Smith (TA)",
-    course: "Advanced Mathematics",
-    date: "2024-01-16",
-    time: "14:00",
-    duration: "90 min",
-    type: "Lab Help",
-    location: "Virtual Room B",
-    description: "Hands-on help with calculus problems and integration techniques",
-    attendees: 18,
-    maxAttendees: 25,
-  },
-  {
-    id: "3",
-    title: "Physics Problem Solving",
-    instructor: "Dr. Emily Rodriguez",
-    course: "Physics Fundamentals",
-    date: "2024-01-17",
-    time: "16:00",
-    duration: "75 min",
-    type: "Q&A",
-    location: "Virtual Room C",
-    description: "Interactive session focusing on Newton's laws and practical applications",
-    attendees: 15,
-    maxAttendees: 20,
-  },
-  {
-    id: "4",
-    title: "ICT Practical Workshop",
-    instructor: "Dr. Sarah Johnson",
-    course: "ICT Fundamentals",
-    date: "2024-01-18",
-    time: "10:00",
-    duration: "120 min",
-    type: "Workshop",
-    location: "Virtual Room A",
-    description: "Hands-on database creation and management workshop",
-    attendees: 20,
-    maxAttendees: 25,
-  },
-  {
-    id: "5",
-    title: "Math Study Group",
-    instructor: "Prof. Michael Chen",
-    course: "Advanced Mathematics",
-    date: "2024-01-19",
-    time: "13:00",
-    duration: "60 min",
-    type: "Study Group",
-    location: "Virtual Room D",
-    description: "Collaborative problem-solving session with peer discussions",
-    attendees: 12,
-    maxAttendees: 15,
-  },
-]
-
-const todaySessions = upcomingSessions.filter((session) => session.date === "2024-01-15")
-const weekSessions = upcomingSessions.filter((session) => {
-  const sessionDate = new Date(session.date)
-  const today = new Date("2024-01-15")
-  const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
-  return sessionDate >= today && sessionDate <= weekFromNow
-})
+import { studentScheduleSessions } from "@/lib/database"
 
 export default function SchedulePage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date("2024-01-15"))
   const [selectedView, setSelectedView] = useState("week")
 
+  const todaySessions = studentScheduleSessions.filter((session) => session.date === "2024-01-15")
+  const weekSessions = studentScheduleSessions.filter((session) => {
+    const sessionDate = new Date(session.date)
+    const today = new Date("2024-01-15")
+    const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000)
+    return sessionDate >= today && sessionDate <= weekFromNow
+  })
+
   const getSessionsForDate = (date: Date) => {
     const dateString = date.toISOString().split("T")[0]
-    return upcomingSessions.filter((session) => session.date === dateString)
+    return studentScheduleSessions.filter((session) => session.date === dateString)
   }
 
   const getTypeColor = (type: string) => {
@@ -169,7 +96,7 @@ export default function SchedulePage() {
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Live Sessions</p>
                 <p className="text-2xl font-bold">
-                  {upcomingSessions.filter((s) => s.type === "Q&A" || s.type === "Workshop").length}
+                  {studentScheduleSessions.filter((s) => s.type === "Q&A" || s.type === "Workshop").length}
                 </p>
               </div>
             </div>
@@ -182,7 +109,9 @@ export default function SchedulePage() {
               <Users className="h-8 w-8 text-green-600" />
               <div className="ml-4">
                 <p className="text-sm font-medium text-gray-600">Study Groups</p>
-                <p className="text-2xl font-bold">{upcomingSessions.filter((s) => s.type === "Study Group").length}</p>
+                <p className="text-2xl font-bold">
+                  {studentScheduleSessions.filter((s) => s.type === "Study Group").length}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -344,7 +273,7 @@ export default function SchedulePage() {
                   <CardDescription>Complete list of scheduled sessions</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {upcomingSessions.map((session) => (
+                  {studentScheduleSessions.map((session) => (
                     <motion.div
                       key={session.id}
                       className="p-4 border rounded-lg hover:shadow-md transition-shadow"

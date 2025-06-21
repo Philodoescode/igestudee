@@ -18,59 +18,9 @@ import {
   Shield,
 } from "lucide-react"
 import { motion } from "framer-motion"
+import { parentBillingData } from "@/lib/database"
 
 export default function BillingPage() {
-  const mockData = {
-    nextPaymentDue: {
-      date: "2024-02-01",
-      amount: 450,
-      description: "February 2024 Tuition",
-    },
-    paymentHistory: [
-      {
-        id: "INV-2024-001",
-        date: "2024-01-01",
-        amount: 450,
-        description: "January 2024 Tuition",
-        status: "paid",
-        method: "Credit Card",
-        downloadUrl: "#",
-      },
-      {
-        id: "INV-2023-012",
-        date: "2023-12-01",
-        amount: 450,
-        description: "December 2023 Tuition",
-        status: "paid",
-        method: "Credit Card",
-        downloadUrl: "#",
-      },
-      {
-        id: "INV-2023-011",
-        date: "2023-11-01",
-        amount: 450,
-        description: "November 2023 Tuition",
-        status: "paid",
-        method: "Bank Transfer",
-        downloadUrl: "#",
-      },
-    ],
-    upcomingPayments: [
-      {
-        date: "2024-02-01",
-        amount: 450,
-        description: "February 2024 Tuition",
-        status: "scheduled",
-      },
-      {
-        date: "2024-03-01",
-        amount: 450,
-        description: "March 2024 Tuition",
-        status: "pending",
-      },
-    ],
-  }
-
   const getStatusColor = (status: string) => {
     switch (status) {
       case "paid":
@@ -142,12 +92,12 @@ export default function BillingPage() {
               <Calendar className="h-10 w-10 text-purple-600 flex-shrink-0" />
               <div>
                 <h3 className="font-semibold text-purple-800">Next Payment Due</h3>
-                <p className="text-lg font-medium text-purple-900">{mockData.nextPaymentDue.description}</p>
+                <p className="text-lg font-medium text-purple-900">{parentBillingData.nextPaymentDue.description}</p>
               </div>
             </div>
             <div className="text-center sm:text-right">
-              <p className="text-2xl font-bold text-purple-900">${mockData.nextPaymentDue.amount}</p>
-              <p className="text-sm text-purple-600">on {mockData.nextPaymentDue.date}</p>
+              <p className="text-2xl font-bold text-purple-900">${parentBillingData.nextPaymentDue.amount}</p>
+              <p className="text-sm text-purple-600">on {parentBillingData.nextPaymentDue.date}</p>
             </div>
           </CardContent>
         </Card>
@@ -169,8 +119,14 @@ export default function BillingPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.upcomingPayments.map((payment, index) => (
-                    <motion.div key={index} className="flex items-center justify-between p-4 rounded-xl bg-gray-50" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.3, delay: index * 0.1 }}>
+                  {parentBillingData.upcomingPayments.map((payment, index) => (
+                    <motion.div
+                      key={index}
+                      className="flex items-center justify-between p-4 rounded-xl bg-gray-50"
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
                       <div className="flex items-center space-x-4">
                         <div className="p-2 bg-white rounded-lg shadow-sm">{getStatusIcon(payment.status)}</div>
                         <div>
@@ -180,7 +136,9 @@ export default function BillingPage() {
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-gray-900">${payment.amount}</p>
-                        <Badge variant="outline" className={getStatusColor(payment.status)}>{payment.status}</Badge>
+                        <Badge variant="outline" className={getStatusColor(payment.status)}>
+                          {payment.status}
+                        </Badge>
                       </div>
                     </motion.div>
                   ))}
@@ -196,23 +154,37 @@ export default function BillingPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {mockData.paymentHistory.map((payment, index) => (
-                    <motion.div key={payment.id} className="flex items-center justify-between p-4 rounded-xl border" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: index * 0.1 }}>
+                  {parentBillingData.paymentHistory.map((payment, index) => (
+                    <motion.div
+                      key={payment.id}
+                      className="flex items-center justify-between p-4 rounded-xl border"
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                    >
                       <div className="flex items-center space-x-4">
-                        <div className="p-2 bg-green-100 rounded-lg"><Receipt className="h-5 w-5 text-green-600" /></div>
+                        <div className="p-2 bg-green-100 rounded-lg">
+                          <Receipt className="h-5 w-5 text-green-600" />
+                        </div>
                         <div>
                           <h4 className="font-medium text-gray-900">{payment.description}</h4>
                           <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <span>Invoice: {payment.id}</span><span>•</span><span>{payment.date}</span>
+                            <span>Invoice: {payment.id}</span>
+                            <span>•</span>
+                            <span>{payment.date}</span>
                           </div>
                         </div>
                       </div>
                       <div className="flex items-center space-x-4">
                         <div className="text-right">
                           <p className="font-semibold text-gray-900">${payment.amount}</p>
-                          <Badge variant="outline" className={getStatusColor(payment.status)}>{payment.status}</Badge>
+                          <Badge variant="outline" className={getStatusColor(payment.status)}>
+                            {payment.status}
+                          </Badge>
                         </div>
-                        <Button variant="ghost" size="sm"><Download className="h-4 w-4" /></Button>
+                        <Button variant="ghost" size="sm">
+                          <Download className="h-4 w-4" />
+                        </Button>
                       </div>
                     </motion.div>
                   ))}
@@ -235,15 +207,26 @@ export default function BillingPage() {
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="description">Payment Description</Label>
-                      <Input id="description" placeholder="February 2024 Tuition" defaultValue="February 2024 Tuition"/>
+                      <Input id="description" placeholder="February 2024 Tuition" defaultValue="February 2024 Tuition" />
                     </div>
                   </div>
                   <div className="bg-gray-50 rounded-xl p-6">
                     <h3 className="font-semibold text-gray-900 mb-4">Payment Summary</h3>
                     <div className="space-y-3">
-                      <div className="flex justify-between"><span className="text-gray-600">Tuition Amount:</span><span className="font-medium">$450.00</span></div>
-                      <div className="flex justify-between"><span className="text-gray-600">Processing Fee:</span><span className="font-medium">$0.00</span></div>
-                      <div className="border-t pt-3"><div className="flex justify-between"><span className="font-semibold">Total:</span><span className="font-bold text-lg">$450.00</span></div></div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Tuition Amount:</span>
+                        <span className="font-medium">$450.00</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-600">Processing Fee:</span>
+                        <span className="font-medium">$0.00</span>
+                      </div>
+                      <div className="border-t pt-3">
+                        <div className="flex justify-between">
+                          <span className="font-semibold">Total:</span>
+                          <span className="font-bold text-lg">$450.00</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -11,33 +11,11 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { User, Mail, Phone, MapPin, Calendar, Edit, Save, X, Camera, Shield, Bell, GraduationCap } from "lucide-react"
 import { motion } from "framer-motion"
+import { parentDefaultProfileData, parentChildInfo } from "@/lib/database"
 
 export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false)
-  const [profileData, setProfileData] = useState({
-    firstName: "Sarah",
-    lastName: "Johnson",
-    email: "parent.test@example.com",
-    phone: "+1 (555) 123-4567",
-    address: "123 Main Street",
-    city: "Springfield",
-    state: "IL",
-    zipCode: "62701",
-    emergencyContact: "John Johnson",
-    emergencyPhone: "+1 (555) 987-6543",
-    relationship: "Spouse",
-    bio: "Dedicated parent committed to supporting my child's educational journey. I believe in the importance of technology and mathematics education for future success.",
-  })
-
-  const childInfo = {
-    name: "Emma Johnson",
-    studentId: "STU-2024-001",
-    grade: "10th Grade",
-    enrollmentDate: "2024-01-08",
-    courses: ["ICT Course", "Mathematics Course"],
-    emergencyContact: "Sarah Johnson",
-    medicalInfo: "No known allergies",
-  }
+  const [profileData, setProfileData] = useState(parentDefaultProfileData)
 
   const handleInputChange = (field: string, value: string) => {
     setProfileData((prev) => ({ ...prev, [field]: value }))
@@ -147,22 +125,22 @@ export default function ProfilePage() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <h4 className="font-medium text-gray-900">{childInfo.name}</h4>
-                <p className="text-sm text-gray-500">Student ID: {childInfo.studentId}</p>
+                <h4 className="font-medium text-gray-900">{parentChildInfo.name}</h4>
+                <p className="text-sm text-gray-500">Student ID: {parentChildInfo.studentId}</p>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span className="text-gray-600">Grade:</span>
-                  <span className="font-medium">{childInfo.grade}</span>
+                  <span className="font-medium">{parentChildInfo.grade}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600">Enrolled:</span>
-                  <span className="font-medium">{childInfo.enrollmentDate}</span>
+                  <span className="font-medium">{parentChildInfo.enrollmentDate}</span>
                 </div>
                 <div>
                   <span className="text-gray-600">Courses:</span>
                   <div className="mt-1 space-y-1">
-                    {childInfo.courses.map((course, index) => (
+                    {parentChildInfo.courses.map((course, index) => (
                       <Badge key={index} variant="outline" className="mr-1">
                         {course}
                       </Badge>

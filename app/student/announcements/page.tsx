@@ -7,77 +7,14 @@ import { Input } from "@/components/ui/input"
 import { Bell, Search, Clock, BookOpen, AlertCircle, CheckCircle, Info } from "lucide-react"
 import { useState } from "react"
 import { motion } from "framer-motion"
-
-// Mock data
-const announcements = [
-  {
-    id: "1",
-    title: "New ICT Module Released: Database Design Principles",
-    content:
-      "We're excited to announce the release of Module 10: Database Design Principles. This comprehensive module covers entity-relationship modeling, normalization techniques, and best practices for creating efficient database structures. The module includes both theoretical concepts and practical exercises to help you master database design. Access the module through your course dashboard and don't forget to join the discussion forum for any questions.",
-    date: "2024-01-15T10:30:00Z",
-    course: "ICT Fundamentals",
-    priority: "high",
-    type: "course_update",
-    author: "Dr. Sarah Johnson",
-    read: false,
-  },
-  {
-    id: "2",
-    title: "Math Assignment Due Reminder",
-    content:
-      "This is a friendly reminder that your calculus problem set is due this Friday, January 19th at 11:59 PM. The assignment covers integration techniques and applications that we've discussed in recent modules. If you're having trouble with any problems, please join our Math Lab Help session on Tuesday at 2:00 PM or post your questions in the forum.",
-    date: "2024-01-14T14:15:00Z",
-    course: "Advanced Mathematics",
-    priority: "medium",
-    type: "assignment",
-    author: "Prof. Michael Chen",
-    read: true,
-  },
-  {
-    id: "3",
-    title: "Physics Lab Session Rescheduled",
-    content:
-      "Due to technical maintenance in our virtual lab environment, this week's Physics lab session has been rescheduled from Wednesday 3:00 PM to Thursday 3:00 PM. The session will cover Newton's Laws practical applications and include interactive simulations. Please update your calendars accordingly and ensure you have the latest lab materials downloaded.",
-    date: "2024-01-13T09:45:00Z",
-    course: "Physics Fundamentals",
-    priority: "low",
-    type: "schedule_change",
-    author: "Dr. Emily Rodriguez",
-    read: true,
-  },
-  {
-    id: "4",
-    title: "Welcome to the New Semester!",
-    content:
-      "Welcome back, students! We're thrilled to start this new semester with you. This term brings exciting updates to our platform, including enhanced video quality, new interactive features, and improved discussion forums. We've also added more practice problems and real-world case studies to help you apply your learning. Don't forget to check your course schedules and mark important dates in your calendar.",
-    date: "2024-01-10T08:00:00Z",
-    course: "General",
-    priority: "medium",
-    type: "general",
-    author: "Academic Team",
-    read: true,
-  },
-  {
-    id: "5",
-    title: "System Maintenance Scheduled",
-    content:
-      "We will be performing scheduled system maintenance on Sunday, January 21st from 2:00 AM to 6:00 AM EST. During this time, the platform may be temporarily unavailable. We recommend downloading any materials you need in advance. All live sessions scheduled during this time have been moved to alternative time slots. Thank you for your patience as we work to improve our services.",
-    date: "2024-01-12T16:20:00Z",
-    course: "General",
-    priority: "high",
-    type: "maintenance",
-    author: "Technical Team",
-    read: false,
-  },
-]
+import { studentAnnouncements } from "@/lib/database"
 
 export default function AnnouncementsPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedPriority, setSelectedPriority] = useState("all")
   const [selectedCourse, setSelectedCourse] = useState("all")
 
-  const filteredAnnouncements = announcements.filter((announcement) => {
+  const filteredAnnouncements = studentAnnouncements.filter((announcement) => {
     const matchesSearch =
       announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       announcement.content.toLowerCase().includes(searchTerm.toLowerCase())
@@ -138,7 +75,7 @@ export default function AnnouncementsPage() {
     return date.toLocaleDateString()
   }
 
-  const courses = ["all", ...Array.from(new Set(announcements.map((a) => a.course)))]
+  const courses = ["all", ...Array.from(new Set(studentAnnouncements.map((a) => a.course)))]
 
   return (
     <div className="space-y-6">
@@ -151,7 +88,7 @@ export default function AnnouncementsPage() {
           </div>
           <div className="text-right">
             <div className="text-2xl font-bold text-[var(--color-gossamer-600)]">
-              {announcements.filter((a) => !a.read).length}
+              {studentAnnouncements.filter((a) => !a.read).length}
             </div>
             <div className="text-sm text-gray-500">Unread</div>
           </div>
@@ -216,7 +153,9 @@ export default function AnnouncementsPage() {
             transition={{ duration: 0.4, delay: index * 0.05 }}
           >
             <Card
-              className={`${getPriorityColor(announcement.priority)} ${!announcement.read ? "ring-2 ring-[var(--color-gossamer-300)]" : ""}`}
+              className={`${getPriorityColor(announcement.priority)} ${
+                !announcement.read ? "ring-2 ring-[var(--color-gossamer-300)]" : ""
+              }`}
             >
               <CardHeader>
                 <div className="flex items-start justify-between">
@@ -226,8 +165,8 @@ export default function AnnouncementsPage() {
                         announcement.priority === "high"
                           ? "bg-red-100 text-red-600"
                           : announcement.priority === "medium"
-                            ? "bg-yellow-100 text-yellow-600"
-                            : "bg-green-100 text-green-600"
+                          ? "bg-yellow-100 text-yellow-600"
+                          : "bg-green-100 text-green-600"
                       }`}
                     >
                       {getTypeIcon(announcement.type)}
@@ -253,8 +192,8 @@ export default function AnnouncementsPage() {
                         announcement.priority === "high"
                           ? "destructive"
                           : announcement.priority === "medium"
-                            ? "default"
-                            : "secondary"
+                          ? "default"
+                          : "secondary"
                       }
                       className="flex items-center space-x-1"
                     >
