@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Calendar } from "@/components/ui/calendar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CalendarIcon, Clock, Video, Users, MapPin, Bell } from "lucide-react"
+import { CalendarIcon, Clock, Video, Users, MapPin } from "lucide-react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { studentScheduleSessions } from "@/lib/database"
@@ -42,6 +42,46 @@ export default function SchedulePage() {
     }
   }
 
+  const handleAddToCalendar = (session: typeof studentScheduleSessions[0]) => {
+    const formatDateForICS = (date: Date) => {
+      return date.toISOString().replace(/[-:.]/g, "").slice(0, -1) + "Z"
+    }
+
+    const startDate = new Date(`${session.date}T${session.time}:00`)
+    const durationMinutes = parseInt(session.duration, 10)
+    const endDate = new Date(startDate.getTime() + durationMinutes * 60000)
+
+    const start = formatDateForICS(startDate)
+    const end = formatDateForICS(endDate)
+    const now = formatDateForICS(new Date())
+
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//EduTechAcademy//StudentSchedule//EN
+BEGIN:VEVENT
+UID:${session.id}@edutech.academy
+DTSTAMP:${now}
+DTSTART:${start}
+DTEND:${end}
+SUMMARY:${session.title}
+DESCRIPTION:${session.description}
+LOCATION:${session.location}
+END:VEVENT
+END:VCALENDAR`
+
+    const blob = new Blob([icsContent], { type: "text/calendar;charset=utf-8" })
+    const url = URL.createObjectURL(blob)
+
+    const link = document.createElement("a")
+    link.href = url
+    link.setAttribute("download", `${session.title.replace(/\s+/g, "_")}.ics`)
+    document.body.appendChild(link)
+    link.click()
+
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -51,71 +91,7 @@ export default function SchedulePage() {
             <h1 className="text-3xl font-bold text-gray-900">Schedule & Calendar</h1>
             <p className="text-gray-600 mt-1">Manage your live sessions and study schedule</p>
           </div>
-          <Button variant="outline">
-            <Bell className="mr-2 h-4 w-4" />
-            Notifications
-          </Button>
         </div>
-      </motion.div>
-
-      {/* Quick Stats */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-4 gap-4"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.1 }}
-      >
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <CalendarIcon className="h-8 w-8 text-[var(--color-gossamer-600)]" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Today's Sessions</p>
-                <p className="text-2xl font-bold">{todaySessions.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Clock className="h-8 w-8 text-blue-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">This Week</p>
-                <p className="text-2xl font-bold">{weekSessions.length}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Video className="h-8 w-8 text-purple-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Live Sessions</p>
-                <p className="text-2xl font-bold">
-                  {studentScheduleSessions.filter((s) => s.type === "Q&A" || s.type === "Workshop").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center">
-              <Users className="h-8 w-8 text-green-600" />
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Study Groups</p>
-                <p className="text-2xl font-bold">
-                  {studentScheduleSessions.filter((s) => s.type === "Study Group").length}
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </motion.div>
 
       {/* Calendar and Sessions */}
@@ -192,7 +168,7 @@ export default function SchedulePage() {
                             <Video className="mr-2 h-4 w-4" />
                             Join Session
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleAddToCalendar(session)}>
                             Add to Calendar
                           </Button>
                         </div>

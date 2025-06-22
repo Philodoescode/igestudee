@@ -198,6 +198,54 @@ export const parentProgressData = {
 
 // --- STUDENT PORTAL DATA ---
 
+export const studentDetailedCourses = [
+  {
+    id: "ict-101",
+    name: "ICT Fundamentals",
+    instructor: "Dr. Sarah Johnson",
+    currentChapter: 4,
+    currentChapterTitle: "Networking & Security",
+    completedChallenges: 6,
+    totalChallenges: 9,
+  },
+  {
+    id: "math-201",
+    name: "Advanced Mathematics",
+    instructor: "Prof. Michael Chen",
+    currentChapter: 8,
+    currentChapterTitle: "Integration Techniques",
+    completedChallenges: 2,
+    totalChallenges: 11,
+  },
+  {
+    id: "web-dev-101",
+    name: "Web Development Basics",
+    instructor: "Dr. Sarah Johnson",
+    currentChapter: 1,
+    currentChapterTitle: "Introduction to HTML",
+    completedChallenges: 10,
+    totalChallenges: 10,
+  },
+  {
+    id: "stats-101",
+    name: "Statistics and Probability",
+    instructor: "Prof. Michael Chen",
+    currentChapter: 5,
+    currentChapterTitle: "Hypothesis Testing",
+    completedChallenges: 3,
+    totalChallenges: 7,
+  },
+  {
+    id: "python-101",
+    name: "Introduction to Python",
+    instructor: "Dr. Sarah Johnson",
+    currentChapter: 3,
+    currentChapterTitle: "Functions & Scope",
+    completedChallenges: 5,
+    totalChallenges: 8,
+  },
+];
+
 export const studentAnnouncements = [
     { id: "1", title: "New ICT Module Released: Database Design Principles", content: "We're excited to announce the release of Module 10...", date: "2024-01-15T10:30:00Z", course: "ICT Fundamentals", priority: "high", type: "course_update", author: "Dr. Sarah Johnson", read: false, },
     { id: "2", title: "Math Assignment Due Reminder", content: "This is a friendly reminder that your calculus problem set is due this Friday...", date: "2024-01-14T14:15:00Z", course: "Advanced Mathematics", priority: "medium", type: "assignment", author: "Prof. Michael Chen", read: true, },
@@ -213,7 +261,7 @@ export const studentCourseForums = [ { id: "ict-101", name: "ICT Fundamentals Fo
 
 export const studentRecentForumTopics = [ { id: "1", title: "Database Normalization Best Practices", author: "Emma Johnson", course: "ICT Fundamentals", replies: 12, lastReply: "30 minutes ago", isPinned: true, isHot: true, }, { id: "2", title: "Calculus Integration Techniques Help", author: "Michael Chen", course: "Advanced Mathematics", replies: 8, lastReply: "1 hour ago", isPinned: false, isHot: true, }, ];
 
-export const studentEnrolledCourses = [ { id: "ict-101", name: "ICT Fundamentals", instructor: "Dr. Sarah Johnson", progress: 75, totalModules: 12, completedModules: 9, nextModule: "Database Design Principles", color: "from-blue-500 to-cyan-500", }, { id: "math-201", name: "Advanced Mathematics", instructor: "Prof. Michael Chen", progress: 60, totalModules: 15, completedModules: 9, nextModule: "Calculus Applications", color: "from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)]", }, ];
+export const studentEnrolledCourses = [ { id: "ict-101", title: "ICT Fundamentals", instructor: "Dr. Sarah Johnson", progress: 75, totalModules: 12, completedModules: 9, nextModule: "Database Design Principles", color: "from-blue-500 to-cyan-500", }, { id: "math-201", title: "Advanced Mathematics", instructor: "Prof. Michael Chen", progress: 60, totalModules: 15, completedModules: 9, nextModule: "Calculus Applications", color: "from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)]", }, ];
 
 export const studentUpcomingSessions = [ { id: "1", title: "ICT Q&A Session", instructor: "Dr. Sarah Johnson", date: "Today", time: "3:00 PM", type: "Q&A", course: "ICT Fundamentals", }, { id: "2", title: "Math Lab Help", instructor: "Alex Smith (TA)", date: "Tomorrow", time: "2:00 PM", type: "Lab Help", course: "Advanced Mathematics", }, ];
 
@@ -240,8 +288,6 @@ export const taDashboardData = {
 
 export const taDefaultProfileData = { firstName: "Alex", lastName: "Smith", email: "ta.test@example.com", phone: "+1 (555) 987-6543", address: "456 University Ave, College Town, ST 12345", bio: "Passionate teaching assistant with expertise in computer science and mathematics.", specializations: ["Python Programming", "Data Structures", "Web Development", "Mathematics"], experience: "2 years", education: "Bachelor's in Computer Science, Master's in Education", };
 
-// export const taProfileAchievements = [ { title: "Outstanding TA Award", description: "Recognized for exceptional student support", date: "Fall 2023", icon: Award, }, { title: "Student Favorite", description: "Highest student satisfaction ratings", date: "Spring 2023", icon: Award, }, ];
-
 export const taProfileStats = [ { label: "Students Helped", value: "150+", color: "text-blue-600" }, { label: "Sessions Conducted", value: "85", color: "text-green-600" }, { label: "Average Rating", value: "4.9/5", color: "text-purple-600" }, { label: "Response Time", value: "< 2hrs", color: "text-orange-600" }, ];
 
 export const taScheduleData = {
@@ -252,4 +298,152 @@ export const taScheduleData = {
 export const taStudentManagementData = {
     groups: [ { id: "group-1", name: "ICT Fundamentals - Group A", course: "ICT Fundamentals", studentCount: 12, averageProgress: 78, strugglingStudents: 2, students: [ { id: "student-1", name: "Emma Johnson", email: "emma.johnson@example.com", progress: 85, lastActive: "1 hour ago", status: "active", }, { id: "student-3", name: "Sarah Wilson", email: "sarah.wilson@example.com", progress: 45, lastActive: "2 days ago", status: "struggling", }, ], }, ],
     progressInsights: { totalStudents: 35, averageProgress: 77, strugglingStudents: 8, activeStudents: 27, commonStrugglingAreas: [ { topic: "Python Loops", studentCount: 5 }, { topic: "Database Design", studentCount: 4 }, ], },
+};
+
+// --- NEW DATA FOR REDESIGNED COURSE DETAILS PAGE ---
+export interface AssignmentDetail {
+  id: number;
+  title: string;
+  dueDate: string;
+  status: 'Submitted' | 'Graded' | 'Missing';
+  grade?: string;
+}
+
+export interface QuizDetail {
+  id: number;
+  title: string;
+  date: string;
+  status: 'Passed' | 'Failed' | 'Not Taken';
+  score?: string;
+}
+
+export interface AttendanceDetail {
+  id: number;
+  date: string;
+  status: 'Present' | 'Absent' | 'Late';
+}
+export interface CourseVideo {
+  id: number;
+  title: string;
+  locked: boolean;
+  url: string;
+}
+
+export interface CourseAnnouncement {
+  id: number;
+  title: string;
+  date: string;
+}
+
+export interface CourseDetail {
+  title: string;
+  endMonth: string;
+  group: string;
+  progress: {
+    assignmentsCompleted: number;
+    quizzesPassed: [number, number];
+    attendanceRate: number;
+  };
+  assignments: AssignmentDetail[];
+  quizzes: QuizDetail[];
+  attendance: AttendanceDetail[];
+  videos: CourseVideo[];
+  details: {
+    instructor: string;
+    ta: string;
+    contact: string;
+  };
+  announcements: CourseAnnouncement[];
+}
+
+export const courseDetailsData: { [key: string]: CourseDetail } = {
+  "ict-101": {
+    title: "ICT-101: Fundamentals of ICT",
+    endMonth: "July",
+    group: "Group A",
+    progress: {
+      assignmentsCompleted: 92,
+      quizzesPassed: [8, 8],
+      attendanceRate: 98,
+    },
+    assignments: [
+      { id: 1, title: "Assignment 1: Hardware Basics", dueDate: "2024-09-15", status: "Graded", grade: "100/100" },
+      { id: 2, title: "Assignment 2: Networking", dueDate: "2024-09-22", status: "Graded", grade: "90/100" },
+    ],
+    quizzes: [
+      { id: 1, title: "Quiz 1: Systems", date: "2024-09-12", status: "Passed", score: "10/10" },
+      { id: 2, title: "Quiz 2: Internet", date: "2024-09-19", status: "Passed", score: "8/10" },
+    ],
+    attendance: [
+      { id: 1, date: "2024-09-05", status: "Present" },
+      { id: 2, date: "2024-09-07", status: "Present" },
+    ],
+    videos: [
+      { id: 1, title: "Week 1: Computer Systems", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 2, title: "Week 2: Networks & The Internet", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 3, title: "Week 3: Digital Literacy & Security", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 4, title: "Week 4: Intro to Databases", locked: true, url: "" },
+      { id: 5, title: "Week 5: Basics of Web Development", locked: true, url: "" },
+    ],
+    details: {
+      instructor: "Dr. Grace Hopper",
+      ta: "Alan Turing",
+      contact: "a.turing@university.edu",
+    },
+    announcements: [
+      { id: 1, title: "Project 1 specifications are out", date: "Oct 28, 2024" },
+      { id: 2, title: "Office hours moved to 3pm", date: "Oct 25, 2024" },
+    ],
+  },
+  "cs-101": {
+    title: "CS101: Introduction to Programming with Python",
+    endMonth: "June",
+    group: "Group B",
+    progress: {
+      assignmentsCompleted: 88,
+      quizzesPassed: [4, 5],
+      attendanceRate: 92,
+    },
+    assignments: [
+        { id: 1, title: "Assignment 1: Python Basics", dueDate: "2024-09-15", status: "Graded", grade: "95/100" },
+        { id: 2, title: "Assignment 2: Control Flow", dueDate: "2024-09-22", status: "Graded", grade: "88/100" },
+        { id: 3, title: "Assignment 3: Functions", dueDate: "2024-09-29", status: "Submitted" },
+        { id: 4, title: "Assignment 4: Data Structures", dueDate: "2024-10-06", status: "Missing" },
+    ],
+    quizzes: [
+        { id: 1, title: "Quiz 1: Syntax", date: "2024-09-12", status: "Passed", score: "10/10" },
+        { id: 2, title: "Quiz 2: Loops", date: "2024-09-19", status: "Passed", score: "8/10" },
+        { id: 3, title: "Quiz 3: Functions", date: "2024-09-26", status: "Passed", score: "9/10" },
+        { id: 4, title: "Quiz 4: Dictionaries", date: "2024-10-03", status: "Passed", score: "7/10" },
+        { id: 5, title: "Quiz 5: Midterm", date: "2024-10-10", status: "Failed", score: "4/10" },
+    ],
+    attendance: [
+        { id: 1, date: "2024-09-05", status: "Present" },
+        { id: 2, date: "2024-09-07", status: "Present" },
+        { id: 3, date: "2024-09-12", status: "Late" },
+        { id: 4, date: "2024-09-14", status: "Present" },
+        { id: 5, date: "2024-09-19", status: "Absent" },
+        { id: 6, date: "2024-09-21", status: "Present" },
+    ],
+    videos: [
+      { id: 1, title: "Week 1: Introduction & Setup", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 2, title: "Week 2: Variables & Data Types", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 3, title: "Week 3: Control Flow & Loops", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 4, title: "Week 4: Functions & Modules", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      { id: 5, title: "Week 5: Dictionaries & Data Structures", locked: true, url: "" },
+      { id: 6, title: "Week 6: File I/O", locked: true, url: "" },
+      { id: 7, title: "Week 7: Object-Oriented Programming", locked: true, url: "" },
+      { id: 8, title: "Week 8: Final Project", locked: true, url: "" },
+    ],
+    details: {
+      instructor: "Dr. Ada Lovelace",
+      ta: "Charles Babbage",
+      contact: "c.babbage@university.edu",
+    },
+    announcements: [
+      { id: 1, title: "Midterm 1 Grades Posted", date: "Oct 26, 2024" },
+      { id: 2, title: "Reminder: No Lab This Friday", date: "Oct 22, 2024" },
+      { id: 3, title: "Welcome to CS101!", date: "Sep 05, 2024" },
+    ],
+  },
 };

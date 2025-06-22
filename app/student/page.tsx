@@ -1,193 +1,259 @@
-// app/student/page.tsx
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { BookOpen, Calendar, Clock, MessageSquare, TrendingUp, Bell, ArrowRight } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/hooks/use-auth"
 import { motion } from "framer-motion"
-import { studentEnrolledCourses, studentUpcomingSessions, studentRecentAnnouncements } from "@/lib/database"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Progress } from "@/components/ui/progress"
+import { Badge } from "@/components/ui/badge"
+import { BookOpen, Calendar, Bell, ArrowRight, TrendingUp } from "lucide-react"
+import {
+  PieChart,
+  Pie,
+  Cell,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts"
+
+import {
+  studentEnrolledCourses,
+  studentUpcomingSessions,
+  studentRecentAnnouncements,
+} from "@/lib/database"
+
+const performanceData = [
+  { month: "Jan", score: 65 },
+  { month: "Feb", score: 72 },
+  { month: "Mar", score: 78 },
+  { month: "Apr", score: 85 },
+  { month: "May", score: 82 },
+  { month: "Jun", score: 90 },
+]
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
+}
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
+}
 
 export default function StudentDashboard() {
   const { user } = useAuth()
-
   const firstName = user?.name?.split(" ")[0] || "Student"
+
   const totalProgress = Math.round(
-    studentEnrolledCourses.reduce((acc, course) => acc + course.progress, 0) / studentEnrolledCourses.length,
+    studentEnrolledCourses.reduce((acc, course) => acc + course.progress, 0) /
+      studentEnrolledCourses.length,
   )
+  const pieData = [{ value: totalProgress }, { value: 100 - totalProgress }]
 
   return (
-    <div className="space-y-6">
-      {/* Welcome Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Welcome back, {firstName}! 👋</h1>
-            <p className="text-gray-600 mt-1">Ready to continue your learning journey?</p>
-          </div>
-          <div className="text-right">
-            <div className="text-2xl font-bold text-[var(--color-gossamer-600)]">{totalProgress}%</div>
-            <div className="text-sm text-gray-500">Overall Progress</div>
-          </div>
-        </div>
+    <motion.div
+      className="space-y-8"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      <motion.div variants={itemVariants}>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Welcome back, {firstName}!
+        </h1>
+        <p className="mt-1 text-lg text-gray-600">
+          Here is your learning snapshot.
+        </p>
       </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Enrolled Courses */}
-        <motion.div
-          className="lg:col-span-2"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 space-y-8">
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 gap-6"
+            variants={itemVariants}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle>Overall Completion</CardTitle>
+                <CardDescription>Across all courses</CardDescription>
+              </CardHeader>
+              <CardContent className="h-48 relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      dataKey="value"
+                      innerRadius="70%"
+                      outerRadius="100%"
+                      startAngle={90}
+                      endAngle={450}
+                      cornerRadius={5}
+                    >
+                      <Cell fill="#10b981" />
+                      <Cell fill="#e2e8f0" />
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-4xl font-bold text-gray-800">
+                    {totalProgress}%
+                  </span>
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Performance Trend</CardTitle>
+                <CardDescription>Monthly average score</CardDescription>
+              </CardHeader>
+              <CardContent className="h-48">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={performanceData}>
+                    <XAxis dataKey="month" fontSize={12} tickLine={false} />
+                    <Tooltip
+                      cursor={{ fill: "rgba(241, 245, 249, 0.5)" }}
+                    />
+                    <Bar
+                      dataKey="score"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <Card>
+              <CardHeader>
                 <CardTitle>My Courses</CardTitle>
-                <Button variant="outline" size="sm" asChild>
-                  <Link href="/student/courses">
-                    View All
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                <CardDescription>Your enrolled course progress</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {studentEnrolledCourses.map((course) => (
+                  <Link
+                    key={course.id}
+                    href={`/student/courses/${course.id}`}
+                    className="group"
+                  >
+                    <div className="rounded-lg border p-3 transition-colors hover:bg-gray-50">
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-gray-800 group-hover:text-blue-600">
+                          {course.title}
+                        </span>
+                        <span className="text-sm font-medium text-gray-600">
+                          {course.progress}%
+                        </span>
+                      </div>
+                      <Progress value={course.progress} className="mt-2 h-2" />
+                    </div>
+                  </Link>
+                ))}
+              </CardContent>
+              <CardFooter>
+                <Button asChild variant="outline" className="w-full">
+                  <Link href="/student/courses">View All Courses</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        </div>
+
+        <div className="space-y-8">
+          <motion.div variants={itemVariants}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Calendar className="mr-2 h-5 w-5" />
+                  Upcoming Sessions
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-4">
+                  {studentUpcomingSessions.slice(0, 3).map((session, i) => (
+                    <li key={session.id}>
+                      <div className="flex gap-4">
+                        <Badge
+                          variant={
+                            session.type === "Q&A" ? "default" : "secondary"
+                          }
+                        >
+                          {session.type}
+                        </Badge>
+                        <div>
+                          <h4 className="font-medium text-sm text-gray-800">
+                            {session.title}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            {session.date} at {session.time}
+                          </p>
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link href="/student/schedule">View Full Schedule</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          </motion.div>
+
+          <motion.div variants={itemVariants}>
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <Bell className="mr-2 h-5 w-5" />
+                  Recent Announcements
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-4">
+                  {studentRecentAnnouncements
+                    .slice(0, 2)
+                    .map((announcement) => (
+                      <li key={announcement.id}>
+                        <div className="flex justify-between items-start mb-1">
+                          <h4 className="font-medium text-sm text-gray-800">
+                            {announcement.title}
+                          </h4>
+                          {announcement.priority === "high" && (
+                            <Badge variant="destructive">Urgent</Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-gray-500">
+                          {announcement.date} · {announcement.course}
+                        </p>
+                      </li>
+                    ))}
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button asChild variant="outline" size="sm" className="w-full">
+                  <Link href="/student/announcements">
+                    View All Announcements
                   </Link>
                 </Button>
-              </div>
-              <CardDescription>Continue your learning journey</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {studentEnrolledCourses.map((course) => (
-                <motion.div
-                  key={course.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h3 className="font-semibold text-gray-900">{course.name}</h3>
-                      <p className="text-sm text-gray-600">{course.instructor}</p>
-                    </div>
-                    <Badge variant="secondary">{course.progress}%</Badge>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Progress value={course.progress} className="h-2" />
-                    <div className="flex items-center justify-between text-sm text-gray-600">
-                      <span>
-                        {course.completedModules} of {course.totalModules} modules completed
-                      </span>
-                      <span>Next: {course.nextModule}</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-4">
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href={`/student/courses/${course.id}`}>
-                        <BookOpen className="mr-2 h-4 w-4" />
-                        Continue Learning
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" size="sm" asChild>
-                      <Link href={`/student/forum/${course.id}`}>
-                        <MessageSquare className="mr-2 h-4 w-4" />
-                        Discussion
-                      </Link>
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Sidebar Content */}
-        <motion.div
-          className="space-y-6"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-        >
-          {/* Upcoming Sessions */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Calendar className="mr-2 h-5 w-5" />
-                Upcoming Sessions
-              </CardTitle>
-              <CardDescription>Live Q&A and Lab Help sessions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {studentUpcomingSessions.map((session) => (
-                <div key={session.id} className="p-3 border rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h4 className="font-medium text-sm">{session.title}</h4>
-                      <p className="text-xs text-gray-600">{session.instructor}</p>
-                    </div>
-                    <Badge variant={session.type === "Q&A" ? "default" : "secondary"} className="text-xs">
-                      {session.type}
-                    </Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center text-xs text-gray-600">
-                      <Clock className="mr-1 h-3 w-3" />
-                      {session.date} at {session.time}
-                    </div>
-                    <Button size="sm" variant="outline" className="h-7 text-xs">
-                      Join
-                    </Button>
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href="/student/schedule">View Full Schedule</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
-          {/* Recent Announcements */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <Bell className="mr-2 h-5 w-5" />
-                Recent Announcements
-              </CardTitle>
-              <CardDescription>Stay updated with the latest news</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {studentRecentAnnouncements.slice(0, 2).map((announcement) => (
-                <div key={announcement.id} className="p-3 border rounded-lg">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-sm">{announcement.title}</h4>
-                    <Badge
-                      variant={
-                        announcement.priority === "high"
-                          ? "destructive"
-                          : announcement.priority === "medium"
-                          ? "default"
-                          : "secondary"
-                      }
-                      className="text-xs"
-                    >
-                      {announcement.priority}
-                    </Badge>
-                  </div>
-                  <p className="text-xs text-gray-600 mb-2">{announcement.content}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-500">{announcement.date}</span>
-                    <span className="text-xs text-[var(--color-gossamer-600)]">{announcement.course}</span>
-                  </div>
-                </div>
-              ))}
-              <Button variant="outline" size="sm" className="w-full" asChild>
-                <Link href="/student/announcements">View All Announcements</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+              </CardFooter>
+            </Card>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

@@ -2,150 +2,159 @@
 
 import type React from "react"
 import { useState } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Bell, Key, Save, Eye, EyeOff } from "lucide-react"
+import { motion } from "framer-motion"
 
-const StudentSettingsPage = () => {
-  const [accountPreferences, setAccountPreferences] = useState({
-    language: "English",
-    theme: "Light",
-  })
-
+export default function StudentSettingsPage() {
   const [notificationSettings, setNotificationSettings] = useState({
-    emailNotifications: true,
-    pushNotifications: false,
+    newAnnouncements: true,
+    upcomingDeadlines: true,
+    newGrades: true,
+    forumReplies: false,
   })
 
-  const [privacySettings, setPrivacySettings] = useState({
-    profileVisibility: "Public",
-    dataSharing: false,
+  const [password, setPassword] = useState({
+    current: "",
+    new: "",
+    confirm: "",
   })
 
-  const handleAccountPreferencesChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setAccountPreferences({
-      ...accountPreferences,
-      [e.target.name]: e.target.value,
-    })
+  const [showCurrent, setShowCurrent] = useState(false)
+  const [showNew, setShowNew] = useState(false)
+
+  const handleNotificationChange = (id: keyof typeof notificationSettings, checked: boolean) => {
+    setNotificationSettings((prev) => ({ ...prev, [id]: checked }))
   }
 
-  const handleNotificationSettingsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNotificationSettings({
-      ...notificationSettings,
-      [e.target.name]: e.target.checked,
-    })
-  }
-
-  const handlePrivacySettingsChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setPrivacySettings({
-      ...privacySettings,
-      [e.target.name]: e.target.value,
-    })
+  const handlePasswordChange = () => {
+    // Handle password change logic
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Student Settings</h1>
+    <div className="space-y-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
+        <p className="text-gray-600 mt-1">Manage your account and notification preferences.</p>
+      </motion.div>
 
-      {/* Account Preferences */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Account Preferences</h2>
-        <div className="mb-2">
-          <label htmlFor="language" className="block text-gray-700 text-sm font-bold mb-2">
-            Language:
-          </label>
-          <select
-            id="language"
-            name="language"
-            value={accountPreferences.language}
-            onChange={handleAccountPreferencesChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option>English</option>
-            <option>Spanish</option>
-            <option>French</option>
-          </select>
-        </div>
-        <div className="mb-2">
-          <label htmlFor="theme" className="block text-gray-700 text-sm font-bold mb-2">
-            Theme:
-          </label>
-          <select
-            id="theme"
-            name="theme"
-            value={accountPreferences.theme}
-            onChange={handleAccountPreferencesChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option>Light</option>
-            <option>Dark</option>
-          </select>
-        </div>
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Notification Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Preferences</CardTitle>
+              <CardDescription>Choose how you receive alerts and updates.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {[
+                {
+                  id: "newAnnouncements",
+                  label: "New Announcements",
+                  description: "Get notified about new course or general announcements.",
+                },
+                {
+                  id: "upcomingDeadlines",
+                  label: "Upcoming Deadlines",
+                  description: "Receive reminders for assignments and quizzes.",
+                },
+                {
+                  id: "newGrades",
+                  label: "New Grades",
+                  description: "Get an alert when a new grade is posted.",
+                },
+                {
+                  id: "forumReplies",
+                  label: "Forum Replies",
+                  description: "Notify me about replies to my forum posts.",
+                },
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between">
+                  <div>
+                    <Label htmlFor={item.id}>{item.label}</Label>
+                    <p className="text-sm text-gray-500">{item.description}</p>
+                  </div>
+                  <Switch
+                    id={item.id}
+                    checked={notificationSettings[item.id as keyof typeof notificationSettings]}
+                    onCheckedChange={(checked) =>
+                      handleNotificationChange(item.id as keyof typeof notificationSettings, checked)
+                    }
+                  />
+                </div>
+              ))}
+              <Button>
+                <Save className="mr-2 h-4 w-4" />
+                Save Notification Settings
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-      {/* Notification Settings */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Notification Settings</h2>
-        <div className="mb-2">
-          <label htmlFor="emailNotifications" className="inline-flex items-center">
-            <input
-              type="checkbox"
-              id="emailNotifications"
-              name="emailNotifications"
-              checked={notificationSettings.emailNotifications}
-              onChange={handleNotificationSettingsChange}
-              className="form-checkbox h-5 w-5 text-indigo-600"
-            />
-            <span className="ml-2 text-gray-700">Email Notifications</span>
-          </label>
-        </div>
-        <div className="mb-2">
-          <label htmlFor="pushNotifications" className="inline-flex items-center">
-            <input
-              type="checkbox"
-              id="pushNotifications"
-              name="pushNotifications"
-              checked={notificationSettings.pushNotifications}
-              onChange={handleNotificationSettingsChange}
-              className="form-checkbox h-5 w-5 text-indigo-600"
-            />
-            <span className="ml-2 text-gray-700">Push Notifications</span>
-          </label>
-        </div>
-      </div>
+        {/* Security Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Security</CardTitle>
+              <CardDescription>Manage your password and account security.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="current-password">Current Password</Label>
+                <div className="relative">
+                  <Input id="current-password" type={showCurrent ? "text" : "password"} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setShowCurrent(!showCurrent)}
+                  >
+                    {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
 
-      {/* Privacy Settings */}
-      <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">Privacy Settings</h2>
-        <div className="mb-2">
-          <label htmlFor="profileVisibility" className="block text-gray-700 text-sm font-bold mb-2">
-            Profile Visibility:
-          </label>
-          <select
-            id="profileVisibility"
-            name="profileVisibility"
-            value={privacySettings.profileVisibility}
-            onChange={handlePrivacySettingsChange}
-            className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          >
-            <option>Public</option>
-            <option>Private</option>
-            <option>Friends Only</option>
-          </select>
-        </div>
-        <div className="mb-2">
-          <label htmlFor="dataSharing" className="inline-flex items-center">
-            <input
-              type="checkbox"
-              id="dataSharing"
-              name="dataSharing"
-              checked={privacySettings.dataSharing}
-              onChange={handlePrivacySettingsChange}
-              className="form-checkbox h-5 w-5 text-indigo-600"
-            />
-            <span className="ml-2 text-gray-700">Allow Data Sharing</span>
-          </label>
-        </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-password">New Password</Label>
+                <div className="relative">
+                  <Input id="new-password" type={showNew ? "text" : "password"} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7"
+                    onClick={() => setShowNew(!showNew)}
+                  >
+                    {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="confirm-password">Confirm New Password</Label>
+                <Input id="confirm-password" type={showNew ? "text" : "password"} />
+              </div>
+
+              <Button>
+                <Key className="mr-2 h-4 w-4" />
+                Change Password
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
     </div>
   )
 }
-
-export default StudentSettingsPage
