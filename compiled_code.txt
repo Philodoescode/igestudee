@@ -7029,254 +7029,221 @@ export default function TAAnnouncementsPage() {
 }
 //END OF app\ta\announcements\page.tsx
 
-//START OF app\ta\attendance\loading.tsx
-export default function Loading() {
-  return null
-}
-//END OF app\ta\attendance\loading.tsx
-
-//START OF app\ta\attendance\page.tsx
+//START OF app\ta\groups\components\add-grade-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRequireAuth } from "@/hooks/use-auth"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { format } from "date-fns"
+import { Loader2, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/hooks/use-auth"
+import { taStudentList, type GradingEntry, type StudentGrade } from "@/lib/database"
+import { cn } from "@/lib/utils"
+
+interface AddGradeModalProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  onSave: (newEntry: GradingEntry) => void
+  courseId: string
+}
+
+export default function AddGradeModal({ isOpen, setIsOpen, onSave }: AddGradeModalProps) {
+  const { user } = useAuth()
+  const [step, setStep] = useState(1)
+  
+  // Step 1 State
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
+  const [title, setTitle] = useState("")
+  const [maxScore, setMaxScore] = useState<number | string>("")
+  const [errors, setErrors] = useState<{ title?: string; maxScore?: string }>({})
+
+  // Step 2 State
+  const [studentGrades, setStudentGrades] = useState<StudentGrade[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+
+  // Reset state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setStep(1)
+      setDate(format(new Date(), "yyyy-MM-dd"))
+      setTitle("")
+      setMaxScore("")
+      setErrors({})
+      setStudentGrades(taStudentList.map(s => ({ studentId: s.id, name: s.name, grade: null })))
+    }
+  }, [isOpen])
+
+  const validateStep1 = () => {
+    const newErrors: { title?: string; maxScore?: string } = {}
+    if (!title.trim()) newErrors.title = "Title is required."
+    if (maxScore === "" || Number(maxScore) <= 0) newErrors.maxScore = "Max score must be a positive number."
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleNext = () => {
+    if (validateStep1()) {
+      setStep(2)
+    }
+  }
+
+  const handleSave = () => {
+    setIsSaving(true)
+    setTimeout(() => {
+      const newEntry: GradingEntry = {
+        id: `grading-${Date.now()}`,
+        taName: user?.name || "TA",
+        date: date,
+        title,
+        maxScore: Number(maxScore),
+        studentGrades,
+      }
+      onSave(newEntry)
+      setIsSaving(false)
+    }, 1000)
+  }
+
+  const handleGradeChange = (studentId: string, value: string) => {
+    const grade = value === '' ? null : parseFloat(value);
+    
+    setStudentGrades(prev => prev.map(sg => 
+        sg.studentId === studentId 
+        ? { ...sg, grade: grade } 
+        : sg
+    ));
+  };
+  
+  const handleCopyGrade = (grade: number | null) => {
+    if (grade === null) return;
+    setStudentGrades(studentGrades.map(sg => ({ ...sg, grade })))
+  }
+
+  const firstGrade = studentGrades.find(sg => sg.grade !== null)?.grade ?? null;
+
+  const step1Content = (
+    <motion.div key="step1" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.3 }}>
+      <div className="grid gap-6 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="ta-name">TA Name</Label>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+            <Input id="ta-name" value={user?.name || ""} disabled className="cursor-not-allowed" />
+          </TooltipTrigger><TooltipContent><p>Your name is pre-filled and cannot be edited.</p></TooltipContent></Tooltip></TooltipProvider>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid gap-2">
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
+                <Label htmlFor="maxScore">Max Score (Out of)</Label>
+                <Input id="maxScore" type="number" min="1" value={maxScore} onChange={(e) => setMaxScore(e.target.value)} placeholder="e.g., 100" />
+                {errors.maxScore && <p className="text-xs text-red-500">{errors.maxScore}</p>}
+            </div>
+        </div>
+        <div className="grid gap-2">
+          <Label htmlFor="title">Grading Title</Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Midterm 1 Exam, Project Submission" />
+          {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
+        </div>
+      </div>
+    </motion.div>
+  )
+
+  const step2Content = (
+    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
+        <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+                <span className="font-semibold">Title:</span> {title} | <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()} | <span className="font-semibold">Max Score:</span> {maxScore}
+            </AlertDescription>
+        </Alert>
+        <div className="flex justify-end mb-2">
+            <Button variant="link" size="sm" onClick={() => handleCopyGrade(firstGrade)} disabled={firstGrade === null}>Copy first grade to all</Button>
+        </div>
+        <div className="max-h-[40vh] overflow-y-auto border rounded-md">
+            <Table>
+                <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                    <TableRow><TableHead>Student Name</TableHead><TableHead className="w-1/3">Grade</TableHead></TableRow>
+                </TableHeader>
+                <TableBody>
+                    {studentGrades.map((student) => {
+                        const isInvalid = student.grade !== null && student.grade > Number(maxScore);
+                        return (
+                            <TableRow key={student.studentId}>
+                                <TableCell className="font-medium">{student.name}</TableCell>
+                                <TableCell>
+                                    <Input type="number" value={student.grade ?? ""} onChange={(e) => handleGradeChange(student.studentId, e.target.value)} 
+                                        placeholder={`0 - ${maxScore}`} className={cn(isInvalid && "border-red-500 focus-visible:ring-red-500")}
+                                        max={Number(maxScore)}
+                                    />
+                                    {isInvalid && <p className="text-xs text-red-500 mt-1">Grade cannot exceed max score.</p>}
+                                </TableCell>
+                            </TableRow>
+                        )
+                    })}
+                </TableBody>
+            </Table>
+        </div>
+    </motion.div>
+  )
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>New Grading Entry</DialogTitle>
+          <DialogDescription>
+            {step === 1 ? "Step 1 of 2: Enter grading details." : "Step 2 of 2: Enter student grades."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
+
+        <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+          {step === 1 && (
+            <>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button onClick={handleNext}>Next: Enter Grades</Button>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+              <Button onClick={handleSave} disabled={isSaving || studentGrades.some(s => s.grade !== null && s.grade > Number(maxScore))}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? "Saving..." : "Save Grades"}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+//END OF app\ta\groups\components\add-grade-modal.tsx
+
+//START OF app\ta\groups\components\attendance-tab.tsx
+"use client"
+
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { UserCheck, Users, Calendar, ArrowLeft, Plus, Check, Edit, Trash2 } from "lucide-react"
+import { UserCheck, Plus, Check, Edit, Trash2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { taAttendancePageData } from "@/lib/database"
-import type { TAttendanceGroup, TAttendanceSession, TAttendanceRecord } from "@/lib/database"
-
-export default function TAAttendancePage() {
-  const { user, isLoading } = useRequireAuth(["ta"])
-  const [groups, setGroups] = useState<TAttendanceGroup[]>(taAttendancePageData.groups)
-  const [selectedGroup, setSelectedGroup] = useState<TAttendanceGroup | null>(null)
-
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null)
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  const handleSelectGroup = (group: TAttendanceGroup) => {
-    setSelectedGroup(group)
-  }
-
-  const handleBackToGroups = () => {
-    setSelectedGroup(null)
-  }
-
-  const handleOpenModal = (session: TAttendanceSession | null) => {
-    setEditingSession(session)
-    setIsModalOpen(true)
-  }
-
-  const handleSaveSession = (newSession: TAttendanceSession) => {
-    const updatedGroups = groups.map(group => {
-      if (group.id === selectedGroup?.id) {
-        const sessionExists = group.sessions.some(s => s.id === newSession.id);
-        let updatedSessions;
-        if (sessionExists) {
-          // Update existing session
-          updatedSessions = group.sessions.map(s => s.id === newSession.id ? newSession : s);
-        } else {
-          // Add new session
-          updatedSessions = [newSession, ...group.sessions];
-        }
-        // Sort sessions by date descending
-        updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        return { ...group, sessions: updatedSessions };
-      }
-      return group;
-    });
-
-    setGroups(updatedGroups);
-    // Refresh selected group data
-    setSelectedGroup(updatedGroups.find(g => g.id === selectedGroup?.id) || null);
-  };
-  
-  const handleDeleteSession = (sessionId: string) => {
-     const updatedGroups = groups.map(group => {
-      if (group.id === selectedGroup?.id) {
-        const updatedSessions = group.sessions.filter(s => s.id !== sessionId);
-        return { ...group, sessions: updatedSessions };
-      }
-      return group;
-    });
-
-    setGroups(updatedGroups);
-    setSelectedGroup(updatedGroups.find(g => g.id === selectedGroup?.id) || null);
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      <AnimatePresence mode="wait">
-        {selectedGroup ? (
-          <motion.div
-            key="history-view"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <GroupHistoryView
-              group={selectedGroup}
-              onBack={handleBackToGroups}
-              onAddSession={() => handleOpenModal(null)}
-              onEditSession={(session) => handleOpenModal(session)}
-              onDeleteSession={handleDeleteSession}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="selection-view"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <GroupSelectionView groups={groups} onSelectGroup={handleSelectGroup} />
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AttendanceModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        session={editingSession}
-        group={selectedGroup}
-        onSave={handleSaveSession}
-      />
-    </div>
-  )
-}
-
-// --- Sub-components ---
-
-function GroupSelectionView({ groups, onSelectGroup }: { groups: TAttendanceGroup[], onSelectGroup: (group: TAttendanceGroup) => void }) {
-  return (
-    <>
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <h1 className="text-3xl font-poppins font-bold text-gray-900">Attendance</h1>
-        <p className="text-gray-600 mt-1">Select a group to manage attendance.</p>
-      </motion.div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {groups.map((group, index) => (
-          <motion.div
-            key={group.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5 }}
-            className="cursor-pointer"
-            onClick={() => onSelectGroup(group)}
-          >
-            <Card className="h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
-              <CardHeader>
-                <CardTitle>{group.name}</CardTitle>
-                <CardDescription className="text-emerald-200">{group.course}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex items-center space-x-2 text-sm">
-                <Users className="h-4 w-4" />
-                <span>{group.studentCount} Students</span>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-function GroupHistoryView({ group, onBack, onAddSession, onEditSession, onDeleteSession }: {
-  group: TAttendanceGroup,
-  onBack: () => void,
-  onAddSession: () => void,
-  onEditSession: (session: TAttendanceSession) => void,
-  onDeleteSession: (sessionId: string) => void,
-}) {
-  const getSessionSummary = (records: TAttendanceRecord[]) => {
-    const summary = records.reduce((acc, record) => {
-      if (record.status === 'Absent') acc.absent++;
-      if (record.status === 'Tardy') acc.tardy++;
-      return acc;
-    }, { absent: 0, tardy: 0 });
-    return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
-  }
-
-  return (
-    <>
-      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4 mb-6">
-          <Button variant="ghost" onClick={onBack} className="w-full sm:w-auto self-start sm:self-center text-gray-600 hover:bg-transparent hover:text-emerald-600">
-            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Groups
-          </Button>
-          <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 w-full sm:w-auto" onClick={onAddSession}>
-            <Plus className="h-4 w-4 mr-2" /> Add Attendance
-          </Button>
-        </div>
-        <Card>
-          <CardHeader>
-            <CardTitle>{group.name}</CardTitle>
-            <CardDescription>Attendance History</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible className="w-full">
-              {group.sessions.map(session => (
-                <AccordionItem value={session.id} key={session.id}>
-                  <AccordionTrigger>
-                    <div className="flex justify-between w-full pr-4">
-                      <span>{new Date(session.date).toDateString()}</span>
-                      <span className="text-sm text-gray-500">{getSessionSummary(session.records)}</span>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-2">
-                      {session.records.map(record => (
-                        <div key={record.studentId} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
-                          <span>{record.name}</span>
-                          <Badge variant={record.status === 'Present' ? 'default' : record.status === 'Absent' ? 'destructive' : 'secondary'}>
-                            {record.status}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                    <div className="flex justify-end space-x-2 mt-4">
-                      <Button variant="ghost" size="sm" onClick={() => onEditSession(session)}><Edit className="h-4 w-4 mr-1" /> Edit</Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                           <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                            <AlertDialogHeader>
-                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription>This action cannot be undone. This will permanently delete the attendance record for this session.</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onDeleteSession(session.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-            {group.sessions.length === 0 && <p className="text-center text-gray-500 py-4">No attendance records found for this group.</p>}
-          </CardContent>
-        </Card>
-      </motion.div>
-    </>
-  );
-}
+import { taAttendancePageData, type TAttendanceGroup, type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
 
 function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
     isOpen: boolean,
@@ -7291,11 +7258,11 @@ function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
 
     useEffect(() => {
         if (isOpen) {
-            if (session) { // Editing existing session
+            if (session) {
                 setDetails({ date: session.date });
                 setRecords(session.records);
                 setStep(2);
-            } else { // Creating new session
+            } else {
                 setDetails({ date: new Date().toISOString().split('T')[0] });
                 setRecords([]);
                 setStep(1);
@@ -7304,92 +7271,61 @@ function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
     }, [isOpen, session]);
 
     const handleNext = () => {
-        if (!details.date) {
-            alert("Please provide a date.");
-            return;
-        }
+        if (!details.date) { alert("Please provide a date."); return; }
         if (group) {
-            const initialRecords = group.students.map(student => ({
-                studentId: student.id,
-                name: student.name,
-                status: 'Present' as 'Present' | 'Absent' | 'Tardy'
-            }));
+            const initialRecords = group.students.map(student => ({ studentId: student.id, name: student.name, status: 'Present' as 'Present' | 'Absent' | 'Tardy' }));
             setRecords(initialRecords);
         }
         setStep(2);
-    }
+    };
     
     const toggleStatus = (studentId: string) => {
         const statuses = ['Present', 'Absent', 'Tardy'];
-        setRecords(records.map(r => {
-            if (r.studentId === studentId) {
-                const currentIndex = statuses.indexOf(r.status);
-                const nextStatus = statuses[(currentIndex + 1) % statuses.length] as 'Present' | 'Absent' | 'Tardy';
-                return { ...r, status: nextStatus };
-            }
-            return r;
-        }));
-    }
+        setRecords(records.map(r => r.studentId === studentId ? { ...r, status: statuses[(statuses.indexOf(r.status) + 1) % statuses.length] as 'Present' | 'Absent' | 'Tardy' } : r));
+    };
 
-    const markAllPresent = () => {
-        setRecords(records.map(r => ({ ...r, status: 'Present' })));
-    }
+    const markAllPresent = () => setRecords(records.map(r => ({ ...r, status: 'Present' })));
 
     const handleConfirm = () => {
-        const finalSession: TAttendanceSession = {
-            id: session?.id || `session-${Date.now()}`,
-            ...details,
-            records,
-        };
+        const finalSession: TAttendanceSession = { id: session?.id || `session-${Date.now()}`, ...details, records };
         onSave(finalSession);
         setIsOpen(false);
-    }
+    };
 
     const getStatusBadgeVariant = (status: string) => {
-      switch(status) {
-        case 'Present': return 'default';
-        case 'Absent': return 'destructive';
-        case 'Tardy': return 'secondary';
-        default: return 'outline';
-      }
-    }
+        switch(status) {
+            case 'Present': return 'default';
+            case 'Absent': return 'destructive';
+            case 'Tardy': return 'secondary';
+            default: return 'outline';
+        }
+    };
 
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogContent className="sm:max-w-[425px] md:max-w-xl">
                 <DialogHeader>
                     <DialogTitle>{session ? 'Edit Attendance' : 'Add Attendance'}</DialogTitle>
-                    <DialogDescription>
-                        {step === 1 ? "Provide session details." : `Mark attendance for ${group?.name}`}
-                    </DialogDescription>
+                    <DialogDescription>{step === 1 ? "Provide session details." : `Mark attendance for ${group?.name}`}</DialogDescription>
                 </DialogHeader>
-
                 <AnimatePresence mode="wait">
                     {step === 1 && !session ? (
                         <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="date">Date</Label>
-                                <Input id="date" type="date" value={details.date} onChange={e => setDetails({...details, date: e.target.value})} />
-                            </div>
+                            <div className="space-y-2"><Label htmlFor="date">Date</Label><Input id="date" type="date" value={details.date} onChange={e => setDetails({...details, date: e.target.value})} /></div>
                         </motion.div>
                     ) : (
                         <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
-                            <div className="flex justify-between items-center">
-                                <p className="text-sm font-medium">{new Date(details.date).toDateString()}</p>
-                                <Button size="sm" variant="outline" onClick={markAllPresent}><Check className="h-4 w-4 mr-2" /> Mark All Present</Button>
-                            </div>
+                            <div className="flex justify-between items-center"><p className="text-sm font-medium">{new Date(details.date + 'T00:00:00').toDateString()}</p><Button size="sm" variant="outline" onClick={markAllPresent}><Check className="h-4 w-4 mr-2" /> Mark All Present</Button></div>
                             <div className="max-h-64 overflow-y-auto pr-2 space-y-2">
                                 {records.map(record => (
                                     <div key={record.studentId} className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-gray-50" onClick={() => toggleStatus(record.studentId)}>
-                                        <p>{record.name}</p>
-                                        <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
+                                        <p>{record.name}</p><Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
                                     </div>
                                 ))}
                             </div>
                         </motion.div>
                     )}
                 </AnimatePresence>
-                
                 <DialogFooter>
                     {step === 2 && !session && <Button variant="outline" onClick={() => setStep(1)}>Back</Button>}
                     {step === 1 && !session ? <Button onClick={handleNext}>Next</Button> : <Button onClick={handleConfirm} className="bg-gradient-to-r from-emerald-500 to-teal-500">Confirm</Button>}
@@ -7398,446 +7334,499 @@ function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
         </Dialog>
     )
 }
-//END OF app\ta\attendance\page.tsx
 
-//START OF app\ta\forum\loading.tsx
-export default function Loading() {
-  return null
-}
+export default function AttendanceTabContent({ groupId }: { groupId: string }) {
+    const [groupData, setGroupData] = useState<TAttendanceGroup | undefined>(
+        taAttendancePageData.groups.find(g => g.id === groupId)
+    );
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null);
 
-//END OF app\ta\forum\loading.tsx
+    const handleSaveSession = (newSession: TAttendanceSession) => {
+        setGroupData(prevGroup => {
+            if (!prevGroup) return undefined;
+            const sessionExists = prevGroup.sessions.some(s => s.id === newSession.id);
+            let updatedSessions;
+            if (sessionExists) {
+                updatedSessions = prevGroup.sessions.map(s => s.id === newSession.id ? newSession : s);
+            } else {
+                updatedSessions = [newSession, ...prevGroup.sessions];
+            }
+            updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+            return { ...prevGroup, sessions: updatedSessions };
+        });
+    };
 
-//START OF app\ta\forum\page.tsx
-"use client"
+    const handleDeleteSession = (sessionId: string) => {
+        setGroupData(prevGroup => {
+            if (!prevGroup) return undefined;
+            const updatedSessions = prevGroup.sessions.filter(s => s.id !== sessionId);
+            return { ...prevGroup, sessions: updatedSessions };
+        });
+    };
 
-import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { MessageSquare, Search, Filter, Clock, User, Pin, Lock } from "lucide-react"
-import Link from "next/link"
-import { motion } from "framer-motion"
-import { useState } from "react"
-import { taForumData } from "@/lib/database"
+    const handleOpenModal = (session: TAttendanceSession | null) => {
+        setEditingSession(session);
+        setIsModalOpen(true);
+    };
 
-export default function TAForumPage() {
-  const { user, isLoading } = useRequireAuth(["ta"])
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedCourse, setSelectedCourse] = useState("all")
-  const [statusFilter, setStatusFilter] = useState("all")
+    const getSessionSummary = (records: TAttendanceRecord[]) => {
+        const summary = records.reduce((acc, record) => {
+            if (record.status === 'Absent') acc.absent++;
+            if (record.status === 'Tardy') acc.tardy++;
+            return acc;
+        }, { absent: 0, tardy: 0 });
+        return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
+    };
 
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  const filteredQuestions = taForumData.recentQuestions.filter((question) => {
-    const matchesSearch =
-      question.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      question.student.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCourse = selectedCourse === "all" || question.course === selectedCourse
-    const matchesStatus = statusFilter === "all" || question.status === statusFilter
-
-    return matchesSearch && matchesCourse && matchesStatus
-  })
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "unanswered":
-        return "destructive"
-      case "answered":
-        return "default"
-      case "resolved":
-        return "secondary"
-      default:
-        return "secondary"
+    if (!groupData) {
+        return <div className="text-center py-10">No attendance data for this group.</div>;
     }
-  }
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "destructive"
-      case "medium":
-        return "default"
-      case "low":
-        return "secondary"
-      default:
-        return "secondary"
-    }
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">Discussion Forum</h1>
-            <p className="text-gray-600 mt-1">Moderate discussions and help students with their questions.</p>
-          </div>
-          <Badge variant="secondary" className="bg-purple-100 text-purple-700">
-            Moderator Access
-          </Badge>
-        </div>
-      </motion.div>
-
-      {/* Course Overview */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        {taForumData.courses.map((course) => (
-          <Card key={course.id} className="hover:shadow-lg transition-shadow">
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span className="text-lg">{course.name}</span>
-                <MessageSquare className="h-5 w-5 text-purple-600" />
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Total Topics</span>
-                  <Badge variant="outline">{course.totalTopics}</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Unanswered</span>
-                  <Badge variant={course.unansweredQuestions > 0 ? "destructive" : "secondary"}>
-                    {course.unansweredQuestions}
-                  </Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-600">Last Activity</span>
-                  <span className="text-xs text-gray-500">{course.recentActivity}</span>
-                </div>
-                <Button asChild className="w-full mt-4" variant="outline">
-                  <Link href={`/ta/forum/${course.id}`}>View Forum</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      {/* Filters and Search */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filter Questions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                  <Input
-                    placeholder="Search questions or students..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-              <Select value={selectedCourse} onValueChange={setSelectedCourse}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Select course" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Courses</SelectItem>
-                  {taForumData.courses.map((course) => (
-                    <SelectItem key={course.id} value={course.name}>
-                      {course.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full md:w-48">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="unanswered">Unanswered</SelectItem>
-                  <SelectItem value="answered">Answered</SelectItem>
-                  <SelectItem value="resolved">Resolved</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Questions List */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Questions</CardTitle>
-            <CardDescription>
-              {filteredQuestions.length} question{filteredQuestions.length !== 1 ? "s" : ""} found
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {filteredQuestions.map((question) => (
-                <motion.div
-                  key={question.id}
-                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-2">
-                      {question.isPinned && <Pin className="h-4 w-4 text-purple-600" />}
-                      {question.isLocked && <Lock className="h-4 w-4 text-gray-600" />}
-                      <h4 className="font-medium text-gray-900">{question.title}</h4>
-                    </div>
-                    <div className="flex items-center space-x-4 mb-2">
-                      <Badge variant="outline" className="text-xs">
-                        {question.course}
-                      </Badge>
-                      <Badge variant={getStatusColor(question.status)} className="text-xs">
-                        {question.status}
-                      </Badge>
-                      <Badge variant={getPriorityColor(question.priority)} className="text-xs">
-                        {question.priority} priority
-                      </Badge>
-                    </div>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600">
-                      <div className="flex items-center space-x-1">
-                        <User className="h-4 w-4" />
-                        <span>{question.student}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <Clock className="h-4 w-4" />
-                        <span>{question.timeAgo}</span>
-                      </div>
-                      <div className="flex items-center space-x-1">
-                        <MessageSquare className="h-4 w-4" />
-                        <span>{question.replies} replies</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {question.status === "unanswered" && (
-                      <Button size="sm" variant="outline">
-                        Answer
-                      </Button>
-                    )}
-                    {question.status === "answered" && (
-                      <Button size="sm" variant="outline">
-                        Mark Resolved
-                      </Button>
-                    )}
-                    <Button asChild size="sm" variant="ghost">
-                      <Link href={`/ta/forum/question/${question.id}`}>View</Link>
-                    </Button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-    </div>
-  )
-}
-//END OF app\ta\forum\page.tsx
-
-//START OF app\ta\grading\loading.tsx
-export default function Loading() {
-  return null
-}
-//END OF app\ta\grading\loading.tsx
-
-//START OF app\ta\grading\page.tsx
-"use client"
-
-import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { ClipboardEdit, Save, BookOpen, User } from "lucide-react"
-import { motion } from "framer-motion"
-import { useState } from "react"
-import { taGradingData } from "@/lib/database"
-
-export default function TAGradingPage() {
-  const { user, isLoading } = useRequireAuth(["ta"])
-  const [selectedCourseId, setSelectedCourseId] = useState(taGradingData.courses[0].id)
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState(taGradingData.courses[0].assignments[0].id)
-
-  if (isLoading) {
-    return <div>Loading...</div>
-  }
-
-  const selectedCourse = taGradingData.courses.find(c => c.id === selectedCourseId)!
-  const selectedAssignment = selectedCourse.assignments.find(a => a.id === selectedAssignmentId)!
-  
-  const [submissions, setSubmissions] = useState(selectedAssignment.submissions)
-
-  const handleGradeChange = (studentId: string, grade: string) => {
-    setSubmissions(submissions.map(s => s.studentId === studentId ? { ...s, grade: grade } : s));
-  };
-
-  const handleMarkAsGraded = (studentId: string) => {
-     setSubmissions(submissions.map(s => s.studentId === studentId ? { ...s, status: "Graded" } : s));
-  }
-
-  const handleSaveGrades = () => {
-    console.log("Saving grades:", submissions);
-    // Persist data logic here
-  }
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Graded":
-        return <Badge variant="default">Graded</Badge>
-      case "Needs Grading":
-        return <Badge variant="destructive">Needs Grading</Badge>
-      case "Late":
-        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">Late</Badge>
-      default:
-        return <Badge variant="outline">{status}</Badge>
-    }
-  }
-
-  return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">Grading</h1>
-            <p className="text-gray-600 mt-1">Grade student assignments and provide feedback.</p>
-          </div>
-          <Button onClick={handleSaveGrades}>
-            <Save className="h-4 w-4 mr-2" />
-            Save All Grades
-          </Button>
-        </div>
-      </motion.div>
-
-      {/* Filters */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-purple-600" />
-              Select Assignment
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col md:flex-row gap-4">
-            <Select value={selectedCourseId} onValueChange={(id) => {
-              setSelectedCourseId(id)
-              setSelectedAssignmentId(taGradingData.courses.find(c => c.id === id)!.assignments[0].id)
-              setSubmissions(taGradingData.courses.find(c => c.id === id)!.assignments[0].submissions)
-            }}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                {taGradingData.courses.map(course => (
-                  <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select value={selectedAssignmentId} onValueChange={(id) => {
-              setSelectedAssignmentId(id)
-              setSubmissions(selectedCourse.assignments.find(a => a.id === id)!.submissions)
-            }}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select an assignment" />
-              </SelectTrigger>
-              <SelectContent>
-                {selectedCourse.assignments.map(assignment => (
-                  <SelectItem key={assignment.id} value={assignment.id}>{assignment.title}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Submissions Table */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>{selectedAssignment.title} - Submissions</CardTitle>
-            <CardDescription>Due: {new Date(selectedAssignment.dueDate).toLocaleDateString()}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Grade</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {submissions.map(submission => (
-                    <TableRow key={submission.studentId}>
-                      <TableCell className="font-medium">{submission.studentName}</TableCell>
-                      <TableCell>{getStatusBadge(submission.status)}</TableCell>
-                      <TableCell>
-                        <Input 
-                          className="w-32" 
-                          placeholder="e.g., 95/100" 
-                          value={submission.grade || ""}
-                          onChange={(e) => handleGradeChange(submission.studentId, e.target.value)}
-                          disabled={submission.status === 'Graded'}
-                        />
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => handleMarkAsGraded(submission.studentId)}
-                          disabled={!submission.grade || submission.status === 'Graded'}
-                        >
-                          Mark as Graded
+    return (
+        <div className="space-y-4">
+             <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle className="flex items-center gap-2 text-lg">
+                            <UserCheck className="h-5 w-5 text-purple-600" />
+                            Attendance History
+                        </CardTitle>
+                        <Button onClick={() => handleOpenModal(null)} size="sm">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Record
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                        {groupData.sessions.map(session => (
+                            <AccordionItem value={session.id} key={session.id}>
+                                <AccordionTrigger>
+                                    <div className="flex justify-between w-full pr-4">
+                                    <span>{new Date(session.date).toDateString()}</span>
+                                    <span className="text-sm text-gray-500">{getSessionSummary(session.records)}</span>
+                                    </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-2">
+                                    {session.records.map(record => (
+                                        <div key={record.studentId} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
+                                        <span>{record.name}</span>
+                                        <Badge variant={record.status === 'Present' ? 'default' : record.status === 'Absent' ? 'destructive' : 'secondary'}>
+                                            {record.status}
+                                        </Badge>
+                                        </div>
+                                    ))}
+                                    </div>
+                                    <div className="flex justify-end space-x-2 mt-4">
+                                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal(session)}><Edit className="h-4 w-4 mr-1" /> Edit</Button>
+                                        <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                                <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                                <AlertDialogHeader>
+                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the attendance record for this session.</AlertDialogDescription>
+                                                </AlertDialogHeader>
+                                                <AlertDialogFooter>
+                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteSession(session.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                                </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                        </AlertDialog>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        ))}
+                    </Accordion>
+                    {groupData.sessions.length === 0 && <p className="text-center text-gray-500 py-4">No attendance records found for this group.</p>}
+                </CardContent>
+            </Card>
+            <AttendanceModal
+                isOpen={isModalOpen}
+                setIsOpen={setIsModalOpen}
+                session={editingSession}
+                group={groupData}
+                onSave={handleSaveSession}
+            />
+        </div>
+    );
+}
+//END OF app\ta\groups\components\attendance-tab.tsx
+
+//START OF app\ta\groups\components\grading-history.tsx
+"use client"
+
+import { useState, useMemo } from "react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Input } from "@/components/ui/input"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Button } from "@/components/ui/button"
+import { Search, History, Download } from "lucide-react"
+import { motion } from "framer-motion"
+import { type GradingEntry } from "@/lib/database"
+
+interface GradingHistoryProps {
+  history: GradingEntry[]
+}
+
+const ITEMS_PER_PAGE = 5;
+
+export default function GradingHistory({ history }: GradingHistoryProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const filteredHistory = useMemo(() => {
+    return history.filter(entry => 
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [history, searchTerm])
+
+  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
+  const paginatedHistory = filteredHistory.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+  );
+
+  const handleExportToCSV = (entry: GradingEntry) => {
+    const headers = ["Student Name", "Grade", "Max Score"];
+    const rows = entry.studentGrades.map(sg => [
+        `"${sg.name}"`,
+        sg.grade ?? "N/A",
+        entry.maxScore
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+        + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${entry.title.replace(/\s+/g, '_')}_grades.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-gray-700" />
+            Grading History
+          </CardTitle>
+          <CardDescription>Review and manage past grading entries.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by title..."
+                value={searchTerm}
+                onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1); // Reset to first page on search
+                }}
+                className="pl-10"
+              />
+          </div>
+          
+          <div className="border rounded-lg">
+            {paginatedHistory.length > 0 ? (
+              <Accordion type="single" collapsible>
+                {paginatedHistory.map(entry => (
+                  <AccordionItem value={entry.id} key={entry.id}>
+                    <AccordionTrigger className="px-4 hover:bg-slate-50">
+                      <div className="flex flex-1 items-center justify-between gap-4">
+                          <div className="text-left">
+                            <p className="font-semibold">{entry.title}</p>
+                            <p className="text-sm text-gray-500">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
+                          </div>
+                          <p className="text-sm font-medium text-gray-600 pr-4">Out of {entry.maxScore}</p>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 bg-white">
+                      <div className="max-h-60 overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Student</TableHead>
+                                    <TableHead className="text-right">Grade</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {entry.studentGrades.map(sg => (
+                                    <TableRow key={sg.studentId}>
+                                        <TableCell>{sg.name}</TableCell>
+                                        <TableCell className="text-right font-mono">{sg.grade ?? "N/A"}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
+                            <Download className="mr-2 h-4 w-4" />Export CSV
+                        </Button>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="p-10 text-center text-gray-500">
+                <p>No grading history found.</p>
+                <p className="text-sm">Try adjusting your search or adding a new grade entry.</p>
+              </div>
+            )}
+          </div>
+           {totalPages > 1 && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
+                                    {i+1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+//END OF app\ta\groups\components\grading-history.tsx
+
+//START OF app\ta\groups\components\grading-tab.tsx
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { motion } from "framer-motion"
+import { Toaster, toast } from "sonner"
+import { taGradingHistory, type GradingEntry } from "@/lib/database"
+
+import AddGradeModal from "./add-grade-modal"
+import GradingHistory from "./grading-history"
+
+export default function GradingTabContent({ courseId }: { courseId: string }) {
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [history, setHistory] = useState<GradingEntry[]>(taGradingHistory)
+
+  const handleSaveNewGrade = (newEntry: GradingEntry) => {
+    // Add new entry to the top of the history list
+    setHistory([newEntry, ...history])
+    setIsModalOpen(false)
+    toast.success(`Grades for "${newEntry.title}" saved successfully!`)
+  }
+
+  return (
+    <div className="space-y-6">
+      <Toaster position="top-center" richColors />
+      <motion.div
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border rounded-lg bg-slate-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center sm:text-left">
+          <h2 className="text-lg font-semibold text-gray-800">New Grading Entry</h2>
+          <p className="text-sm text-gray-600">Click here to add a new set of grades for your students.</p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          Add New Grade
+        </Button>
       </motion.div>
+
+      <GradingHistory history={history} />
+
+      <AddGradeModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        onSave={handleSaveNewGrade}
+        courseId={courseId}
+      />
     </div>
   )
 }
-//END OF app\ta\grading\page.tsx
+//END OF app\ta\groups\components\grading-tab.tsx
+
+//START OF app\ta\groups\loading.tsx
+export default function Loading() {
+  // You can add a skeleton loader here if you want
+  // For now, returning null to be consistent with other loading files
+  return (
+    <div className="p-6 space-y-6">
+      <div className="space-y-2">
+        <div className="h-8 w-1/3 bg-gray-200 rounded animate-pulse"></div>
+        <div className="h-4 w-1/2 bg-gray-200 rounded animate-pulse"></div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {[...Array(3)].map((_, i) => (
+          <div key={i} className="h-40 bg-gray-200 rounded-lg animate-pulse"></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+//END OF app\ta\groups\loading.tsx
+
+//START OF app\ta\groups\page.tsx
+"use client"
+
+import { useState } from "react"
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Users, User, ArrowLeft } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { taGroupsData, type TaGroup } from "@/lib/database"
+
+import GradingTabContent from "./components/grading-tab"
+import AttendanceTabContent from "./components/attendance-tab"
+
+export default function GroupsPage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+  const [selectedGroup, setSelectedGroup] = useState<TaGroup | null>(null)
+
+  if (isLoading) {
+    return (
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
+      </div>
+    )
+  }
+
+  const handleSelectGroup = (group: TaGroup) => {
+    setSelectedGroup(group)
+  }
+
+  const handleBackToGroups = () => {
+    setSelectedGroup(null)
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <AnimatePresence mode="wait">
+        {selectedGroup ? (
+          <motion.div
+            key="detail-view"
+            initial={{ opacity: 0, x: 50 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupDetailView group={selectedGroup} onBack={handleBackToGroups} />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="landing-view"
+            initial={{ opacity: 0, x: 0 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -50 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupsLandingView onSelectGroup={handleSelectGroup} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+function GroupsLandingView({ onSelectGroup }: { onSelectGroup: (group: TaGroup) => void }) {
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <h1 className="text-3xl font-poppins font-bold text-gray-900">Groups</h1>
+        <p className="text-gray-600 mt-1">Select a group to manage.</p>
+      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {taGroupsData.map((group, index) => (
+          <motion.div
+            key={group.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
+            className="cursor-pointer"
+            onClick={() => onSelectGroup(group)}
+          >
+            <Card className="h-full flex flex-col">
+              <CardHeader>
+                <CardTitle>{group.groupName}</CardTitle>
+                <CardDescription>{group.courseName}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-3">
+                <div className="flex items-center space-x-2 text-sm text-gray-700">
+                    <Users className="h-4 w-4 text-gray-500" />
+                    <span>{group.studentCount} Students</span>
+                </div>
+                <div className="flex items-center space-x-2 text-sm text-gray-700">
+                    <User className="h-4 w-4 text-gray-500" />
+                    <span>{group.instructorName}</span>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </>
+  )
+}
+
+function GroupDetailView({ group, onBack }: { group: TaGroup; onBack: () => void }) {
+  return (
+    <div className="space-y-6">
+      <Button variant="ghost" onClick={onBack} className="text-gray-600 hover:text-emerald-600">
+        <ArrowLeft className="h-4 w-4 mr-2" />
+        Back to Groups
+      </Button>
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl">{group.groupName}</CardTitle>
+          <CardDescription>{group.courseName}</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultValue="grading">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="grading">Grading</TabsTrigger>
+              <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            </TabsList>
+            <TabsContent value="grading" className="mt-4">
+              <GradingTabContent courseId={group.courseId} />
+            </TabsContent>
+            <TabsContent value="attendance" className="mt-4">
+              <AttendanceTabContent groupId={group.id} />
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+//END OF app\ta\groups\page.tsx
 
 //START OF app\ta\layout.tsx
 "use client"
@@ -7862,7 +7851,7 @@ import { useRequireAuth } from "@/hooks/use-auth"
 
 const navigation = [
   {
-    title: "Core Tasks",
+    title: "MENU",
     items: [
       {
         title: "Dashboard",
@@ -7870,34 +7859,14 @@ const navigation = [
         icon: LayoutDashboard,
       },
       {
-        title: "Student Roster",
-        href: "/ta/students",
+        title: "Groups",
+        href: "/ta/groups",
         icon: Users,
-      },
-      {
-        title: "Grading",
-        href: "/ta/grading",
-        icon: ClipboardEdit,
-      },
-      {
-        title: "Attendance",
-        href: "/ta/attendance",
-        icon: UserCheck,
       },
       {
         title: "Announcements",
         href: "/ta/announcements",
         icon: Megaphone,
-      },
-    ],
-  },
-  {
-    title: "Support",
-    items: [
-      {
-        title: "Discussion Forum",
-        href: "/ta/forum",
-        icon: MessageSquare,
       },
       {
         title: "Schedule & Meetings",
@@ -7908,26 +7877,6 @@ const navigation = [
         title: "Video Resources",
         href: "/ta/resources",
         icon: Video,
-      },
-      {
-        title: "My Subjects",
-        href: "/ta/subjects",
-        icon: BookOpen,
-      },
-    ],
-  },
-  {
-    title: "Account",
-    items: [
-      {
-        title: "My Profile",
-        href: "/ta/profile",
-        icon: User,
-      },
-      {
-        title: "Settings",
-        href: "/ta/settings",
-        icon: Settings,
       },
     ],
   },
@@ -8772,313 +8721,452 @@ export default function TAResourcesPage() {
 }
 //END OF app\ta\resources\page.tsx
 
+//START OF app\ta\schedule\components\ScheduleSessionModal.tsx
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { format, set } from "date-fns"
+import { Loader2, AlertCircle } from "lucide-react"
+import { type TASession, type TAAvailabilitySlot } from "@/lib/database"
+
+interface ScheduleSessionModalProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  onSave: (session: TASession) => void
+  sessionToEdit: TASession | null
+  availability: TAAvailabilitySlot[]
+}
+
+const dayMap = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessionToEdit, availability }: ScheduleSessionModalProps) {
+  const [title, setTitle] = useState("")
+  const [description, setDescription] = useState("")
+  const [date, setDate] = useState("")
+  const [startTime, setStartTime] = useState("")
+  const [endTime, setEndTime] = useState("")
+  const [meetingLink, setMeetingLink] = useState("")
+  const [errors, setErrors] = useState<{ [key: string]: string }>({})
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (sessionToEdit) {
+      const sessionDate = new Date(sessionToEdit.dateTime)
+      setTitle(sessionToEdit.title)
+      setDescription(sessionToEdit.description || "")
+      setDate(format(sessionDate, "yyyy-MM-dd"))
+      setStartTime(format(sessionDate, "HH:mm"))
+      const endDate = new Date(sessionDate.getTime() + sessionToEdit.durationMinutes * 60000)
+      setEndTime(format(endDate, "HH:mm"))
+      setMeetingLink(sessionToEdit.meetingLink)
+    } else {
+      // Reset form when opening for a new session
+      setTitle("")
+      setDescription("")
+      setDate("")
+      setStartTime("")
+      setEndTime("")
+      setMeetingLink("")
+    }
+    setErrors({})
+  }, [sessionToEdit, isOpen])
+
+  const validate = (): boolean => {
+    const newErrors: { [key: string]: string } = {}
+    if (!title.trim()) newErrors.title = "Title is required."
+    if (!date) newErrors.date = "Date is required."
+    if (!startTime) newErrors.startTime = "Start time is required."
+    if (!endTime) newErrors.endTime = "End time is required."
+    if (endTime <= startTime) newErrors.endTime = "End time must be after start time."
+    if (!meetingLink.trim()) {
+        newErrors.meetingLink = "Meeting link is required."
+    } else if (!/^(https?:\/\/)?([\w-]+\.)+[\w-]+(\/[\w- .\/?%&=]*)?$/.test(meetingLink)) {
+        newErrors.meetingLink = "Please enter a valid URL."
+    }
+
+    // Validate against availability
+    if (date && startTime && endTime) {
+        const selectedDayIndex = new Date(date + 'T00:00:00').getDay();
+        const selectedDayName = dayMap[selectedDayIndex] as TAAvailabilitySlot['day'];
+        const dayAvailability = availability.find(a => a.day === selectedDayName);
+
+        if (!dayAvailability || dayAvailability.slots.length === 0) {
+            newErrors.date = `You are not available on ${selectedDayName}s.`
+        } else {
+            const isInSlot = dayAvailability.slots.some(slot => {
+                const [slotStart, slotEnd] = slot.split('-');
+                return startTime >= slotStart && endTime <= slotEnd;
+            });
+            if (!isInSlot) {
+                newErrors.startTime = `The selected time is outside your available slots for ${selectedDayName}s.`
+            }
+        }
+    }
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
+  }
+
+  const handleSave = () => {
+    if (!validate()) return
+
+    setIsSaving(true)
+    const startDateTime = new Date(`${date}T${startTime}:00`)
+    const endDateTime = new Date(`${date}T${endTime}:00`)
+    const durationMinutes = (endDateTime.getTime() - startDateTime.getTime()) / 60000
+
+    const sessionData: TASession = {
+      id: sessionToEdit?.id || `session-${Date.now()}`,
+      title,
+      description,
+      dateTime: startDateTime.toISOString(),
+      durationMinutes,
+      meetingLink,
+    }
+    
+    // Simulate API call
+    setTimeout(() => {
+      onSave(sessionData)
+      setIsSaving(false)
+    }, 1000)
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{sessionToEdit ? "Edit Session" : "Schedule New Session"}</DialogTitle>
+          <DialogDescription>Fill in the details for the online session.</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="title">Title</Label>
+            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., ICT Midterm Review" />
+            {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="start-time">Start Time</Label>
+              <Input id="start-time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
+              {errors.startTime && <p className="text-xs text-red-500">{errors.startTime}</p>}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="end-time">End Time</Label>
+              <Input id="end-time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
+              {errors.endTime && <p className="text-xs text-red-500">{errors.endTime}</p>}
+            </div>
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="meeting-link">Meeting Link</Label>
+            <Input id="meeting-link" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} placeholder="https://zoom.us/j/..." />
+             {errors.meetingLink && <p className="text-xs text-red-500">{errors.meetingLink}</p>}
+          </div>
+           <div className="grid gap-2">
+            <Label htmlFor="description">Description (Optional)</Label>
+            <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Topics to be covered, etc." />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {sessionToEdit ? "Save Changes" : "Schedule"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+//END OF app\ta\schedule\components\ScheduleSessionModal.tsx
+
+//START OF app\ta\schedule\components\SessionList.tsx
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { format } from "date-fns"
+import { Calendar, Clock, Link as LinkIcon, Edit, Trash2, Copy, Check } from "lucide-react"
+import { motion } from "framer-motion"
+import { type TASession } from "@/lib/database"
+
+interface SessionListProps {
+  title: string
+  sessions: TASession[]
+  mode: 'upcoming' | 'recent'
+  onEdit?: (session: TASession) => void
+  onCancel?: (sessionId: string) => void
+}
+
+const SESSIONS_TO_SHOW = 5;
+
+export default function SessionList({ title, sessions, mode, onEdit, onCancel }: SessionListProps) {
+  const [itemsToShow, setItemsToShow] = useState(SESSIONS_TO_SHOW)
+  const [copiedLink, setCopiedLink] = useState<string | null>(null);
+
+  const handleCopyLink = (link: string, id: string) => {
+    navigator.clipboard.writeText(link);
+    setCopiedLink(id);
+    setTimeout(() => setCopiedLink(null), 2000);
+  }
+
+  const listVariants = {
+    visible: {
+      opacity: 1,
+      transition: {
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+      },
+    },
+    hidden: {
+      opacity: 0,
+    },
+  }
+
+  const itemVariants = {
+    visible: { opacity: 1, y: 0 },
+    hidden: { opacity: 0, y: 20 },
+  }
+
+  return (
+    <section>
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">{title}</h2>
+      {sessions.length > 0 ? (
+        <motion.ul variants={listVariants} initial="hidden" animate="visible" className="space-y-4">
+          {sessions.slice(0, itemsToShow).map(session => {
+            const sessionDate = new Date(session.dateTime)
+            return (
+              <motion.li key={session.id} variants={itemVariants} className="p-4 border rounded-lg bg-white">
+                <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
+                  <h3 className="font-semibold text-gray-800">{session.title}</h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-1.5"><Calendar className="h-4 w-4" /><span>{format(sessionDate, "MMM d, yyyy")}</span></div>
+                    <div className="flex items-center gap-1.5"><Clock className="h-4 w-4" /><span>{format(sessionDate, "p")}</span></div>
+                  </div>
+                </div>
+                {session.description && <p className="text-sm text-gray-600 mb-4">{session.description}</p>}
+                
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-3 border-t">
+                    <div className="flex items-center gap-2">
+                        <LinkIcon className="h-4 w-4 text-gray-400"/>
+                        <a href={session.meetingLink} target="_blank" rel="noopener noreferrer" className="text-sm text-emerald-600 hover:underline truncate">
+                            {session.meetingLink}
+                        </a>
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleCopyLink(session.meetingLink, session.id)}>
+                            {copiedLink === session.id ? <Check className="h-4 w-4 text-green-500"/> : <Copy className="h-4 w-4"/>}
+                            <span className="sr-only">Copy link</span>
+                        </Button>
+                    </div>
+
+                    {mode === 'upcoming' && onEdit && onCancel && (
+                        <div className="flex items-center gap-2 self-end sm:self-center">
+                            <Button variant="outline" size="sm" onClick={() => onEdit(session)}><Edit className="h-3 w-3 mr-1.5"/> Edit</Button>
+                             <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                    <Button variant="destructive" size="sm" ><Trash2 className="h-3 w-3 mr-1.5"/> Cancel</Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                        <AlertDialogDescription>This will permanently cancel the session "{session.title}". This action cannot be undone.</AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                        <AlertDialogCancel>Dismiss</AlertDialogCancel>
+                                        <AlertDialogAction onClick={() => onCancel(session.id)}>Confirm Cancel</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    )}
+                </div>
+              </motion.li>
+            )
+          })}
+           {sessions.length > itemsToShow && (
+                <div className="text-center mt-4">
+                    <Button variant="link" onClick={() => setItemsToShow(itemsToShow + SESSIONS_TO_SHOW)}>Load More</Button>
+                </div>
+            )}
+        </motion.ul>
+      ) : (
+        <div className="text-center py-8 px-4 border-2 border-dashed rounded-lg">
+          <p className="text-gray-500">No {mode} sessions.</p>
+          {mode === 'upcoming' && <p className="text-sm text-gray-400 mt-1">Click 'Schedule Session' to add one.</p>}
+        </div>
+      )}
+    </section>
+  )
+}
+//END OF app\ta\schedule\components\SessionList.tsx
+
+//START OF app\ta\schedule\components\WeeklyAvailability.tsx
+"use client"
+
+import { type TAAvailabilitySlot } from "@/lib/database"
+import { Badge } from "@/components/ui/badge"
+
+interface WeeklyAvailabilityProps {
+  availability: TAAvailabilitySlot[]
+}
+
+export default function WeeklyAvailability({ availability }: WeeklyAvailabilityProps) {
+  return (
+    <section>
+      <h2 className="text-xl font-semibold text-gray-700 mb-4">Weekly Availability</h2>
+      <div className="p-4 border rounded-lg bg-white">
+        <div className="hidden md:grid md:grid-cols-7 gap-px">
+          {availability.map(daySlot => (
+            <div key={daySlot.day} className="flex flex-col p-2">
+              <p className="font-semibold text-center text-sm mb-2">{daySlot.day}</p>
+              <div className="space-y-1">
+                {daySlot.slots.length > 0 ? daySlot.slots.map(slot => (
+                  <Badge key={slot} variant="secondary" className="block text-center whitespace-nowrap bg-emerald-100 text-emerald-800 font-normal">
+                    {slot}
+                  </Badge>
+                )) : (
+                  <p className="text-xs text-center text-gray-400">-</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="md:hidden space-y-3">
+             {availability.map(daySlot => (
+                <div key={daySlot.day} className="flex items-start gap-4 p-2 border-b last:border-b-0">
+                    <p className="font-semibold text-sm w-20 shrink-0">{daySlot.day}</p>
+                    <div className="flex flex-wrap gap-1">
+                         {daySlot.slots.length > 0 ? daySlot.slots.map(slot => (
+                            <Badge key={slot} variant="secondary" className="whitespace-nowrap bg-emerald-100 text-emerald-800 font-normal">
+                                {slot}
+                            </Badge>
+                         )) : (
+                            <p className="text-xs text-gray-400">Unavailable</p>
+                         )}
+                    </div>
+                </div>
+            ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+//END OF app\ta\schedule\components\WeeklyAvailability.tsx
+
 //START OF app\ta\schedule\page.tsx
 "use client"
 
+import { useState, useMemo } from "react"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Users, Video, MapPin, Plus } from "lucide-react"
+import { Plus } from "lucide-react"
 import { motion } from "framer-motion"
-import { useState } from "react"
-import { taScheduleData } from "@/lib/database"
+import { Toaster, toast } from "sonner"
+import { isAfter, isBefore, subDays } from "date-fns"
+import { taScheduleData, taAvailabilityData, type TASession } from "@/lib/database"
+import WeeklyAvailability from "./components/WeeklyAvailability"
+import ScheduleSessionModal from "./components/ScheduleSessionModal"
+import SessionList from "./components/SessionList"
 
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
-  const [viewMode, setViewMode] = useState("week")
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [sessions, setSessions] = useState<TASession[]>(taScheduleData)
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSession, setEditingSession] = useState<TASession | null>(null)
+
+  const { upcomingSessions, recentSessions } = useMemo(() => {
+    const now = new Date()
+    const thirtyDaysAgo = subDays(now, 30)
+    
+    const upcoming = sessions
+      .filter(s => isAfter(new Date(s.dateTime), now))
+      .sort((a, b) => new Date(a.dateTime).getTime() - new Date(b.dateTime).getTime())
+
+    const recent = sessions
+      .filter(s => isBefore(new Date(s.dateTime), now) && isAfter(new Date(s.dateTime), thirtyDaysAgo))
+      .sort((a, b) => new Date(b.dateTime).getTime() - new Date(a.dateTime).getTime())
+
+    return { upcomingSessions: upcoming, recentSessions: recent }
+  }, [sessions])
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div className="p-6 text-center">Loading...</div>
+  }
+  
+  const handleOpenModal = (session: TASession | null = null) => {
+    setEditingSession(session)
+    setIsModalOpen(true)
   }
 
-  const getSessionTypeColor = (type: string) => {
-    switch (type) {
-      case "Q&A":
-        return "bg-blue-100 text-blue-700"
-      case "Tutorial":
-        return "bg-green-100 text-green-700"
-      case "Lab Help":
-        return "bg-purple-100 text-purple-700"
-      case "Office Hours":
-        return "bg-orange-100 text-orange-700"
-      case "Review":
-        return "bg-pink-100 text-pink-700"
-      default:
-        return "bg-gray-100 text-gray-700"
-    }
+  const handleSaveSession = (newSession: TASession) => {
+    setSessions(prev => {
+        const existingIndex = prev.findIndex(s => s.id === newSession.id);
+        if (existingIndex > -1) {
+            const updated = [...prev];
+            updated[existingIndex] = newSession;
+            return updated;
+        }
+        return [...prev, newSession];
+    });
+    setIsModalOpen(false);
+    toast.success(`Session "${newSession.title}" has been ${editingSession ? 'updated' : 'scheduled'}!`);
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "upcoming":
-        return <Badge variant="default">Upcoming</Badge>
-      case "completed":
-        return <Badge variant="secondary">Completed</Badge>
-      case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>
-      default:
-        return <Badge variant="outline">Unknown</Badge>
-    }
+  const handleCancelSession = (sessionId: string) => {
+    setSessions(prev => prev.filter(s => s.id !== sessionId));
+    toast.error("Session has been cancelled.");
   }
-
-  const upcomingSessions = taScheduleData.sessions.filter((session) => session.status === "upcoming")
-  const completedSessions = taScheduleData.sessions.filter((session) => session.status === "completed")
 
   return (
-    <div className="p-6 space-y-6">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">TA Schedule</h1>
-            <p className="text-gray-600 mt-1">Manage your Q&A sessions, tutorials, and office hours.</p>
-          </div>
-          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Session
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Session</DialogTitle>
-                <DialogDescription>Schedule a new meeting for a student group.</DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Session Title</Label>
-                  <Input id="title" placeholder="e.g., Mid-term Review" />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="date">Date</Label>
-                    <Input id="date" type="date" />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="time">Time</Label>
-                    <Input id="time" type="time" />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="group">Student Group</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a group" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
-                      <SelectItem value="group-b">Mathematics - Group B</SelectItem>
-                      <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="link">Meeting Link</Label>
-                  <Input id="link" placeholder="https://zoom.us/..." />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
-                <Button onClick={() => setIsCreateDialogOpen(false)}>Schedule Session</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+    <div className="p-4 sm:p-6 space-y-8">
+      <Toaster position="top-center" richColors />
+      <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">Schedule & Meetings</h1>
+          <p className="text-gray-500 mt-1">Manage your availability and scheduled sessions.</p>
         </div>
-      </motion.div>
+        <Button onClick={() => handleOpenModal()} variant="outline" className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          Schedule Session
+        </Button>
+      </header>
 
-      {/* Schedule Overview */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <Card className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100">Weekly Hours</p>
-                <p className="text-3xl font-bold">{taScheduleData.weeklyHours}</p>
-              </div>
-              <Clock className="h-8 w-8 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
+      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+        <WeeklyAvailability availability={taAvailabilityData} />
+      </motion.section>
 
-        <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100">Total Sessions</p>
-                <p className="text-3xl font-bold">{taScheduleData.totalSessions}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100">Avg Attendance</p>
-                <p className="text-3xl font-bold">{taScheduleData.averageAttendance}%</p>
-              </div>
-              <Users className="h-8 w-8 text-purple-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100">Upcoming</p>
-                <p className="text-3xl font-bold">{upcomingSessions.length}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Sessions */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-blue-600" />
-                Upcoming Sessions
-              </CardTitle>
-              <CardDescription>Your scheduled sessions for this week</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {upcomingSessions.map((session) => (
-                <motion.div
-                  key={session.id}
-                  className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  whileHover={{ scale: 1.01 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{session.title}</h4>
-                      <p className="text-sm text-gray-600">{session.course}</p>
-                    </div>
-                    <Badge className={getSessionTypeColor(session.type)}>{session.type}</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(session.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {session.time} ({session.duration})
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Users className="h-4 w-4" />
-                      <span>{session.students} students</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>Virtual</span>
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-gray-600 mb-3">{session.description}</p>
-
-                  <div className="flex items-center justify-between">
-                    {getStatusBadge(session.status)}
-                    <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Video className="h-4 w-4 mr-1" />
-                        Join
-                      </Button>
-                      <Button size="sm" variant="ghost">
-                        Edit
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Recent Sessions */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-green-600" />
-                Recent Sessions
-              </CardTitle>
-              <CardDescription>Completed sessions and their outcomes</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {completedSessions.map((session) => (
-                <div key={session.id} className="border rounded-lg p-4 bg-gray-50">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <h4 className="font-medium text-gray-900">{session.title}</h4>
-                      <p className="text-sm text-gray-600">{session.course}</p>
-                    </div>
-                    <Badge className={getSessionTypeColor(session.type)}>{session.type}</Badge>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Calendar className="h-4 w-4" />
-                      <span>{new Date(session.date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Clock className="h-4 w-4" />
-                      <span>
-                        {session.time} ({session.duration})
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <Users className="h-4 w-4" />
-                      <span>{session.students} attended</span>
-                    </div>
-                    <div className="flex items-center space-x-2 text-sm text-gray-600">
-                      <MapPin className="h-4 w-4" />
-                      <span>Virtual</span>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    {getStatusBadge(session.status)}
-                    <Button size="sm" variant="ghost">
-                      View Summary
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+        <SessionList 
+          title="Upcoming Sessions"
+          sessions={upcomingSessions}
+          mode="upcoming"
+          onEdit={handleOpenModal}
+          onCancel={handleCancelSession}
+        />
+        <SessionList 
+          title="Recent Sessions"
+          sessions={recentSessions}
+          mode="recent"
+        />
       </div>
+
+      <ScheduleSessionModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        onSave={handleSaveSession}
+        sessionToEdit={editingSession}
+        availability={taAvailabilityData}
+      />
     </div>
   )
 }
@@ -9757,125 +9845,6 @@ export default function TAStudentsPage() {
   )
 }
 //END OF app\ta\students\page.tsx
-
-//START OF app\ta\subjects\loading.tsx
-export default function Loading() {
-  return null
-}
-//END OF app\ta\subjects\loading.tsx
-
-//START OF app\ta\subjects\page.tsx
-"use client"
-
-import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { BookOpen, User, Users } from "lucide-react"
-import { motion } from "framer-motion"
-import { taSubjectsData } from "@/lib/database"
-
-// Animation variants for Framer Motion
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1, // Each child will animate 0.1s after the previous one
-    },
-  },
-}
-
-const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
-  visible: {
-    y: 0,
-    opacity: 1,
-    transition: {
-      duration: 0.5,
-    },
-  },
-}
-
-export default function TASubjectsPage() {
-  const { user, isLoading } = useRequireAuth(["ta"])
-
-  if (isLoading) {
-    // A slightly more polished loading state
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
-        <p className="text-lg text-gray-500 animate-pulse">Loading your subjects...</p>
-      </div>
-    )
-  }
-
-  return (
-    // Use a container for better responsiveness on large screens
-    <main className="container mx-auto p-4 sm:p-6 lg:p-8">
-      {/* Header */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={itemVariants}
-        className="mb-8" // Increased bottom margin for better separation
-      >
-        <h1 className="text-3xl font-poppins font-bold text-gray-900 tracking-tight">My Assigned Subjects</h1>
-        <p className="text-gray-600 mt-2 max-w-2xl">
-          A list of subjects you are assigned to assist with. Click on a card to view more details.
-        </p>
-      </motion.div>
-
-      {/* Subjects Grid */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-      >
-        {taSubjectsData.map(subject => (
-          <motion.div key={subject.id} variants={itemVariants}>
-            <Card className="h-full flex flex-col hover:shadow-xl transition-shadow duration-300 cursor-pointer">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-3">
-                  <span className="flex-shrink-0 bg-purple-100 p-2 rounded-lg">
-                    <BookOpen className="h-6 w-6 text-purple-700" />
-                  </span>
-                  <span className="text-xl">{subject.name}</span>
-                </CardTitle>
-                <CardDescription className="pt-2">{subject.description}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow space-y-4">
-                {/* Instructor Info */}
-                <div className="flex items-start gap-3">
-                  <User className="h-5 w-5 mt-1 flex-shrink-0 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Instructor</p>
-                    <p className="font-semibold text-gray-800">{subject.instructor}</p>
-                  </div>
-                </div>
-
-                {/* Groups Info */}
-                <div className="flex items-start gap-3">
-                  <Users className="h-5 w-5 mt-1 flex-shrink-0 text-gray-500" />
-                  <div>
-                    <p className="text-sm text-gray-500">Assigned Groups</p>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      {subject.studentGroups.map(group => (
-                        <Badge key={group} variant="secondary">
-                          {group}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        ))}
-      </motion.div>
-    </main>
-  )
-}
-//END OF app\ta\subjects\page.tsx
 
 //START OF app\unauthorized\page.tsx
 "use client"
@@ -11706,12 +11675,6 @@ export const studentScheduleSessions = [ { id: "1", title: "ICT Q&A Session", in
 
 
 // --- TA PORTAL DATA ---
-
-export const taForumData = {
-    courses: [ { id: "ict-fundamentals", name: "ICT Fundamentals", totalTopics: 45, unansweredQuestions: 8, recentActivity: "2 hours ago", }, { id: "mathematics", name: "Mathematics", totalTopics: 32, unansweredQuestions: 3, recentActivity: "4 hours ago", }, ],
-    recentQuestions: [ { id: "q1", title: "Help with Python loops and iteration", course: "ICT Fundamentals", student: "Emma Johnson", timeAgo: "2 hours ago", priority: "high", replies: 0, status: "unanswered", isPinned: false, isLocked: false, }, { id: "q2", title: "Algebra equation solving methods", course: "Mathematics", student: "Michael Chen", timeAgo: "4 hours ago", priority: "medium", replies: 3, status: "answered", isPinned: true, isLocked: false, }, ],
-};
-
 export const taDashboardData = {
     studentGroups: [ { id: "group-1", name: "ICT Fundamentals - Group A", studentCount: 12, course: "ICT Fundamentals", nextSession: "2024-01-15T14:00:00Z", pendingQuestions: 3, }, { id: "group-2", name: "Mathematics - Group B", studentCount: 8, course: "Mathematics", nextSession: "2024-01-16T10:00:00Z", pendingQuestions: 1, }, ],
     forumActivity: [ { id: "q1", title: "Help with Python loops", course: "ICT Fundamentals", student: "Emma Johnson", timeAgo: "2 hours ago", priority: "high", replies: 0, }, { id: "q2", title: "Algebra equation solving", course: "Mathematics", student: "Michael Chen", timeAgo: "4 hours ago", priority: "medium", replies: 1, }, ],
@@ -11728,17 +11691,12 @@ export const taProfileAchievements = [
   { icon: CheckCircle, title: "Certified Python Tutor", description: "Completed advanced Python tutoring certification.", date: "January 2024" },
 ];
 
-export const taScheduleData = {
-    sessions: [ { id: "session-1", title: "ICT Q&A Session", course: "ICT Fundamentals", type: "Q&A", date: "2024-01-15", time: "14:00", duration: "1 hour", students: 12, location: "Virtual - Zoom Room 1", status: "upcoming", description: "Weekly Q&A session for ICT Fundamentals students", }, { id: "session-5", title: "ICT Review Session", course: "ICT Fundamentals", type: "Review", date: "2024-01-12", time: "15:00", duration: "1.5 hours", students: 10, location: "Virtual - Zoom Room 1", status: "completed", description: "Review session for Module 3 concepts", }, ],
-    weeklyHours: 8, totalSessions: 12, averageAttendance: 85,
-};
-
 export const taStudentManagementData = {
     groups: [ { id: "group-1", name: "ICT Fundamentals - Group A", course: "ICT Fundamentals", studentCount: 12, averageProgress: 78, strugglingStudents: 2, students: [ { id: "student-1", name: "Emma Johnson", email: "emma.johnson@example.com", progress: 85, lastActive: "1 hour ago", status: "active", }, { id: "student-3", name: "Sarah Wilson", email: "sarah.wilson@example.com", progress: 45, lastActive: "2 days ago", status: "struggling", }, ], }, ],
     progressInsights: { totalStudents: 35, averageProgress: 77, strugglingStudents: 8, activeStudents: 27, commonStrugglingAreas: [ { topic: "Python Loops", studentCount: 5 }, { topic: "Database Design", studentCount: 4 }, ], },
 };
 
-// --- NEW DATA FOR TA ATTENDANCE PAGE ---
+// --- TA ATTENDANCE DATA ---
 
 export type TAttendanceRecord = {
   studentId: string;
@@ -11761,7 +11719,7 @@ export type TAttendanceGroup = {
   sessions: TAttendanceSession[];
 };
 
-const taStudentList = [
+export const taStudentList = [
     { id: "stu-01", name: "Emma Johnson" }, { id: "stu-02", name: "Michael Chen" },
     { id: "stu-03", name: "Sarah Wilson" }, { id: "stu-04", name: "David Brown" },
     { id: "stu-05", name: "Lisa Wilson" }, { id: "stu-06", name: "James Taylor" },
@@ -11779,25 +11737,8 @@ export const taAttendancePageData: { groups: TAttendanceGroup[] } = {
       studentCount: 8,
       students: taStudentList.slice(0, 8),
       sessions: [
-        {
-          id: "session-ict-01",
-          date: "2024-05-20",
-          records: [
-            { studentId: "stu-01", name: "Emma Johnson", status: "Present" },
-            { studentId: "stu-02", name: "Michael Chen", status: "Present" },
-            { studentId: "stu-03", name: "Sarah Wilson", status: "Absent" },
-            { studentId: "stu-04", name: "David Brown", status: "Tardy" },
-            { studentId: "stu-05", name: "Lisa Wilson", status: "Present" },
-            { studentId: "stu-06", name: "James Taylor", status: "Present" },
-            { studentId: "stu-07", name: "Olivia Martinez", status: "Present" },
-            { studentId: "stu-08", name: "William Garcia", status: "Present" },
-          ]
-        },
-        {
-          id: "session-ict-02",
-          date: "2024-05-13",
-          records: taStudentList.slice(0, 8).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
-        },
+        { id: "session-ict-01", date: "2024-05-20", records: [ { studentId: "stu-01", name: "Emma Johnson", status: "Present" }, { studentId: "stu-02", name: "Michael Chen", status: "Present" }, { studentId: "stu-03", name: "Sarah Wilson", status: "Absent" }, { studentId: "stu-04", name: "David Brown", status: "Tardy" }, { studentId: "stu-05", name: "Lisa Wilson", status: "Present" }, { studentId: "stu-06", name: "James Taylor", status: "Present" }, { studentId: "stu-07", name: "Olivia Martinez", status: "Present" }, { studentId: "stu-08", name: "William Garcia", status: "Present" }, ] },
+        { id: "session-ict-02", date: "2024-05-13", records: taStudentList.slice(0, 8).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })), },
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     },
     {
@@ -11806,280 +11747,115 @@ export const taAttendancePageData: { groups: TAttendanceGroup[] } = {
       course: "MATH-101",
       studentCount: 8,
       students: taStudentList.slice(4, 12),
-      sessions: [
-        {
-          id: "session-math-01",
-          date: "2024-05-21",
-          records: taStudentList.slice(4, 12).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
-        },
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      sessions: [ { id: "session-math-01", date: "2024-05-21", records: taStudentList.slice(4, 12).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })), }, ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
     },
-     {
-      id: "group-ict-c",
-      name: "ICT Practical - Group C",
-      course: "ICT-102",
-      studentCount: 4,
-      students: taStudentList.slice(8, 12),
-      sessions: [],
-    },
+     { id: "group-ict-c", name: "ICT Practical - Group C", course: "ICT-102", studentCount: 4, students: taStudentList.slice(8, 12), sessions: [], },
   ]
 };
 
-// New data for TA Grading
+// --- TA GRADING DATA ---
+export type StudentGrade = {
+  studentId: string;
+  name: string;
+  grade: number | null; // Grade is now a number or null if not graded
+};
+
+export type GradingEntry = {
+  id: string;
+  taName: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  maxScore: number; // Max possible score for this entry
+  studentGrades: StudentGrade[];
+};
+
+export const taGradingHistory: GradingEntry[] = [
+    {
+        id: 'grading-1716300000000',
+        taName: 'Alex Smith',
+        date: '2024-05-20',
+        title: 'Midterm 1 Exam',
+        maxScore: 100,
+        studentGrades: taStudentList.slice(0,8).map(s => ({...s, studentId: s.id, name: s.name, grade: Math.floor(Math.random() * (98 - 75 + 1)) + 75}))
+    },
+    {
+        id: 'grading-1715600000000',
+        taName: 'Alex Smith',
+        date: '2024-05-13',
+        title: 'Homework 4',
+        maxScore: 20,
+        studentGrades: taStudentList.slice(0,8).map(s => ({...s, studentId: s.id, name: s.name, grade: Math.floor(Math.random() * (20 - 15 + 1)) + 15}))
+    },
+];
+
 export const taGradingData = {
   courses: [
-    {
-      id: "ict-fundamentals",
-      name: "ICT Fundamentals",
-      assignments: [
-        {
-          id: "assign-1",
-          title: "Assignment 3: Web Basics",
-          dueDate: "2024-05-15",
-          submissions: [
-            { studentId: "student-1", studentName: "Emma Johnson", status: "Graded", grade: "95/100" },
-            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
-            { studentId: "student-3", studentName: "Sarah Wilson", status: "Late", grade: null },
-          ],
-        },
-         {
-          id: "assign-3",
-          title: "Assignment 4: Databases",
-          dueDate: "2024-05-22",
-          submissions: [
-            { studentId: "student-1", studentName: "Emma Johnson", status: "Needs Grading", grade: null },
-            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
-          ],
-        },
-      ],
-    },
-    {
-      id: "mathematics",
-      name: "Mathematics",
-      assignments: [
-        {
-          id: "assign-2",
-          title: "Problem Set 5: Calculus",
-          dueDate: "2024-05-18",
-          submissions: [
-             { studentId: "student-4", studentName: "David Brown", status: "Needs Grading", grade: null },
-             { studentId: "student-5", studentName: "Lisa Wilson", status: "Graded", grade: "88/100" },
-          ],
-        },
-      ],
-    },
+    { id: "ict-fundamentals", name: "ICT Fundamentals", assignments: [ { id: "assign-1", title: "Assignment 3: Web Basics", dueDate: "2024-05-15", submissions: [ { studentId: "student-1", studentName: "Emma Johnson", status: "Graded", grade: "95/100" }, { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null }, { studentId: "student-3", studentName: "Sarah Wilson", status: "Late", grade: null }, ], }, { id: "assign-3", title: "Assignment 4: Databases", dueDate: "2024-05-22", submissions: [ { studentId: "student-1", studentName: "Emma Johnson", status: "Needs Grading", grade: null }, { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null }, ], }, ], },
+    { id: "mathematics", name: "Mathematics", assignments: [ { id: "assign-2", title: "Problem Set 5: Calculus", dueDate: "2024-05-18", submissions: [ { studentId: "student-4", studentName: "David Brown", status: "Needs Grading", grade: null }, { studentId: "student-5", studentName: "Lisa Wilson", status: "Graded", grade: "88/100" }, ], }, ], },
   ],
 };
 
-// New data for TA Resources
+// --- TA RESOURCES AND ANNOUNCEMENTS ---
 export const taResourceData = {
   subjects: [
-    {
-      id: "ict",
-      name: "ICT Resources",
-      videos: [
-        { id: "vid-1", title: "Advanced Python: Decorators", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-        { id: "vid-2", title: "SQL Normalization Forms Explained", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-        { id: "vid-3", title: "React Hooks in 10 Minutes", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      ],
-    },
-    {
-      id: "math",
-      name: "Mathematics Resources",
-      videos: [
-        { id: "vid-4", title: "Visualizing Calculus: Integrals", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-        { id: "vid-5", title: "Statistics: Understanding P-Values", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      ],
-    },
+    { id: "ict", name: "ICT Resources", videos: [ { id: "vid-1", title: "Advanced Python: Decorators", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, { id: "vid-2", title: "SQL Normalization Forms Explained", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, { id: "vid-3", title: "React Hooks in 10 Minutes", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, ], },
+    { id: "math", name: "Mathematics Resources", videos: [ { id: "vid-4", title: "Visualizing Calculus: Integrals", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, { id: "vid-5", title: "Statistics: Understanding P-Values", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" }, ], },
   ],
 };
 
-// New data for TA Announcements
 export const taAnnouncementsData = [
-    {
-      id: "ta-ann-1",
-      title: "Extra Q&A session for ICT Assignment 3",
-      content: "Hi everyone, I'll be hosting an extra Q&A session this Wednesday at 4 PM to help with the web basics assignment. Please come with your questions prepared. The Zoom link is the usual one.",
-      author: "Alex Smith",
-      group: "ICT Fundamentals - Group A",
-      date: "2024-05-20T11:00:00Z",
-    },
-    {
-      id: "ta-ann-2",
-      title: "Office Hours Canceled for May 22",
-      content: "Please note that my regular office hours for this Wednesday, May 22, are canceled. Feel free to email me with any urgent questions.",
-      author: "Alex Smith",
-      group: "All Groups",
-      date: "2024-05-19T16:30:00Z",
-    },
+    { id: "ta-ann-1", title: "Extra Q&A session for ICT Assignment 3", content: "Hi everyone, I'll be hosting an extra Q&A session this Wednesday at 4 PM to help with the web basics assignment. Please come with your questions prepared. The Zoom link is the usual one.", author: "Alex Smith", group: "ICT Fundamentals - Group A", date: "2024-05-20T11:00:00Z", },
+    { id: "ta-ann-2", title: "Office Hours Canceled for May 22", content: "Please note that my regular office hours for this Wednesday, May 22, are canceled. Feel free to email me with any urgent questions.", author: "Alex Smith", group: "All Groups", date: "2024-05-19T16:30:00Z", },
 ];
 
-// New data for TA Subjects
-export const taSubjectsData = [
-  {
-    id: "ict-fundamentals",
-    name: "ICT Fundamentals",
-    description: "Assisting with core concepts of Information and Communication Technology, including hardware, software, and networking.",
-    instructor: "Dr. Sarah Johnson",
-    studentGroups: ["Group A", "Group C"],
-  },
-  {
-    id: "mathematics",
-    name: "Mathematics",
-    description: "Providing support for Algebra, Geometry, and introductory Calculus problem sets and concepts.",
-    instructor: "Prof. Michael Chen",
-    studentGroups: ["Group B"],
-  },
+// --- TA SCHEDULE & AVAILABILITY ---
+export type TASession = {
+    id: string;
+    title: string;
+    description?: string;
+    dateTime: string; // ISO 8601 format
+    durationMinutes: number;
+    meetingLink: string;
+}
+
+export type TAAvailabilitySlot = {
+    day: 'Sunday' | 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday';
+    slots: string[]; // e.g., ["09:00-11:00", "14:00-17:00"]
+}
+
+export const taAvailabilityData: TAAvailabilitySlot[] = [
+    { day: 'Monday', slots: ['09:00-11:00', '14:00-17:00'] },
+    { day: 'Tuesday', slots: ['10:00-12:00'] },
+    { day: 'Wednesday', slots: ['09:00-11:00', '13:00-16:00'] },
+    { day: 'Thursday', slots: ['10:00-12:00'] },
+    { day: 'Friday', slots: ['14:00-16:00'] },
+    { day: 'Saturday', slots: [] },
+    { day: 'Sunday', slots: [] },
 ];
 
+export const taScheduleData: TASession[] = [
+    { id: "session-1", title: "ICT Q&A Session", dateTime: "2024-05-27T14:00:00Z", durationMinutes: 60, meetingLink: "https://zoom.us/j/1234567890" },
+    { id: "session-2", title: "Math Problem Solving", dateTime: "2024-05-29T13:00:00Z", durationMinutes: 90, meetingLink: "https://zoom.us/j/0987654321" },
+    // Past sessions for history
+    { id: "session-3", title: "ICT Midterm Review", dateTime: "2024-05-20T14:00:00Z", durationMinutes: 60, meetingLink: "https://zoom.us/j/1122334455" },
+    { id: "session-4", title: "Math Concepts", dateTime: "2024-05-15T13:00:00Z", durationMinutes: 90, meetingLink: "https://zoom.us/j/5544332211" },
+];
 
-// --- NEW DATA FOR REDESIGNED COURSE DETAILS PAGE ---
-export interface AssignmentDetail {
-  id: number;
-  title: string;
-  dueDate: string;
-  status: 'Submitted' | 'Graded' | 'Missing';
-  grade?: string;
-}
-
-export interface QuizDetail {
-  id: number;
-  title: string;
-  date: string;
-  status: 'Passed' | 'Failed' | 'Not Taken';
-  score?: string;
-}
-
-export interface AttendanceDetail {
-  id: number;
-  date: string;
-  status: 'Present' | 'Absent' | 'Late';
-}
-export interface CourseVideo {
-  id: number;
-  title: string;
-  locked: boolean;
-  url: string;
-}
-
-export interface CourseAnnouncement {
-  id: number;
-  title: string;
-  date: string;
-}
-
-export interface CourseDetail {
-  title: string;
-  endMonth: string;
-  group: string;
-  progress: {
-    assignmentsCompleted: number;
-    quizzesPassed: [number, number];
-    attendanceRate: number;
-  };
-  assignments: AssignmentDetail[];
-  quizzes: QuizDetail[];
-  attendance: AttendanceDetail[];
-  videos: CourseVideo[];
-  details: {
-    instructor: string;
-    ta: string;
-    contact: string;
-  };
-  announcements: CourseAnnouncement[];
-}
-
-export const courseDetailsData: { [key: string]: CourseDetail } = {
-  "ict-101": {
-    title: "ICT-101: Fundamentals of ICT",
-    endMonth: "July",
-    group: "Group A",
-    progress: {
-      assignmentsCompleted: 92,
-      quizzesPassed: [8, 8],
-      attendanceRate: 98,
-    },
-    assignments: [
-      { id: 1, title: "Assignment 1: Hardware Basics", dueDate: "2024-09-15", status: "Graded", grade: "100/100" },
-      { id: 2, title: "Assignment 2: Networking", dueDate: "2024-09-22", status: "Graded", grade: "90/100" },
-    ],
-    quizzes: [
-      { id: 1, title: "Quiz 1: Systems", date: "2024-09-12", status: "Passed", score: "10/10" },
-      { id: 2, title: "Quiz 2: Internet", date: "2024-09-19", status: "Passed", score: "8/10" },
-    ],
-    attendance: [
-      { id: 1, date: "2024-09-05", status: "Present" },
-      { id: 2, date: "2024-09-07", status: "Present" },
-    ],
-    videos: [
-      { id: 1, title: "Week 1: Computer Systems", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 2, title: "Week 2: Networks & The Internet", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 3, title: "Week 3: Digital Literacy & Security", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 4, title: "Week 4: Intro to Databases", locked: true, url: "" },
-      { id: 5, title: "Week 5: Basics of Web Development", locked: true, url: "" },
-    ],
-    details: {
-      instructor: "Dr. Grace Hopper",
-      ta: "Alan Turing",
-      contact: "a.turing@university.edu",
-    },
-    announcements: [
-      { id: 1, title: "Project 1 specifications are out", date: "Oct 28, 2024" },
-      { id: 2, title: "Office hours moved to 3pm", date: "Oct 25, 2024" },
-    ],
-  },
-  "cs-101": {
-    title: "CS101: Introduction to Programming with Python",
-    endMonth: "June",
-    group: "Group B",
-    progress: {
-      assignmentsCompleted: 88,
-      quizzesPassed: [4, 5],
-      attendanceRate: 92,
-    },
-    assignments: [
-        { id: 1, title: "Assignment 1: Python Basics", dueDate: "2024-09-15", status: "Graded", grade: "95/100" },
-        { id: 2, title: "Assignment 2: Control Flow", dueDate: "2024-09-22", status: "Graded", grade: "88/100" },
-        { id: 3, title: "Assignment 3: Functions", dueDate: "2024-09-29", status: "Submitted" },
-        { id: 4, title: "Assignment 4: Data Structures", dueDate: "2024-10-06", status: "Missing" },
-    ],
-    quizzes: [
-        { id: 1, title: "Quiz 1: Syntax", date: "2024-09-12", status: "Passed", score: "10/10" },
-        { id: 2, title: "Quiz 2: Loops", date: "2024-09-19", status: "Passed", score: "8/10" },
-        { id: 3, title: "Quiz 3: Functions", date: "2024-09-26", status: "Passed", score: "9/10" },
-        { id: 4, title: "Quiz 4: Dictionaries", date: "2024-10-03", status: "Passed", score: "7/10" },
-        { id: 5, title: "Quiz 5: Midterm", date: "2024-10-10", status: "Failed", score: "4/10" },
-    ],
-    attendance: [
-        { id: 1, date: "2024-09-05", status: "Present" },
-        { id: 2, date: "2024-09-07", status: "Present" },
-        { id: 3, date: "2024-09-12", status: "Late" },
-        { id: 4, date: "2024-09-14", status: "Present" },
-        { id: 5, date: "2024-09-19", status: "Absent" },
-        { id: 6, date: "2024-09-21", status: "Present" },
-    ],
-    videos: [
-      { id: 1, title: "Week 1: Introduction & Setup", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 2, title: "Week 2: Variables & Data Types", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 3, title: "Week 3: Control Flow & Loops", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 4, title: "Week 4: Functions & Modules", locked: false, url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
-      { id: 5, title: "Week 5: Dictionaries & Data Structures", locked: true, url: "" },
-      { id: 6, title: "Week 6: File I/O", locked: true, url: "" },
-      { id: 7, title: "Week 7: Object-Oriented Programming", locked: true, url: "" },
-      { id: 8, title: "Week 8: Final Project", locked: true, url: "" },
-    ],
-    details: {
-      instructor: "Dr. Ada Lovelace",
-      ta: "Charles Babbage",
-      contact: "c.babbage@university.edu",
-    },
-    announcements: [
-      { id: 1, title: "Midterm 1 Grades Posted", date: "Oct 26, 2024" },
-      { id: 2, title: "Reminder: No Lab This Friday", date: "Oct 22, 2024" },
-      { id: 3, title: "Welcome to CS101!", date: "Sep 05, 2024" },
-    ],
-  },
+// --- TA GROUPS DATA ---
+export type TaGroup = {
+  id: string;
+  courseName: string;
+  courseId: string;
+  groupName: string;
+  studentCount: number;
+  instructorName: string;
 };
+
+export const taGroupsData: TaGroup[] = [
+  { id: "group-ict-a", courseName: "ICT Fundamentals", courseId: "ict-fundamentals", groupName: "ICT Fundamentals - Group A", studentCount: 8, instructorName: "Dr. Sarah Johnson", },
+  { id: "group-math-b", courseName: "Mathematics", courseId: "mathematics", groupName: "Mathematics - Group B", studentCount: 8, instructorName: "Prof. Michael Chen", },
+  { id: "group-ict-c", courseName: "ICT Practical", courseId: "ict-practical", groupName: "ICT Practical - Group C", studentCount: 4, instructorName: "Dr. Sarah Johnson", },
+];
 //END OF lib\database.ts
 
 //START OF lib\utils.ts
@@ -12166,7 +11942,6 @@ export function cn(...inputs: ClassValue[]) {
     "typescript": "^5"
   }
 }
-
 //END OF package.json
 
 //START OF styles\globals.css
