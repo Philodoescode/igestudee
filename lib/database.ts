@@ -3,7 +3,7 @@
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
-import { BookOpen, Calendar, CheckCircle, GraduationCap, Heart, MessageSquare, Plus, Megaphone, Shield, TrendingUp, UserCheck, Users, DollarSign, BarChart3, Settings, LayoutDashboard, User } from "lucide-react";
+import { BookOpen, Calendar, CheckCircle, GraduationCap, Heart, MessageSquare, Plus, Megaphone, Shield, TrendingUp, UserCheck, Users, DollarSign, BarChart3, Settings, LayoutDashboard, User, Video, ClipboardEdit, Award } from "lucide-react";
 
 // --- HOMEPAGE DATA ---
 
@@ -290,6 +290,11 @@ export const taDefaultProfileData = { firstName: "Alex", lastName: "Smith", emai
 
 export const taProfileStats = [ { label: "Students Helped", value: "150+", color: "text-blue-600" }, { label: "Sessions Conducted", value: "85", color: "text-green-600" }, { label: "Average Rating", value: "4.9/5", color: "text-purple-600" }, { label: "Response Time", value: "< 2hrs", color: "text-orange-600" }, ];
 
+export const taProfileAchievements = [
+  { icon: Award, title: "TA of the Month", description: "Awarded for exceptional student support.", date: "March 2024" },
+  { icon: CheckCircle, title: "Certified Python Tutor", description: "Completed advanced Python tutoring certification.", date: "January 2024" },
+];
+
 export const taScheduleData = {
     sessions: [ { id: "session-1", title: "ICT Q&A Session", course: "ICT Fundamentals", type: "Q&A", date: "2024-01-15", time: "14:00", duration: "1 hour", students: 12, location: "Virtual - Zoom Room 1", status: "upcoming", description: "Weekly Q&A session for ICT Fundamentals students", }, { id: "session-5", title: "ICT Review Session", course: "ICT Fundamentals", type: "Review", date: "2024-01-12", time: "15:00", duration: "1.5 hours", students: 10, location: "Virtual - Zoom Room 1", status: "completed", description: "Review session for Module 3 concepts", }, ],
     weeklyHours: 8, totalSessions: 12, averageAttendance: 85,
@@ -299,6 +304,201 @@ export const taStudentManagementData = {
     groups: [ { id: "group-1", name: "ICT Fundamentals - Group A", course: "ICT Fundamentals", studentCount: 12, averageProgress: 78, strugglingStudents: 2, students: [ { id: "student-1", name: "Emma Johnson", email: "emma.johnson@example.com", progress: 85, lastActive: "1 hour ago", status: "active", }, { id: "student-3", name: "Sarah Wilson", email: "sarah.wilson@example.com", progress: 45, lastActive: "2 days ago", status: "struggling", }, ], }, ],
     progressInsights: { totalStudents: 35, averageProgress: 77, strugglingStudents: 8, activeStudents: 27, commonStrugglingAreas: [ { topic: "Python Loops", studentCount: 5 }, { topic: "Database Design", studentCount: 4 }, ], },
 };
+
+// --- NEW DATA FOR TA ATTENDANCE PAGE ---
+
+export type TAttendanceRecord = {
+  studentId: string;
+  name: string;
+  status: 'Present' | 'Absent' | 'Tardy';
+};
+
+export type TAttendanceSession = {
+  id: string;
+  date: string;
+  records: TAttendanceRecord[];
+};
+
+export type TAttendanceGroup = {
+  id: string;
+  name: string;
+  course: string;
+  studentCount: number;
+  students: { id: string; name: string }[];
+  sessions: TAttendanceSession[];
+};
+
+const taStudentList = [
+    { id: "stu-01", name: "Emma Johnson" }, { id: "stu-02", name: "Michael Chen" },
+    { id: "stu-03", name: "Sarah Wilson" }, { id: "stu-04", name: "David Brown" },
+    { id: "stu-05", name: "Lisa Wilson" }, { id: "stu-06", name: "James Taylor" },
+    { id: "stu-07", name: "Olivia Martinez" }, { id: "stu-08", name: "William Garcia" },
+    { id: "stu-09", name: "Sophia Rodriguez" }, { id: "stu-10", name: "Daniel Miller" },
+    { id: "stu-11", name: "Isabella Davis" }, { id: "stu-12", name: "Joseph Anderson" },
+];
+
+export const taAttendancePageData: { groups: TAttendanceGroup[] } = {
+  groups: [
+    {
+      id: "group-ict-a",
+      name: "ICT Fundamentals - Group A",
+      course: "ICT-101",
+      studentCount: 8,
+      students: taStudentList.slice(0, 8),
+      sessions: [
+        {
+          id: "session-ict-01",
+          date: "2024-05-20",
+          records: [
+            { studentId: "stu-01", name: "Emma Johnson", status: "Present" },
+            { studentId: "stu-02", name: "Michael Chen", status: "Present" },
+            { studentId: "stu-03", name: "Sarah Wilson", status: "Absent" },
+            { studentId: "stu-04", name: "David Brown", status: "Tardy" },
+            { studentId: "stu-05", name: "Lisa Wilson", status: "Present" },
+            { studentId: "stu-06", name: "James Taylor", status: "Present" },
+            { studentId: "stu-07", name: "Olivia Martinez", status: "Present" },
+            { studentId: "stu-08", name: "William Garcia", status: "Present" },
+          ]
+        },
+        {
+          id: "session-ict-02",
+          date: "2024-05-13",
+          records: taStudentList.slice(0, 8).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
+        },
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    },
+    {
+      id: "group-math-b",
+      name: "Mathematics - Group B",
+      course: "MATH-101",
+      studentCount: 8,
+      students: taStudentList.slice(4, 12),
+      sessions: [
+        {
+          id: "session-math-01",
+          date: "2024-05-21",
+          records: taStudentList.slice(4, 12).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
+        },
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    },
+     {
+      id: "group-ict-c",
+      name: "ICT Practical - Group C",
+      course: "ICT-102",
+      studentCount: 4,
+      students: taStudentList.slice(8, 12),
+      sessions: [],
+    },
+  ]
+};
+
+// New data for TA Grading
+export const taGradingData = {
+  courses: [
+    {
+      id: "ict-fundamentals",
+      name: "ICT Fundamentals",
+      assignments: [
+        {
+          id: "assign-1",
+          title: "Assignment 3: Web Basics",
+          dueDate: "2024-05-15",
+          submissions: [
+            { studentId: "student-1", studentName: "Emma Johnson", status: "Graded", grade: "95/100" },
+            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
+            { studentId: "student-3", studentName: "Sarah Wilson", status: "Late", grade: null },
+          ],
+        },
+         {
+          id: "assign-3",
+          title: "Assignment 4: Databases",
+          dueDate: "2024-05-22",
+          submissions: [
+            { studentId: "student-1", studentName: "Emma Johnson", status: "Needs Grading", grade: null },
+            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
+          ],
+        },
+      ],
+    },
+    {
+      id: "mathematics",
+      name: "Mathematics",
+      assignments: [
+        {
+          id: "assign-2",
+          title: "Problem Set 5: Calculus",
+          dueDate: "2024-05-18",
+          submissions: [
+             { studentId: "student-4", studentName: "David Brown", status: "Needs Grading", grade: null },
+             { studentId: "student-5", studentName: "Lisa Wilson", status: "Graded", grade: "88/100" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+// New data for TA Resources
+export const taResourceData = {
+  subjects: [
+    {
+      id: "ict",
+      name: "ICT Resources",
+      videos: [
+        { id: "vid-1", title: "Advanced Python: Decorators", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-2", title: "SQL Normalization Forms Explained", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-3", title: "React Hooks in 10 Minutes", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      ],
+    },
+    {
+      id: "math",
+      name: "Mathematics Resources",
+      videos: [
+        { id: "vid-4", title: "Visualizing Calculus: Integrals", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-5", title: "Statistics: Understanding P-Values", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      ],
+    },
+  ],
+};
+
+// New data for TA Announcements
+export const taAnnouncementsData = [
+    {
+      id: "ta-ann-1",
+      title: "Extra Q&A session for ICT Assignment 3",
+      content: "Hi everyone, I'll be hosting an extra Q&A session this Wednesday at 4 PM to help with the web basics assignment. Please come with your questions prepared. The Zoom link is the usual one.",
+      author: "Alex Smith",
+      group: "ICT Fundamentals - Group A",
+      date: "2024-05-20T11:00:00Z",
+    },
+    {
+      id: "ta-ann-2",
+      title: "Office Hours Canceled for May 22",
+      content: "Please note that my regular office hours for this Wednesday, May 22, are canceled. Feel free to email me with any urgent questions.",
+      author: "Alex Smith",
+      group: "All Groups",
+      date: "2024-05-19T16:30:00Z",
+    },
+];
+
+// New data for TA Subjects
+export const taSubjectsData = [
+  {
+    id: "ict-fundamentals",
+    name: "ICT Fundamentals",
+    description: "Assisting with core concepts of Information and Communication Technology, including hardware, software, and networking.",
+    instructor: "Dr. Sarah Johnson",
+    studentGroups: ["Group A", "Group C"],
+  },
+  {
+    id: "mathematics",
+    name: "Mathematics",
+    description: "Providing support for Algebra, Geometry, and introductory Calculus problem sets and concepts.",
+    instructor: "Prof. Michael Chen",
+    studentGroups: ["Group B"],
+  },
+];
+
 
 // --- NEW DATA FOR REDESIGNED COURSE DETAILS PAGE ---
 export interface AssignmentDetail {
@@ -447,3 +647,40 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
     ],
   },
 };
+
+// --- NEW DATA FOR TA GROUPS PAGE ---
+export type TaGroup = {
+  id: string;
+  courseName: string;
+  courseId: string;
+  groupName: string;
+  studentCount: number;
+  instructorName: string;
+};
+
+export const taGroupsData: TaGroup[] = [
+  {
+    id: "group-ict-a",
+    courseName: "ICT Fundamentals",
+    courseId: "ict-fundamentals",
+    groupName: "ICT Fundamentals - Group A",
+    studentCount: 8,
+    instructorName: "Dr. Sarah Johnson",
+  },
+  {
+    id: "group-math-b",
+    courseName: "Mathematics",
+    courseId: "mathematics",
+    groupName: "Mathematics - Group B",
+    studentCount: 8,
+    instructorName: "Prof. Michael Chen",
+  },
+  {
+    id: "group-ict-c",
+    courseName: "ICT Practical",
+    courseId: "ict-practical",
+    groupName: "ICT Practical - Group C",
+    studentCount: 4,
+    instructorName: "Dr. Sarah Johnson",
+  },
+];

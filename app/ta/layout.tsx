@@ -1,10 +1,22 @@
 "use client"
 
 import type React from "react"
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  Calendar,
+  Settings,
+  User,
+  BookOpen,
+  ClipboardEdit,
+  UserCheck,
+  Video,
+  Megaphone,
+} from "lucide-react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { LayoutDashboard, MessageSquare, Users, Calendar, UserCheck, Settings } from "lucide-react"
 
 const navigation = [
   {
@@ -16,29 +28,24 @@ const navigation = [
         icon: LayoutDashboard,
       },
       {
-        title: "Discussion Forum",
-        href: "/ta/forum",
-        icon: MessageSquare,
-      },
-      {
-        title: "Student Management",
-        href: "/ta/students",
+        title: "Groups",
+        href: "/ta/groups",
         icon: Users,
       },
-    ],
-  },
-  {
-    title: "GENERAL",
-    items: [
       {
-        title: "My Schedule",
+        title: "Announcements",
+        href: "/ta/announcements",
+        icon: Megaphone,
+      },
+      {
+        title: "Schedule & Meetings",
         href: "/ta/schedule",
         icon: Calendar,
       },
       {
-        title: "Settings",
-        href: "/ta/settings",
-        icon: Settings,
+        title: "Video Resources",
+        href: "/ta/resources",
+        icon: Video,
       },
     ],
   },

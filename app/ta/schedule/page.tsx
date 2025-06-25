@@ -4,8 +4,11 @@ import { useRequireAuth } from "@/hooks/use-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Users, Video, MapPin } from "lucide-react"
+import { Calendar, Clock, Users, Video, MapPin, Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { taScheduleData } from "@/lib/database"
@@ -13,7 +16,7 @@ import { taScheduleData } from "@/lib/database"
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
   const [viewMode, setViewMode] = useState("week")
-  const [selectedWeek, setSelectedWeek] = useState(new Date())
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -61,18 +64,57 @@ export default function TASchedulePage() {
             <h1 className="text-3xl font-poppins font-bold text-gray-900">TA Schedule</h1>
             <p className="text-gray-600 mt-1">Manage your Q&A sessions, tutorials, and office hours.</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Select value={viewMode} onValueChange={setViewMode}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Week View</SelectItem>
-                <SelectItem value="month">Month View</SelectItem>
-                <SelectItem value="list">List View</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Session
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Session</DialogTitle>
+                <DialogDescription>Schedule a new meeting for a student group.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Session Title</Label>
+                  <Input id="title" placeholder="e.g., Mid-term Review" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Input id="time" type="time" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="group">Student Group</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
+                      <SelectItem value="group-b">Mathematics - Group B</SelectItem>
+                      <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="link">Meeting Link</Label>
+                  <Input id="link" placeholder="https://zoom.us/..." />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                <Button onClick={() => setIsCreateDialogOpen(false)}>Schedule Session</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </motion.div>
 

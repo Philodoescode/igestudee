@@ -6871,6 +6871,535 @@ export default function StudentSettingsPage() {
 }
 //END OF app\student\settings\page.tsx
 
+//START OF app\ta\announcements\loading.tsx
+export default function Loading() {
+  return null
+}
+//END OF app\ta\announcements\loading.tsx
+
+//START OF app\ta\announcements\page.tsx
+"use client"
+
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Megaphone, Plus, Send, Clock, User } from "lucide-react"
+import { motion } from "framer-motion"
+import { useState } from "react"
+import { taAnnouncementsData } from "@/lib/database"
+
+export default function TAAnnouncementsPage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+  const [announcements, setAnnouncements] = useState(taAnnouncementsData)
+  const [newAnnouncement, setNewAnnouncement] = useState({ title: "", content: "", group: "all" })
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  const handleCreateAnnouncement = () => {
+    if (!newAnnouncement.title || !newAnnouncement.content) return
+
+    const announcement = {
+      id: `ta-ann-${Date.now()}`,
+      author: user?.name || "TA",
+      date: new Date().toISOString(),
+      ...newAnnouncement,
+    }
+    setAnnouncements([announcement, ...announcements])
+    setNewAnnouncement({ title: "", content: "", group: "all" })
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-poppins font-bold text-gray-900">Announcements</h1>
+            <p className="text-gray-600 mt-1">Create and manage announcements for your student groups.</p>
+          </div>
+        </div>
+      </motion.div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Create Announcement Form */}
+        <motion.div
+          className="lg:col-span-1"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Plus className="h-5 w-5 text-purple-600" />
+                Create New Announcement
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="title">Title</Label>
+                <Input
+                  id="title"
+                  placeholder="Enter announcement title"
+                  value={newAnnouncement.title}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="content">Content</Label>
+                <Textarea
+                  id="content"
+                  placeholder="Enter announcement details..."
+                  rows={5}
+                  value={newAnnouncement.content}
+                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="group">Target Group</Label>
+                <Select value={newAnnouncement.group} onValueChange={(value) => setNewAnnouncement({ ...newAnnouncement, group: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a group" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Groups</SelectItem>
+                    <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
+                    <SelectItem value="group-b">Mathematics - Group B</SelectItem>
+                    <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <Button className="w-full" onClick={handleCreateAnnouncement}>
+                <Send className="h-4 w-4 mr-2" />
+                Post Announcement
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Posted Announcements List */}
+        <motion.div
+          className="lg:col-span-2 space-y-4"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Megaphone className="h-5 w-5 text-purple-600" />
+                Your Posted Announcements
+              </CardTitle>
+              <CardDescription>A list of announcements you have created.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {announcements.map((ann) => (
+                <div key={ann.id} className="border rounded-lg p-4">
+                  <div className="flex justify-between items-start">
+                    <h4 className="font-semibold text-gray-900">{ann.title}</h4>
+                    <Badge variant="outline">{ann.group}</Badge>
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">{ann.content}</p>
+                  <div className="flex justify-between items-center mt-4 text-xs text-gray-500">
+                    <div className="flex items-center gap-1">
+                      <User className="h-3 w-3" />
+                      <span>{ann.author}</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      <span>{new Date(ann.date).toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {announcements.length === 0 && <p className="text-sm text-center text-gray-500 py-4">No announcements posted yet.</p>}
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+//END OF app\ta\announcements\page.tsx
+
+//START OF app\ta\attendance\loading.tsx
+export default function Loading() {
+  return null
+}
+//END OF app\ta\attendance\loading.tsx
+
+//START OF app\ta\attendance\page.tsx
+"use client"
+
+import { useState, useEffect } from "react"
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Badge } from "@/components/ui/badge"
+import { UserCheck, Users, Calendar, ArrowLeft, Plus, Check, Edit, Trash2 } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { taAttendancePageData } from "@/lib/database"
+import type { TAttendanceGroup, TAttendanceSession, TAttendanceRecord } from "@/lib/database"
+
+export default function TAAttendancePage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+  const [groups, setGroups] = useState<TAttendanceGroup[]>(taAttendancePageData.groups)
+  const [selectedGroup, setSelectedGroup] = useState<TAttendanceGroup | null>(null)
+
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null)
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  const handleSelectGroup = (group: TAttendanceGroup) => {
+    setSelectedGroup(group)
+  }
+
+  const handleBackToGroups = () => {
+    setSelectedGroup(null)
+  }
+
+  const handleOpenModal = (session: TAttendanceSession | null) => {
+    setEditingSession(session)
+    setIsModalOpen(true)
+  }
+
+  const handleSaveSession = (newSession: TAttendanceSession) => {
+    const updatedGroups = groups.map(group => {
+      if (group.id === selectedGroup?.id) {
+        const sessionExists = group.sessions.some(s => s.id === newSession.id);
+        let updatedSessions;
+        if (sessionExists) {
+          // Update existing session
+          updatedSessions = group.sessions.map(s => s.id === newSession.id ? newSession : s);
+        } else {
+          // Add new session
+          updatedSessions = [newSession, ...group.sessions];
+        }
+        // Sort sessions by date descending
+        updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        return { ...group, sessions: updatedSessions };
+      }
+      return group;
+    });
+
+    setGroups(updatedGroups);
+    // Refresh selected group data
+    setSelectedGroup(updatedGroups.find(g => g.id === selectedGroup?.id) || null);
+  };
+  
+  const handleDeleteSession = (sessionId: string) => {
+     const updatedGroups = groups.map(group => {
+      if (group.id === selectedGroup?.id) {
+        const updatedSessions = group.sessions.filter(s => s.id !== sessionId);
+        return { ...group, sessions: updatedSessions };
+      }
+      return group;
+    });
+
+    setGroups(updatedGroups);
+    setSelectedGroup(updatedGroups.find(g => g.id === selectedGroup?.id) || null);
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      <AnimatePresence mode="wait">
+        {selectedGroup ? (
+          <motion.div
+            key="history-view"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupHistoryView
+              group={selectedGroup}
+              onBack={handleBackToGroups}
+              onAddSession={() => handleOpenModal(null)}
+              onEditSession={(session) => handleOpenModal(session)}
+              onDeleteSession={handleDeleteSession}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="selection-view"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            <GroupSelectionView groups={groups} onSelectGroup={handleSelectGroup} />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AttendanceModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        session={editingSession}
+        group={selectedGroup}
+        onSave={handleSaveSession}
+      />
+    </div>
+  )
+}
+
+// --- Sub-components ---
+
+function GroupSelectionView({ groups, onSelectGroup }: { groups: TAttendanceGroup[], onSelectGroup: (group: TAttendanceGroup) => void }) {
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <h1 className="text-3xl font-poppins font-bold text-gray-900">Attendance</h1>
+        <p className="text-gray-600 mt-1">Select a group to manage attendance.</p>
+      </motion.div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+        {groups.map((group, index) => (
+          <motion.div
+            key={group.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            whileHover={{ y: -5 }}
+            className="cursor-pointer"
+            onClick={() => onSelectGroup(group)}
+          >
+            <Card className="h-full overflow-hidden shadow-lg hover:shadow-xl transition-shadow bg-gradient-to-br from-emerald-500 to-teal-600 text-white">
+              <CardHeader>
+                <CardTitle>{group.name}</CardTitle>
+                <CardDescription className="text-emerald-200">{group.course}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex items-center space-x-2 text-sm">
+                <Users className="h-4 w-4" />
+                <span>{group.studentCount} Students</span>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function GroupHistoryView({ group, onBack, onAddSession, onEditSession, onDeleteSession }: {
+  group: TAttendanceGroup,
+  onBack: () => void,
+  onAddSession: () => void,
+  onEditSession: (session: TAttendanceSession) => void,
+  onDeleteSession: (sessionId: string) => void,
+}) {
+  const getSessionSummary = (records: TAttendanceRecord[]) => {
+    const summary = records.reduce((acc, record) => {
+      if (record.status === 'Absent') acc.absent++;
+      if (record.status === 'Tardy') acc.tardy++;
+      return acc;
+    }, { absent: 0, tardy: 0 });
+    return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
+  }
+
+  return (
+    <>
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="flex flex-col sm:flex-row items-center sm:justify-between gap-4 mb-6">
+          <Button variant="ghost" onClick={onBack} className="w-full sm:w-auto self-start sm:self-center text-gray-600 hover:bg-transparent hover:text-emerald-600">
+            <ArrowLeft className="h-4 w-4 mr-2" /> Back to Groups
+          </Button>
+          <Button className="bg-gradient-to-r from-emerald-500 to-teal-500 w-full sm:w-auto" onClick={onAddSession}>
+            <Plus className="h-4 w-4 mr-2" /> Add Attendance
+          </Button>
+        </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>{group.name}</CardTitle>
+            <CardDescription>Attendance History</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Accordion type="single" collapsible className="w-full">
+              {group.sessions.map(session => (
+                <AccordionItem value={session.id} key={session.id}>
+                  <AccordionTrigger>
+                    <div className="flex justify-between w-full pr-4">
+                      <span>{new Date(session.date).toDateString()}</span>
+                      <span className="text-sm text-gray-500">{getSessionSummary(session.records)}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-2">
+                      {session.records.map(record => (
+                        <div key={record.studentId} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
+                          <span>{record.name}</span>
+                          <Badge variant={record.status === 'Present' ? 'default' : record.status === 'Absent' ? 'destructive' : 'secondary'}>
+                            {record.status}
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="flex justify-end space-x-2 mt-4">
+                      <Button variant="ghost" size="sm" onClick={() => onEditSession(session)}><Edit className="h-4 w-4 mr-1" /> Edit</Button>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                           <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone. This will permanently delete the attendance record for this session.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDeleteSession(session.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            {group.sessions.length === 0 && <p className="text-center text-gray-500 py-4">No attendance records found for this group.</p>}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </>
+  );
+}
+
+function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
+    isOpen: boolean,
+    setIsOpen: (open: boolean) => void,
+    session: TAttendanceSession | null,
+    group: TAttendanceGroup | null,
+    onSave: (session: TAttendanceSession) => void,
+}) {
+    const [step, setStep] = useState(1);
+    const [details, setDetails] = useState({ date: new Date().toISOString().split('T')[0] });
+    const [records, setRecords] = useState<TAttendanceRecord[]>([]);
+
+    useEffect(() => {
+        if (isOpen) {
+            if (session) { // Editing existing session
+                setDetails({ date: session.date });
+                setRecords(session.records);
+                setStep(2);
+            } else { // Creating new session
+                setDetails({ date: new Date().toISOString().split('T')[0] });
+                setRecords([]);
+                setStep(1);
+            }
+        }
+    }, [isOpen, session]);
+
+    const handleNext = () => {
+        if (!details.date) {
+            alert("Please provide a date.");
+            return;
+        }
+        if (group) {
+            const initialRecords = group.students.map(student => ({
+                studentId: student.id,
+                name: student.name,
+                status: 'Present' as 'Present' | 'Absent' | 'Tardy'
+            }));
+            setRecords(initialRecords);
+        }
+        setStep(2);
+    }
+    
+    const toggleStatus = (studentId: string) => {
+        const statuses = ['Present', 'Absent', 'Tardy'];
+        setRecords(records.map(r => {
+            if (r.studentId === studentId) {
+                const currentIndex = statuses.indexOf(r.status);
+                const nextStatus = statuses[(currentIndex + 1) % statuses.length] as 'Present' | 'Absent' | 'Tardy';
+                return { ...r, status: nextStatus };
+            }
+            return r;
+        }));
+    }
+
+    const markAllPresent = () => {
+        setRecords(records.map(r => ({ ...r, status: 'Present' })));
+    }
+
+    const handleConfirm = () => {
+        const finalSession: TAttendanceSession = {
+            id: session?.id || `session-${Date.now()}`,
+            ...details,
+            records,
+        };
+        onSave(finalSession);
+        setIsOpen(false);
+    }
+
+    const getStatusBadgeVariant = (status: string) => {
+      switch(status) {
+        case 'Present': return 'default';
+        case 'Absent': return 'destructive';
+        case 'Tardy': return 'secondary';
+        default: return 'outline';
+      }
+    }
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogContent className="sm:max-w-[425px] md:max-w-xl">
+                <DialogHeader>
+                    <DialogTitle>{session ? 'Edit Attendance' : 'Add Attendance'}</DialogTitle>
+                    <DialogDescription>
+                        {step === 1 ? "Provide session details." : `Mark attendance for ${group?.name}`}
+                    </DialogDescription>
+                </DialogHeader>
+
+                <AnimatePresence mode="wait">
+                    {step === 1 && !session ? (
+                        <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="date">Date</Label>
+                                <Input id="date" type="date" value={details.date} onChange={e => setDetails({...details, date: e.target.value})} />
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
+                            <div className="flex justify-between items-center">
+                                <p className="text-sm font-medium">{new Date(details.date).toDateString()}</p>
+                                <Button size="sm" variant="outline" onClick={markAllPresent}><Check className="h-4 w-4 mr-2" /> Mark All Present</Button>
+                            </div>
+                            <div className="max-h-64 overflow-y-auto pr-2 space-y-2">
+                                {records.map(record => (
+                                    <div key={record.studentId} className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-gray-50" onClick={() => toggleStatus(record.studentId)}>
+                                        <p>{record.name}</p>
+                                        <Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
+                                    </div>
+                                ))}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                
+                <DialogFooter>
+                    {step === 2 && !session && <Button variant="outline" onClick={() => setStep(1)}>Back</Button>}
+                    {step === 1 && !session ? <Button onClick={handleNext}>Next</Button> : <Button onClick={handleConfirm} className="bg-gradient-to-r from-emerald-500 to-teal-500">Confirm</Button>}
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    )
+}
+//END OF app\ta\attendance\page.tsx
+
 //START OF app\ta\forum\loading.tsx
 export default function Loading() {
   return null
@@ -7129,18 +7658,211 @@ export default function TAForumPage() {
 }
 //END OF app\ta\forum\page.tsx
 
+//START OF app\ta\grading\loading.tsx
+export default function Loading() {
+  return null
+}
+//END OF app\ta\grading\loading.tsx
+
+//START OF app\ta\grading\page.tsx
+"use client"
+
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Input } from "@/components/ui/input"
+import { ClipboardEdit, Save, BookOpen, User } from "lucide-react"
+import { motion } from "framer-motion"
+import { useState } from "react"
+import { taGradingData } from "@/lib/database"
+
+export default function TAGradingPage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+  const [selectedCourseId, setSelectedCourseId] = useState(taGradingData.courses[0].id)
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState(taGradingData.courses[0].assignments[0].id)
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  const selectedCourse = taGradingData.courses.find(c => c.id === selectedCourseId)!
+  const selectedAssignment = selectedCourse.assignments.find(a => a.id === selectedAssignmentId)!
+  
+  const [submissions, setSubmissions] = useState(selectedAssignment.submissions)
+
+  const handleGradeChange = (studentId: string, grade: string) => {
+    setSubmissions(submissions.map(s => s.studentId === studentId ? { ...s, grade: grade } : s));
+  };
+
+  const handleMarkAsGraded = (studentId: string) => {
+     setSubmissions(submissions.map(s => s.studentId === studentId ? { ...s, status: "Graded" } : s));
+  }
+
+  const handleSaveGrades = () => {
+    console.log("Saving grades:", submissions);
+    // Persist data logic here
+  }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "Graded":
+        return <Badge variant="default">Graded</Badge>
+      case "Needs Grading":
+        return <Badge variant="destructive">Needs Grading</Badge>
+      case "Late":
+        return <Badge variant="secondary" className="bg-yellow-100 text-yellow-700">Late</Badge>
+      default:
+        return <Badge variant="outline">{status}</Badge>
+    }
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-poppins font-bold text-gray-900">Grading</h1>
+            <p className="text-gray-600 mt-1">Grade student assignments and provide feedback.</p>
+          </div>
+          <Button onClick={handleSaveGrades}>
+            <Save className="h-4 w-4 mr-2" />
+            Save All Grades
+          </Button>
+        </div>
+      </motion.div>
+
+      {/* Filters */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BookOpen className="h-5 w-5 text-purple-600" />
+              Select Assignment
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col md:flex-row gap-4">
+            <Select value={selectedCourseId} onValueChange={(id) => {
+              setSelectedCourseId(id)
+              setSelectedAssignmentId(taGradingData.courses.find(c => c.id === id)!.assignments[0].id)
+              setSubmissions(taGradingData.courses.find(c => c.id === id)!.assignments[0].submissions)
+            }}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select a course" />
+              </SelectTrigger>
+              <SelectContent>
+                {taGradingData.courses.map(course => (
+                  <SelectItem key={course.id} value={course.id}>{course.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedAssignmentId} onValueChange={(id) => {
+              setSelectedAssignmentId(id)
+              setSubmissions(selectedCourse.assignments.find(a => a.id === id)!.submissions)
+            }}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select an assignment" />
+              </SelectTrigger>
+              <SelectContent>
+                {selectedCourse.assignments.map(assignment => (
+                  <SelectItem key={assignment.id} value={assignment.id}>{assignment.title}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Submissions Table */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Card>
+          <CardHeader>
+            <CardTitle>{selectedAssignment.title} - Submissions</CardTitle>
+            <CardDescription>Due: {new Date(selectedAssignment.dueDate).toLocaleDateString()}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Student</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Grade</TableHead>
+                    <TableHead className="text-right">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {submissions.map(submission => (
+                    <TableRow key={submission.studentId}>
+                      <TableCell className="font-medium">{submission.studentName}</TableCell>
+                      <TableCell>{getStatusBadge(submission.status)}</TableCell>
+                      <TableCell>
+                        <Input 
+                          className="w-32" 
+                          placeholder="e.g., 95/100" 
+                          value={submission.grade || ""}
+                          onChange={(e) => handleGradeChange(submission.studentId, e.target.value)}
+                          disabled={submission.status === 'Graded'}
+                        />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleMarkAsGraded(submission.studentId)}
+                          disabled={!submission.grade || submission.status === 'Graded'}
+                        >
+                          Mark as Graded
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </div>
+  )
+}
+//END OF app\ta\grading\page.tsx
+
 //START OF app\ta\layout.tsx
 "use client"
 
 import type React from "react"
+import {
+  LayoutDashboard,
+  MessageSquare,
+  Users,
+  Calendar,
+  Settings,
+  User,
+  BookOpen,
+  ClipboardEdit,
+  UserCheck,
+  Video,
+  Megaphone,
+} from "lucide-react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { LayoutDashboard, MessageSquare, Users, Calendar, UserCheck, Settings } from "lucide-react"
 
 const navigation = [
   {
-    title: "MENU",
+    title: "Core Tasks",
     items: [
       {
         title: "Dashboard",
@@ -7148,24 +7870,59 @@ const navigation = [
         icon: LayoutDashboard,
       },
       {
+        title: "Student Roster",
+        href: "/ta/students",
+        icon: Users,
+      },
+      {
+        title: "Grading",
+        href: "/ta/grading",
+        icon: ClipboardEdit,
+      },
+      {
+        title: "Attendance",
+        href: "/ta/attendance",
+        icon: UserCheck,
+      },
+      {
+        title: "Announcements",
+        href: "/ta/announcements",
+        icon: Megaphone,
+      },
+    ],
+  },
+  {
+    title: "Support",
+    items: [
+      {
         title: "Discussion Forum",
         href: "/ta/forum",
         icon: MessageSquare,
       },
       {
-        title: "Student Management",
-        href: "/ta/students",
-        icon: Users,
+        title: "Schedule & Meetings",
+        href: "/ta/schedule",
+        icon: Calendar,
+      },
+      {
+        title: "Video Resources",
+        href: "/ta/resources",
+        icon: Video,
+      },
+      {
+        title: "My Subjects",
+        href: "/ta/subjects",
+        icon: BookOpen,
       },
     ],
   },
   {
-    title: "GENERAL",
+    title: "Account",
     items: [
       {
-        title: "My Schedule",
-        href: "/ta/schedule",
-        icon: Calendar,
+        title: "My Profile",
+        href: "/ta/profile",
+        icon: User,
       },
       {
         title: "Settings",
@@ -7643,7 +8400,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { User, Mail, Phone, MapPin, Calendar, Award, Edit, Save, X } from "lucide-react"
+import { User, Mail, Phone, MapPin, Calendar, Award, Edit, Save, X, CheckCircle } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { taDefaultProfileData, taProfileAchievements, taProfileStats } from "@/lib/database"
@@ -7933,6 +8690,88 @@ export default function TAProfilePage() {
 }
 //END OF app\ta\profile\page.tsx
 
+//START OF app\ta\resources\loading.tsx
+export default function Loading() {
+  return null
+}
+//END OF app\ta\resources\loading.tsx
+
+//START OF app\ta\resources\page.tsx
+"use client"
+
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Video, BookOpen, ExternalLink } from "lucide-react"
+import Link from "next/link"
+import { motion } from "framer-motion"
+import { taResourceData } from "@/lib/database"
+
+export default function TAResourcesPage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+
+  if (isLoading) {
+    return <div>Loading...</div>
+  }
+
+  return (
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <div>
+          <h1 className="text-3xl font-poppins font-bold text-gray-900">Resource Library</h1>
+          <p className="text-gray-600 mt-1">Access video links and other resources to assist students.</p>
+        </div>
+      </motion.div>
+
+      {/* Resource List */}
+      <div className="space-y-8">
+        {taResourceData.subjects.map((subject, subjectIndex) => (
+          <motion.div
+            key={subject.id}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 * (subjectIndex + 1) }}
+          >
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <BookOpen className="h-5 w-5 text-purple-600" />
+                  {subject.name}
+                </CardTitle>
+                <CardDescription>A collection of helpful videos for {subject.name}.</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {subject.videos.map(video => (
+                    <Card key={video.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4 flex flex-col justify-between h-full">
+                        <div>
+                          <div className="aspect-video bg-gray-200 rounded-md mb-3 flex items-center justify-center">
+                            <Video className="h-10 w-10 text-gray-400" />
+                          </div>
+                          <h4 className="font-semibold text-gray-800">{video.title}</h4>
+                        </div>
+                        <Button asChild variant="outline" size="sm" className="w-full mt-4">
+                          <a href={video.url} target="_blank" rel="noopener noreferrer">
+                            Watch Video <ExternalLink className="h-4 w-4 ml-2" />
+                          </a>
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </div>
+  )
+}
+//END OF app\ta\resources\page.tsx
+
 //START OF app\ta\schedule\page.tsx
 "use client"
 
@@ -7940,8 +8779,11 @@ import { useRequireAuth } from "@/hooks/use-auth"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, Clock, Users, Video, MapPin } from "lucide-react"
+import { Calendar, Clock, Users, Video, MapPin, Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { taScheduleData } from "@/lib/database"
@@ -7949,7 +8791,7 @@ import { taScheduleData } from "@/lib/database"
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
   const [viewMode, setViewMode] = useState("week")
-  const [selectedWeek, setSelectedWeek] = useState(new Date())
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   if (isLoading) {
     return <div>Loading...</div>
@@ -7997,18 +8839,57 @@ export default function TASchedulePage() {
             <h1 className="text-3xl font-poppins font-bold text-gray-900">TA Schedule</h1>
             <p className="text-gray-600 mt-1">Manage your Q&A sessions, tutorials, and office hours.</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Select value={viewMode} onValueChange={setViewMode}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="week">Week View</SelectItem>
-                <SelectItem value="month">Month View</SelectItem>
-                <SelectItem value="list">List View</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="h-4 w-4 mr-2" />
+                Create Session
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Create New Session</DialogTitle>
+                <DialogDescription>Schedule a new meeting for a student group.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="title">Session Title</Label>
+                  <Input id="title" placeholder="e.g., Mid-term Review" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="date">Date</Label>
+                    <Input id="date" type="date" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="time">Time</Label>
+                    <Input id="time" type="time" />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="group">Student Group</Label>
+                  <Select>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a group" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
+                      <SelectItem value="group-b">Mathematics - Group B</SelectItem>
+                      <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="link">Meeting Link</Label>
+                  <Input id="link" placeholder="https://zoom.us/..." />
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>Cancel</Button>
+                <Button onClick={() => setIsCreateDialogOpen(false)}>Schedule Session</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </motion.div>
 
@@ -8876,6 +9757,125 @@ export default function TAStudentsPage() {
   )
 }
 //END OF app\ta\students\page.tsx
+
+//START OF app\ta\subjects\loading.tsx
+export default function Loading() {
+  return null
+}
+//END OF app\ta\subjects\loading.tsx
+
+//START OF app\ta\subjects\page.tsx
+"use client"
+
+import { useRequireAuth } from "@/hooks/use-auth"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { BookOpen, User, Users } from "lucide-react"
+import { motion } from "framer-motion"
+import { taSubjectsData } from "@/lib/database"
+
+// Animation variants for Framer Motion
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1, // Each child will animate 0.1s after the previous one
+    },
+  },
+}
+
+const itemVariants = {
+  hidden: { y: 20, opacity: 0 },
+  visible: {
+    y: 0,
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+    },
+  },
+}
+
+export default function TASubjectsPage() {
+  const { user, isLoading } = useRequireAuth(["ta"])
+
+  if (isLoading) {
+    // A slightly more polished loading state
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-200px)]">
+        <p className="text-lg text-gray-500 animate-pulse">Loading your subjects...</p>
+      </div>
+    )
+  }
+
+  return (
+    // Use a container for better responsiveness on large screens
+    <main className="container mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Header */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={itemVariants}
+        className="mb-8" // Increased bottom margin for better separation
+      >
+        <h1 className="text-3xl font-poppins font-bold text-gray-900 tracking-tight">My Assigned Subjects</h1>
+        <p className="text-gray-600 mt-2 max-w-2xl">
+          A list of subjects you are assigned to assist with. Click on a card to view more details.
+        </p>
+      </motion.div>
+
+      {/* Subjects Grid */}
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {taSubjectsData.map(subject => (
+          <motion.div key={subject.id} variants={itemVariants}>
+            <Card className="h-full flex flex-col hover:shadow-xl transition-shadow duration-300 cursor-pointer">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <span className="flex-shrink-0 bg-purple-100 p-2 rounded-lg">
+                    <BookOpen className="h-6 w-6 text-purple-700" />
+                  </span>
+                  <span className="text-xl">{subject.name}</span>
+                </CardTitle>
+                <CardDescription className="pt-2">{subject.description}</CardDescription>
+              </CardHeader>
+              <CardContent className="flex-grow space-y-4">
+                {/* Instructor Info */}
+                <div className="flex items-start gap-3">
+                  <User className="h-5 w-5 mt-1 flex-shrink-0 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Instructor</p>
+                    <p className="font-semibold text-gray-800">{subject.instructor}</p>
+                  </div>
+                </div>
+
+                {/* Groups Info */}
+                <div className="flex items-start gap-3">
+                  <Users className="h-5 w-5 mt-1 flex-shrink-0 text-gray-500" />
+                  <div>
+                    <p className="text-sm text-gray-500">Assigned Groups</p>
+                    <div className="flex flex-wrap gap-2 mt-1">
+                      {subject.studentGroups.map(group => (
+                        <Badge key={group} variant="secondary">
+                          {group}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </motion.div>
+    </main>
+  )
+}
+//END OF app\ta\subjects\page.tsx
 
 //START OF app\unauthorized\page.tsx
 "use client"
@@ -10436,7 +11436,7 @@ export async function debugPasswordHash(password: string): Promise<void> {
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
-import { BookOpen, Calendar, CheckCircle, GraduationCap, Heart, MessageSquare, Plus, Megaphone, Shield, TrendingUp, UserCheck, Users, DollarSign, BarChart3, Settings, LayoutDashboard, User } from "lucide-react";
+import { BookOpen, Calendar, CheckCircle, GraduationCap, Heart, MessageSquare, Plus, Megaphone, Shield, TrendingUp, UserCheck, Users, DollarSign, BarChart3, Settings, LayoutDashboard, User, Video, ClipboardEdit, Award } from "lucide-react";
 
 // --- HOMEPAGE DATA ---
 
@@ -10723,6 +11723,11 @@ export const taDefaultProfileData = { firstName: "Alex", lastName: "Smith", emai
 
 export const taProfileStats = [ { label: "Students Helped", value: "150+", color: "text-blue-600" }, { label: "Sessions Conducted", value: "85", color: "text-green-600" }, { label: "Average Rating", value: "4.9/5", color: "text-purple-600" }, { label: "Response Time", value: "< 2hrs", color: "text-orange-600" }, ];
 
+export const taProfileAchievements = [
+  { icon: Award, title: "TA of the Month", description: "Awarded for exceptional student support.", date: "March 2024" },
+  { icon: CheckCircle, title: "Certified Python Tutor", description: "Completed advanced Python tutoring certification.", date: "January 2024" },
+];
+
 export const taScheduleData = {
     sessions: [ { id: "session-1", title: "ICT Q&A Session", course: "ICT Fundamentals", type: "Q&A", date: "2024-01-15", time: "14:00", duration: "1 hour", students: 12, location: "Virtual - Zoom Room 1", status: "upcoming", description: "Weekly Q&A session for ICT Fundamentals students", }, { id: "session-5", title: "ICT Review Session", course: "ICT Fundamentals", type: "Review", date: "2024-01-12", time: "15:00", duration: "1.5 hours", students: 10, location: "Virtual - Zoom Room 1", status: "completed", description: "Review session for Module 3 concepts", }, ],
     weeklyHours: 8, totalSessions: 12, averageAttendance: 85,
@@ -10732,6 +11737,201 @@ export const taStudentManagementData = {
     groups: [ { id: "group-1", name: "ICT Fundamentals - Group A", course: "ICT Fundamentals", studentCount: 12, averageProgress: 78, strugglingStudents: 2, students: [ { id: "student-1", name: "Emma Johnson", email: "emma.johnson@example.com", progress: 85, lastActive: "1 hour ago", status: "active", }, { id: "student-3", name: "Sarah Wilson", email: "sarah.wilson@example.com", progress: 45, lastActive: "2 days ago", status: "struggling", }, ], }, ],
     progressInsights: { totalStudents: 35, averageProgress: 77, strugglingStudents: 8, activeStudents: 27, commonStrugglingAreas: [ { topic: "Python Loops", studentCount: 5 }, { topic: "Database Design", studentCount: 4 }, ], },
 };
+
+// --- NEW DATA FOR TA ATTENDANCE PAGE ---
+
+export type TAttendanceRecord = {
+  studentId: string;
+  name: string;
+  status: 'Present' | 'Absent' | 'Tardy';
+};
+
+export type TAttendanceSession = {
+  id: string;
+  date: string;
+  records: TAttendanceRecord[];
+};
+
+export type TAttendanceGroup = {
+  id: string;
+  name: string;
+  course: string;
+  studentCount: number;
+  students: { id: string; name: string }[];
+  sessions: TAttendanceSession[];
+};
+
+const taStudentList = [
+    { id: "stu-01", name: "Emma Johnson" }, { id: "stu-02", name: "Michael Chen" },
+    { id: "stu-03", name: "Sarah Wilson" }, { id: "stu-04", name: "David Brown" },
+    { id: "stu-05", name: "Lisa Wilson" }, { id: "stu-06", name: "James Taylor" },
+    { id: "stu-07", name: "Olivia Martinez" }, { id: "stu-08", name: "William Garcia" },
+    { id: "stu-09", name: "Sophia Rodriguez" }, { id: "stu-10", name: "Daniel Miller" },
+    { id: "stu-11", name: "Isabella Davis" }, { id: "stu-12", name: "Joseph Anderson" },
+];
+
+export const taAttendancePageData: { groups: TAttendanceGroup[] } = {
+  groups: [
+    {
+      id: "group-ict-a",
+      name: "ICT Fundamentals - Group A",
+      course: "ICT-101",
+      studentCount: 8,
+      students: taStudentList.slice(0, 8),
+      sessions: [
+        {
+          id: "session-ict-01",
+          date: "2024-05-20",
+          records: [
+            { studentId: "stu-01", name: "Emma Johnson", status: "Present" },
+            { studentId: "stu-02", name: "Michael Chen", status: "Present" },
+            { studentId: "stu-03", name: "Sarah Wilson", status: "Absent" },
+            { studentId: "stu-04", name: "David Brown", status: "Tardy" },
+            { studentId: "stu-05", name: "Lisa Wilson", status: "Present" },
+            { studentId: "stu-06", name: "James Taylor", status: "Present" },
+            { studentId: "stu-07", name: "Olivia Martinez", status: "Present" },
+            { studentId: "stu-08", name: "William Garcia", status: "Present" },
+          ]
+        },
+        {
+          id: "session-ict-02",
+          date: "2024-05-13",
+          records: taStudentList.slice(0, 8).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
+        },
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    },
+    {
+      id: "group-math-b",
+      name: "Mathematics - Group B",
+      course: "MATH-101",
+      studentCount: 8,
+      students: taStudentList.slice(4, 12),
+      sessions: [
+        {
+          id: "session-math-01",
+          date: "2024-05-21",
+          records: taStudentList.slice(4, 12).map(s => ({ studentId: s.id, name: s.name, status: "Present" as const })),
+        },
+      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+    },
+     {
+      id: "group-ict-c",
+      name: "ICT Practical - Group C",
+      course: "ICT-102",
+      studentCount: 4,
+      students: taStudentList.slice(8, 12),
+      sessions: [],
+    },
+  ]
+};
+
+// New data for TA Grading
+export const taGradingData = {
+  courses: [
+    {
+      id: "ict-fundamentals",
+      name: "ICT Fundamentals",
+      assignments: [
+        {
+          id: "assign-1",
+          title: "Assignment 3: Web Basics",
+          dueDate: "2024-05-15",
+          submissions: [
+            { studentId: "student-1", studentName: "Emma Johnson", status: "Graded", grade: "95/100" },
+            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
+            { studentId: "student-3", studentName: "Sarah Wilson", status: "Late", grade: null },
+          ],
+        },
+         {
+          id: "assign-3",
+          title: "Assignment 4: Databases",
+          dueDate: "2024-05-22",
+          submissions: [
+            { studentId: "student-1", studentName: "Emma Johnson", status: "Needs Grading", grade: null },
+            { studentId: "student-2", studentName: "Michael Chen", status: "Needs Grading", grade: null },
+          ],
+        },
+      ],
+    },
+    {
+      id: "mathematics",
+      name: "Mathematics",
+      assignments: [
+        {
+          id: "assign-2",
+          title: "Problem Set 5: Calculus",
+          dueDate: "2024-05-18",
+          submissions: [
+             { studentId: "student-4", studentName: "David Brown", status: "Needs Grading", grade: null },
+             { studentId: "student-5", studentName: "Lisa Wilson", status: "Graded", grade: "88/100" },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
+// New data for TA Resources
+export const taResourceData = {
+  subjects: [
+    {
+      id: "ict",
+      name: "ICT Resources",
+      videos: [
+        { id: "vid-1", title: "Advanced Python: Decorators", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-2", title: "SQL Normalization Forms Explained", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-3", title: "React Hooks in 10 Minutes", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      ],
+    },
+    {
+      id: "math",
+      name: "Mathematics Resources",
+      videos: [
+        { id: "vid-4", title: "Visualizing Calculus: Integrals", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+        { id: "vid-5", title: "Statistics: Understanding P-Values", url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ" },
+      ],
+    },
+  ],
+};
+
+// New data for TA Announcements
+export const taAnnouncementsData = [
+    {
+      id: "ta-ann-1",
+      title: "Extra Q&A session for ICT Assignment 3",
+      content: "Hi everyone, I'll be hosting an extra Q&A session this Wednesday at 4 PM to help with the web basics assignment. Please come with your questions prepared. The Zoom link is the usual one.",
+      author: "Alex Smith",
+      group: "ICT Fundamentals - Group A",
+      date: "2024-05-20T11:00:00Z",
+    },
+    {
+      id: "ta-ann-2",
+      title: "Office Hours Canceled for May 22",
+      content: "Please note that my regular office hours for this Wednesday, May 22, are canceled. Feel free to email me with any urgent questions.",
+      author: "Alex Smith",
+      group: "All Groups",
+      date: "2024-05-19T16:30:00Z",
+    },
+];
+
+// New data for TA Subjects
+export const taSubjectsData = [
+  {
+    id: "ict-fundamentals",
+    name: "ICT Fundamentals",
+    description: "Assisting with core concepts of Information and Communication Technology, including hardware, software, and networking.",
+    instructor: "Dr. Sarah Johnson",
+    studentGroups: ["Group A", "Group C"],
+  },
+  {
+    id: "mathematics",
+    name: "Mathematics",
+    description: "Providing support for Algebra, Geometry, and introductory Calculus problem sets and concepts.",
+    instructor: "Prof. Michael Chen",
+    studentGroups: ["Group B"],
+  },
+];
+
 
 // --- NEW DATA FOR REDESIGNED COURSE DETAILS PAGE ---
 export interface AssignmentDetail {
