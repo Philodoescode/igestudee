@@ -10,7 +10,7 @@ interface WeeklyAvailabilityProps {
 export default function WeeklyAvailability({ availability }: WeeklyAvailabilityProps) {
   return (
     <section>
-      <h2 className="text-xl font-semibold text-gray-700 mb-4">Weekly Availability</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Weekly Availability</h2>
       <div className="p-4 border rounded-lg bg-white">
         <div className="hidden md:grid md:grid-cols-7 gap-px">
           {availability.map(daySlot => (
@@ -28,7 +28,7 @@ export default function WeeklyAvailability({ availability }: WeeklyAvailabilityP
             </div>
           ))}
         </div>
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-2">
              {availability.map(daySlot => (
                 <div key={daySlot.day} className="flex items-start gap-4 p-2 border-b last:border-b-0">
                     <p className="font-semibold text-sm w-20 shrink-0">{daySlot.day}</p>

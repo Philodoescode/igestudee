@@ -50,7 +50,7 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
       setEndTime("")
       setMeetingLink("")
     }
-    setErrors({})
+    setErrors({}) // Always clear errors when modal opens/changes sessionToEdit
   }, [sessionToEdit, isOpen])
 
   const validate = (): boolean => {
@@ -68,16 +68,28 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
 
     // Validate against availability
     if (date && startTime && endTime) {
-        const selectedDayIndex = new Date(date + 'T00:00:00').getDay();
+        const selectedDate = new Date(date + 'T00:00:00'); // Use 'T00:00:00' to avoid timezone issues affecting getDay()
+        const selectedDayIndex = selectedDate.getDay();
         const selectedDayName = dayMap[selectedDayIndex] as TAAvailabilitySlot['day'];
         const dayAvailability = availability.find(a => a.day === selectedDayName);
 
         if (!dayAvailability || dayAvailability.slots.length === 0) {
             newErrors.date = `You are not available on ${selectedDayName}s.`
         } else {
+            // Check if selected time range falls completely within any available slot
             const isInSlot = dayAvailability.slots.some(slot => {
                 const [slotStart, slotEnd] = slot.split('-');
-                return startTime >= slotStart && endTime <= slotEnd;
+                // Convert to minutes for easier comparison
+                const timeToMinutes = (time: string) => {
+                    const [hours, minutes] = time.split(':').map(Number);
+                    return hours * 60 + minutes;
+                };
+                const startMinutes = timeToMinutes(startTime);
+                const endMinutes = timeToMinutes(endTime);
+                const slotStartMinutes = timeToMinutes(slotStart);
+                const slotEndMinutes = timeToMinutes(slotEnd);
+
+                return startMinutes >= slotStartMinutes && endMinutes <= slotEndMinutes;
             });
             if (!isInSlot) {
                 newErrors.startTime = `The selected time is outside your available slots for ${selectedDayName}s.`
@@ -114,41 +126,41 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setErrors({}); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{sessionToEdit ? "Edit Session" : "Schedule New Session"}</DialogTitle>
           <DialogDescription>Fill in the details for the online session.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., ICT Midterm Review" />
+            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., ICT Midterm Review" autoFocus />
             {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="date">Date</Label>
             <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
             {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="start-time">Start Time</Label>
               <Input id="start-time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
               {errors.startTime && <p className="text-xs text-red-500">{errors.startTime}</p>}
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="end-time">End Time</Label>
               <Input id="end-time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
               {errors.endTime && <p className="text-xs text-red-500">{errors.endTime}</p>}
             </div>
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="meeting-link">Meeting Link</Label>
             <Input id="meeting-link" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} placeholder="https://zoom.us/j/..." />
              {errors.meetingLink && <p className="text-xs text-red-500">{errors.meetingLink}</p>}
           </div>
-           <div className="grid gap-2">
+           <div className="grid gap-1.5">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Topics to be covered, etc." />
           </div>

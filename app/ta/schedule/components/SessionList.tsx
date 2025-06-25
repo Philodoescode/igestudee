@@ -14,12 +14,11 @@ interface SessionListProps {
   mode: 'upcoming' | 'recent'
   onEdit?: (session: TASession) => void
   onCancel?: (sessionId: string) => void
+  initialDisplayCount?: number; // New prop for initial display count (page size)
 }
 
-const SESSIONS_TO_SHOW = 5;
-
-export default function SessionList({ title, sessions, mode, onEdit, onCancel }: SessionListProps) {
-  const [itemsToShow, setItemsToShow] = useState(SESSIONS_TO_SHOW)
+export default function SessionList({ title, sessions, mode, onEdit, onCancel, initialDisplayCount = 5 }: SessionListProps) {
+  const [currentDisplayCount, setCurrentDisplayCount] = useState(initialDisplayCount);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   const handleCopyLink = (link: string, id: string) => {
@@ -46,15 +45,18 @@ export default function SessionList({ title, sessions, mode, onEdit, onCancel }:
     hidden: { opacity: 0, y: 20 },
   }
 
+  const canLoadMore = currentDisplayCount < sessions.length;
+  const canShowLess = currentDisplayCount > initialDisplayCount;
+
   return (
     <section>
       <h2 className="text-xl font-semibold text-gray-700 mb-4">{title}</h2>
       {sessions.length > 0 ? (
         <motion.ul variants={listVariants} initial="hidden" animate="visible" className="space-y-4">
-          {sessions.slice(0, itemsToShow).map(session => {
+          {sessions.slice(0, currentDisplayCount).map(session => {
             const sessionDate = new Date(session.dateTime)
             return (
-              <motion.li key={session.id} variants={itemVariants} className="p-4 border rounded-lg bg-white">
+              <motion.li key={session.id} variants={itemVariants} className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
                   <h3 className="font-semibold text-gray-800">{session.title}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -100,9 +102,14 @@ export default function SessionList({ title, sessions, mode, onEdit, onCancel }:
               </motion.li>
             )
           })}
-           {sessions.length > itemsToShow && (
-                <div className="text-center mt-4">
-                    <Button variant="link" onClick={() => setItemsToShow(itemsToShow + SESSIONS_TO_SHOW)}>Load More</Button>
+           {(canLoadMore || canShowLess) && (
+                <div className="text-center mt-4 space-x-2">
+                    {canLoadMore && (
+                        <Button variant="link" onClick={() => setCurrentDisplayCount(prev => prev + initialDisplayCount)}>Load More ({sessions.length - currentDisplayCount} left)</Button>
+                    )}
+                    {canShowLess && (
+                        <Button variant="link" onClick={() => setCurrentDisplayCount(initialDisplayCount)}>Show Less</Button>
+                    )}
                 </div>
             )}
         </motion.ul>

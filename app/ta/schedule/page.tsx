@@ -4,13 +4,15 @@ import { useState, useMemo } from "react"
 import { useRequireAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Toaster, toast } from "sonner"
 import { isAfter, isBefore, subDays } from "date-fns"
 import { taScheduleData, taAvailabilityData, type TASession } from "@/lib/database"
 import WeeklyAvailability from "./components/WeeklyAvailability"
 import ScheduleSessionModal from "./components/ScheduleSessionModal"
 import SessionList from "./components/SessionList"
+
+const INITIAL_SESSIONS_DISPLAY = 5; // Define a constant for initial display count
 
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -62,11 +64,11 @@ export default function TASchedulePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 space-y-8">
       <Toaster position="top-center" richColors />
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">Schedule & Meetings</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight">Schedule & Meetings</h1>
           <p className="text-gray-500 mt-1">Manage your availability and scheduled sessions.</p>
         </div>
         <Button onClick={() => handleOpenModal()} variant="outline" className="w-full sm:w-auto">
@@ -75,7 +77,7 @@ export default function TASchedulePage() {
         </Button>
       </header>
 
-      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }}>
         <WeeklyAvailability availability={taAvailabilityData} />
       </motion.section>
 
@@ -86,21 +88,27 @@ export default function TASchedulePage() {
           mode="upcoming"
           onEdit={handleOpenModal}
           onCancel={handleCancelSession}
+          initialDisplayCount={INITIAL_SESSIONS_DISPLAY}
         />
         <SessionList 
           title="Recent Sessions"
           sessions={recentSessions}
           mode="recent"
+          initialDisplayCount={INITIAL_SESSIONS_DISPLAY}
         />
       </div>
 
-      <ScheduleSessionModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        onSave={handleSaveSession}
-        sessionToEdit={editingSession}
-        availability={taAvailabilityData}
-      />
+      <AnimatePresence>
+        {isModalOpen && (
+          <ScheduleSessionModal
+            isOpen={isModalOpen}
+            setIsOpen={setIsModalOpen}
+            onSave={handleSaveSession}
+            sessionToEdit={editingSession}
+            availability={taAvailabilityData}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
