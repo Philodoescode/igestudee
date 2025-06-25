@@ -4,36 +4,53 @@ import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Button } from "@/components/ui/button"
 import { Search, History, Download } from "lucide-react"
 import { motion } from "framer-motion"
 import { type GradingEntry } from "@/lib/database"
-import { Button } from "@/components/ui/button"
 
 interface GradingHistoryProps {
   history: GradingEntry[]
 }
 
+const ITEMS_PER_PAGE = 5;
+
 export default function GradingHistory({ history }: GradingHistoryProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [typeFilter, setTypeFilter] = useState("all")
+  const [currentPage, setCurrentPage] = useState(1)
 
   const filteredHistory = useMemo(() => {
-    return history.filter(entry => {
-      const matchesSearch = entry.title.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesType = typeFilter === "all" || entry.type.toLowerCase() === typeFilter.toLowerCase()
-      return matchesSearch && matchesType
-    })
-  }, [history, searchTerm, typeFilter])
+    return history.filter(entry => 
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [history, searchTerm])
 
-  const getBadgeVariant = (type: string) => {
-    switch(type.toLowerCase()){
-        case 'quiz': return 'default';
-        case 'exam': return 'destructive';
-        default: return 'secondary';
-    }
+  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
+  const paginatedHistory = filteredHistory.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+  );
+
+  const handleExportToCSV = (entry: GradingEntry) => {
+    const headers = ["Student Name", "Grade", "Max Score"];
+    const rows = entry.studentGrades.map(sg => [
+        `"${sg.name}"`,
+        sg.grade ?? "N/A",
+        entry.maxScore
+    ]);
+
+    let csvContent = "data:text/csv;charset=utf-8," 
+        + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${entry.title.replace(/\s+/g, '_')}_grades.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   }
 
   return (
@@ -51,33 +68,23 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
           <CardDescription>Review and manage past grading entries.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="relative flex-1">
+          <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <Input
                 placeholder="Search by title..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1); // Reset to first page on search
+                }}
                 className="pl-10"
               />
-            </div>
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filter by type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="Quiz">Quiz</SelectItem>
-                <SelectItem value="Exam">Exam</SelectItem>
-                <SelectItem value="Other">Other</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
           
           <div className="border rounded-lg">
-            {filteredHistory.length > 0 ? (
+            {paginatedHistory.length > 0 ? (
               <Accordion type="single" collapsible>
-                {filteredHistory.map(entry => (
+                {paginatedHistory.map(entry => (
                   <AccordionItem value={entry.id} key={entry.id}>
                     <AccordionTrigger className="px-4 hover:bg-slate-50">
                       <div className="flex flex-1 items-center justify-between gap-4">
@@ -85,7 +92,7 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
                             <p className="font-semibold">{entry.title}</p>
                             <p className="text-sm text-gray-500">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
                           </div>
-                          <Badge variant={getBadgeVariant(entry.type)}>{entry.type}</Badge>
+                          <p className="text-sm font-medium text-gray-600 pr-4">Out of {entry.maxScore}</p>
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="p-4 bg-white">
@@ -101,14 +108,16 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
                                 {entry.studentGrades.map(sg => (
                                     <TableRow key={sg.studentId}>
                                         <TableCell>{sg.name}</TableCell>
-                                        <TableCell className="text-right font-mono">{sg.grade || "N/A"}</TableCell>
+                                        <TableCell className="text-right font-mono">{sg.grade ?? "N/A"}</TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                       </div>
                       <div className="mt-4 flex justify-end">
-                        <Button variant="outline" size="sm"><Download className="mr-2 h-4 w-4" />Export CSV</Button>
+                        <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
+                            <Download className="mr-2 h-4 w-4" />Export CSV
+                        </Button>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -117,10 +126,29 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
             ) : (
               <div className="p-10 text-center text-gray-500">
                 <p>No grading history found.</p>
-                <p className="text-sm">Try adjusting your filters or adding a new grade entry.</p>
+                <p className="text-sm">Try adjusting your search or adding a new grade entry.</p>
               </div>
             )}
           </div>
+           {totalPages > 1 && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
+                                    {i+1}
+                                </PaginationLink>
+                            </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
         </CardContent>
       </Card>
     </motion.div>
