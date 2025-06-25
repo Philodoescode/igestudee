@@ -328,7 +328,7 @@ export type TAttendanceGroup = {
   sessions: TAttendanceSession[];
 };
 
-const taStudentList = [
+export const taStudentList = [
     { id: "stu-01", name: "Emma Johnson" }, { id: "stu-02", name: "Michael Chen" },
     { id: "stu-03", name: "Sarah Wilson" }, { id: "stu-04", name: "David Brown" },
     { id: "stu-05", name: "Lisa Wilson" }, { id: "stu-06", name: "James Taylor" },
@@ -392,7 +392,42 @@ export const taAttendancePageData: { groups: TAttendanceGroup[] } = {
   ]
 };
 
-// New data for TA Grading
+// --- NEW/MODIFIED DATA FOR TA GRADING INTERFACE ---
+export type StudentGrade = {
+  studentId: string;
+  name: string;
+  grade: string;
+};
+
+export type GradingEntry = {
+  id: string;
+  taName: string;
+  date: string; // YYYY-MM-DD
+  title: string;
+  type: 'Quiz' | 'Exam' | string;
+  studentGrades: StudentGrade[];
+};
+
+export const taGradingHistory: GradingEntry[] = [
+    {
+        id: 'grading-1716300000000',
+        taName: 'Alex Smith',
+        date: '2024-05-20',
+        title: 'Midterm 1',
+        type: 'Exam',
+        studentGrades: taStudentList.slice(0,8).map(s => ({...s, grade: `${Math.floor(Math.random() * (98 - 75 + 1)) + 75}`}))
+    },
+    {
+        id: 'grading-1715600000000',
+        taName: 'Alex Smith',
+        date: '2024-05-13',
+        title: 'Homework 4',
+        type: 'Homework',
+        studentGrades: taStudentList.slice(0,8).map(s => ({...s, grade: 'A-'}))
+    },
+];
+// END NEW DATA
+
 export const taGradingData = {
   courses: [
     {
