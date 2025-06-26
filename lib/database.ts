@@ -1,5 +1,3 @@
-// lib/database.ts
-
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
@@ -245,6 +243,270 @@ export const studentDetailedCourses = [
     totalChallenges: 8,
   },
 ];
+
+// --- STUDENT PORTAL DATA - Course Details (Expanded) ---
+
+export type VideoDetail = {
+  id: string;
+  title: string;
+  description: string;
+  locked: boolean;
+};
+
+export type AssignmentDetail = {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: 'Graded' | 'Submitted' | 'Missing' | 'Late' | 'Needs Grading';
+  grade: string | null;
+};
+
+export type QuizDetail = {
+  id: string;
+  title: string;
+  date: string;
+  status: 'Passed' | 'Failed' | 'Pending';
+  score: string | null;
+};
+
+export type AttendanceDetail = {
+  id: string;
+  date: string;
+  status: 'Present' | 'Absent' | 'Tardy';
+};
+
+export type CourseProgress = {
+  assignmentsCompleted: number; // Percentage, e.g., 75 for 75%
+  quizzesPassed: [number, number]; // [passedCount, totalCount]
+  attendanceRate: number; // Percentage, e.g., 98 for 98%
+};
+
+export type CourseDetailsInfo = {
+  instructor: string;
+  ta: string;
+  contact: string; // TA Contact Email
+};
+
+export type CourseAnnouncement = {
+  id: string;
+  title: string;
+  date: string; // "YYYY-MM-DD"
+};
+
+export type CourseDetail = {
+  id: string;
+  title: string;
+  group: string; // e.g., "Group A"
+  endMonth: string; // e.g., "June"
+  progress: CourseProgress;
+  videos: VideoDetail[];
+  assignments: AssignmentDetail[];
+  quizzes: QuizDetail[];
+  attendance: AttendanceDetail[];
+  details: CourseDetailsInfo;
+  announcements: CourseAnnouncement[];
+};
+
+export const courseDetailsData: { [key: string]: CourseDetail } = {
+  "ict-101": {
+    id: "ict-101",
+    title: "ICT Fundamentals",
+    group: "Group A",
+    endMonth: "June",
+    progress: {
+      assignmentsCompleted: 75,
+      quizzesPassed: [8, 10], // 8 passed out of 10 total
+      attendanceRate: 98,
+    },
+    videos: [
+      { id: "vid-ict-1", title: "Introduction to ICT", description: "Overview of Information and Communication Technology. Dive into the core concepts and historical context.", locked: false },
+      { id: "vid-ict-2", title: "Basic Networking Concepts", description: "Understanding IP addresses, routers, switches, and network topologies.", locked: false },
+      { id: "vid-ict-3", title: "Cybersecurity Fundamentals", description: "Introduction to common cyber threats, attack vectors, and basic protective measures.", locked: true },
+      { id: "vid-ict-4", title: "Database Design Principles", description: "Learn about relational databases, normalization, and an introduction to SQL queries.", locked: true },
+      { id: "vid-ict-5", title: "Web Development: HTML & CSS", description: "Building static web pages with semantic HTML and styling with CSS.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100" },
+      { id: "assign-ict-2", title: "Networking Fundamentals Quiz", dueDate: "2024-05-25", status: "Submitted", grade: null },
+      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null },
+      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null },
+      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", date: "2024-05-10", status: "Passed", score: "85%" },
+      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", date: "2024-05-17", status: "Passed", score: "90%" },
+      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", date: "2024-05-24", status: "Failed", score: "60%" },
+      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", date: "2024-05-31", status: "Pending", score: null },
+    ],
+    attendance: [
+      { id: "att-ict-1", date: "2024-05-22", status: "Present" },
+      { id: "att-ict-2", date: "2024-05-15", status: "Present" },
+      { id: "att-ict-3", date: "2024-05-08", status: "Absent" },
+      { id: "att-ict-4", date: "2024-05-01", status: "Tardy" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-ict-1", title: "Reminder: Midterm Exam next week", date: "2024-05-20" },
+      { id: "ann-ict-2", title: "New optional practice exercises available", date: "2024-05-15" },
+      { id: "ann-ict-3", title: "Guest Speaker on AI in Tech this Friday!", date: "2024-05-10" },
+    ],
+  },
+  "math-201": {
+    id: "math-201",
+    title: "Advanced Mathematics",
+    group: "Group B",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 60,
+      quizzesPassed: [6, 9],
+      attendanceRate: 90,
+    },
+    videos: [
+      { id: "vid-math-1", title: "Complex Numbers Deep Dive", description: "Exploration of complex numbers and their applications in engineering and physics.", locked: false },
+      { id: "vid-math-2", title: "Vectors and Matrices", description: "Understanding linear algebra fundamentals, vector spaces, and matrix operations.", locked: false },
+      { id: "vid-math-3", title: "Introduction to Calculus", description: "Limits, derivatives, and their rules with real-world examples.", locked: true },
+      { id: "vid-math-4", title: "Integral Calculus Techniques", description: "Methods of integration, definite and indefinite integrals.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100" },
+      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null },
+      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-math-1", title: "Algebra Review Quiz", date: "2024-05-12", status: "Passed", score: "78%" },
+      { id: "quiz-math-2", title: "Geometry Quiz", date: "2024-05-19", status: "Failed", score: "65%" },
+      { id: "quiz-math-3", title: "Pre-Calc Assessment", date: "2024-05-26", status: "Passed", score: "82%" },
+    ],
+    attendance: [
+      { id: "att-math-1", date: "2024-05-23", status: "Present" },
+      { id: "att-math-2", date: "2024-05-16", status: "Tardy" },
+      { id: "att-math-3", date: "2024-05-09", status: "Present" },
+      { id: "att-math-4", date: "2024-05-02", status: "Absent" },
+    ],
+    details: {
+      instructor: "Prof. Michael Chen",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-math-1", title: "Office hours moved to Thursday", date: "2024-05-21" },
+      { id: "ann-math-2", title: "Upcoming guest lecture on advanced statistics", date: "2024-05-18" },
+    ],
+  },
+  "web-dev-101": {
+    id: "web-dev-101",
+    title: "Web Development Basics",
+    group: "Group C",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 90,
+      quizzesPassed: [7, 7],
+      attendanceRate: 100,
+    },
+    videos: [
+      { id: "vid-web-1", title: "Intro to HTML5", description: "Fundamental concepts of HTML for web page structure.", locked: false },
+      { id: "vid-web-2", title: "Styling with CSS3", description: "Advanced CSS techniques for responsive and beautiful designs.", locked: false },
+      { id: "vid-web-3", title: "JavaScript Fundamentals", description: "Adding interactivity to web pages with JavaScript.", locked: false },
+    ],
+    assignments: [
+      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100" },
+      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100" },
+    ],
+    quizzes: [
+      { id: "quiz-web-1", title: "HTML Structures Quiz", date: "2024-05-05", status: "Passed", score: "92%" },
+      { id: "quiz-web-2", title: "CSS Selectors Quiz", date: "2024-05-12", status: "Passed", score: "88%" },
+    ],
+    attendance: [
+      { id: "att-web-1", date: "2024-05-21", status: "Present" },
+      { id: "att-web-2", date: "2024-05-14", status: "Present" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-web-1", title: "New CSS Frameworks lesson added", date: "2024-05-19" },
+    ],
+  },
+  "stats-101": {
+    id: "stats-101",
+    title: "Statistics and Probability",
+    group: "Group D",
+    endMonth: "June",
+    progress: {
+      assignmentsCompleted: 50,
+      quizzesPassed: [4, 8],
+      attendanceRate: 85,
+    },
+    videos: [
+      { id: "vid-stats-1", title: "Introduction to Probability", description: "Basic concepts of probability and discrete distributions.", locked: false },
+      { id: "vid-stats-2", title: "Descriptive Statistics", description: "Measures of central tendency and dispersion.", locked: false },
+      { id: "vid-stats-3", title: "Inferential Statistics: Hypothesis Testing", description: "Understanding null and alternative hypotheses.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100" },
+      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-stats-1", title: "Intro to Stats Quiz", date: "2024-05-08", status: "Passed", score: "75%" },
+      { id: "quiz-stats-2", title: "Probability Distributions Quiz", date: "2024-05-15", status: "Failed", score: "55%" },
+    ],
+    attendance: [
+      { id: "att-stats-1", date: "2024-05-20", status: "Present" },
+      { id: "att-stats-2", date: "2024-05-13", status: "Absent" },
+    ],
+    details: {
+      instructor: "Prof. Michael Chen",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-stats-1", title: "Review session for final exam", date: "2024-05-25" },
+    ],
+  },
+  "python-101": {
+    id: "python-101",
+    title: "Introduction to Python",
+    group: "Group E",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 80,
+      quizzesPassed: [7, 8],
+      attendanceRate: 95,
+    },
+    videos: [
+      { id: "vid-python-1", title: "Python Basics: Variables & Data Types", description: "First steps in Python programming.", locked: false },
+      { id: "vid-python-2", title: "Control Flow: Loops & Conditionals", description: "Making your programs dynamic with logic.", locked: false },
+      { id: "vid-python-3", title: "Functions and Modules", description: "Organizing your code with functions.", locked: false },
+    ],
+    assignments: [
+      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100" },
+      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-python-1", title: "Module 1 Assessment", date: "2024-05-07", status: "Passed", score: "90%" },
+      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", date: "2024-05-14", status: "Passed", score: "88%" },
+    ],
+    attendance: [
+      { id: "att-python-1", date: "2024-05-24", status: "Present" },
+      { id: "att-python-2", date: "2024-05-17", status: "Present" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-python-1", title: "Python Coding Challenge this weekend!", date: "2024-05-22" },
+    ],
+  },
+};
+
 
 export const studentAnnouncements = [
     { id: "1", title: "New ICT Module Released: Database Design Principles", content: "We're excited to announce the release of Module 10...", date: "2024-01-15T10:30:00Z", course: "ICT Fundamentals", priority: "high", type: "course_update", author: "Dr. Sarah Johnson", read: false, },

@@ -6871,6 +6871,350 @@ export default function StudentSettingsPage() {
 }
 //END OF app\student\settings\page.tsx
 
+//START OF app\ta\announcements\components\announcement-card.tsx
+// START OF app/ta/announcements/components/announcement-card.tsx
+"use client"
+
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Clock, User, Users } from "lucide-react"
+
+type Announcement = {
+  id: string
+  author: string
+  date: string
+  title: string
+  content: string
+  group: string
+}
+
+interface AnnouncementCardProps {
+  announcement: Announcement
+}
+
+const groupDisplayConfig: {
+  [key: string]: { name: string }
+} = {
+  all: { name: "All Groups" },
+  "group-a": { name: "ICT Fundamentals - Group A" },
+  "group-b": { name: "Mathematics - Group B" },
+  "group-c": { name: "ICT Practical - Group C" },
+}
+
+export function AnnouncementCard({ announcement }: AnnouncementCardProps) {
+  const { author, date, title, content, group } = announcement
+
+  const formattedDate = new Date(date).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  })
+
+  const { name: groupName } = groupDisplayConfig[group] || { name: "Unknown Group" }
+
+  return (
+    <Card className="overflow-hidden transition-all hover:shadow-md dark:border-slate-800 dark:hover:shadow-primary/10">
+      <CardHeader>
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-y-2 gap-x-4">
+          <CardTitle className="text-xl tracking-tight">{title}</CardTitle>
+          <Badge variant="secondary" className="whitespace-nowrap py-1 px-2.5 text-xs font-medium">
+            <Users className="h-3.5 w-3.5 mr-1.5" />
+            {groupName}
+          </Badge>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {/* Using whitespace-pre-wrap to respect newlines in the content */}
+        <p className="text-muted-foreground whitespace-pre-wrap">{content}</p>
+      </CardContent>
+      <CardFooter className="bg-slate-50 dark:bg-slate-800/30 px-6 py-3">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center w-full gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2">
+            <User className="h-3.5 w-3.5" />
+            <span>
+              Posted by <span className="font-medium text-foreground">{author}</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5" />
+            <span>{formattedDate}</span>
+          </div>
+        </div>
+      </CardFooter>
+    </Card>
+  )
+}
+// END OF app/ta/announcements/components/announcement-card.tsx
+//END OF app\ta\announcements\components\announcement-card.tsx
+
+//START OF app\ta\announcements\components\announcement-list.tsx
+// START OF app/ta/announcements/components/announcement-list.tsx
+"use client"
+
+import { AnimatePresence, motion } from "framer-motion"
+import { AnnouncementCard } from "./announcement-card"
+import { Megaphone } from "lucide-react"
+
+type Announcement = {
+  id: string
+  author: string
+  date: string
+  title: string
+  content: string
+  group: string
+}
+
+interface AnnouncementListProps {
+  announcements: Announcement[]
+}
+
+export function AnnouncementList({ announcements }: AnnouncementListProps) {
+  if (announcements.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="text-center py-16 px-6 border-2 border-dashed rounded-lg bg-slate-50/50 dark:bg-slate-800/20 dark:border-slate-800"
+      >
+        <div className="flex justify-center mb-4">
+          <div className="p-3 bg-primary/10 rounded-full">
+            <Megaphone className="h-8 w-8 text-primary" />
+          </div>
+        </div>
+        <h3 className="text-xl font-semibold text-slate-800 dark:text-slate-200">No announcements yet</h3>
+        <p className="text-muted-foreground mt-2">Click on 'Create Announcement' to post your first one.</p>
+      </motion.div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      <AnimatePresence>
+        {announcements.map((ann, index) => (
+          <motion.div
+            key={ann.id}
+            layout
+            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -20, scale: 0.98 }}
+            transition={{ duration: 0.4, delay: index * 0.05 }}
+          >
+            <AnnouncementCard announcement={ann} />
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  )
+}
+// END OF app/ta/announcements/components/announcement-list.tsx
+//END OF app\ta\announcements\components\announcement-list.tsx
+
+//START OF app\ta\announcements\components\create-announcement-form.tsx
+// START OF app/ta/announcements/components/create-announcement-form.tsx
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Send } from "lucide-react"
+
+type AnnouncementData = {
+  title: string
+  content: string
+  group: string
+}
+
+interface CreateAnnouncementFormProps {
+  onSubmit: (data: AnnouncementData) => void
+  onSuccess: () => void
+}
+
+export function CreateAnnouncementForm({ onSubmit, onSuccess }: CreateAnnouncementFormProps) {
+  const [announcement, setAnnouncement] = useState<AnnouncementData>({
+    title: "",
+    content: "",
+    group: "all",
+  })
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    onSubmit(announcement)
+    onSuccess() // Call the success handler to close the dialog
+  }
+
+  const isFormValid = announcement.title.trim() !== "" && announcement.content.trim() !== ""
+
+  return (
+    <form onSubmit={handleSubmit} className="grid gap-4 py-4">
+      <div className="grid gap-2">
+        <Label htmlFor="title">Title</Label>
+        <Input
+          id="title"
+          placeholder="e.g., Mid-term project deadline"
+          value={announcement.title}
+          onChange={(e) => setAnnouncement({ ...announcement, title: e.target.value })}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="content">Content</Label>
+        <Textarea
+          id="content"
+          placeholder="Enter the full announcement details here..."
+          rows={6}
+          value={announcement.content}
+          onChange={(e) => setAnnouncement({ ...announcement, content: e.target.value })}
+          required
+        />
+      </div>
+      <div className="grid gap-2">
+        <Label htmlFor="group">Target Group</Label>
+        <Select
+          value={announcement.group}
+          onValueChange={(value) => setAnnouncement({ ...announcement, group: value })}
+        >
+          <SelectTrigger id="group">
+            <SelectValue placeholder="Select a group" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Groups</SelectItem>
+            <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
+            <SelectItem value="group-b">Mathematics - Group B</SelectItem>
+            <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      <Button type="submit" disabled={!isFormValid} className="mt-2">
+        <Send className="h-4 w-4 mr-2" />
+        Post Announcement
+      </Button>
+    </form>
+  )
+}
+// END OF app/ta/announcements/components/create-announcement-form.tsx
+//END OF app\ta\announcements\components\create-announcement-form.tsx
+
+//START OF app\ta\announcements\components\pagination-controls.tsx
+// START OF app/ta/announcements/components/pagination-controls.tsx
+"use client"
+
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"
+
+interface PaginationControlsProps {
+  currentPage: number
+  totalPages: number
+  onPageChange: (page: number) => void
+}
+
+export function PaginationControls({ currentPage, totalPages, onPageChange }: PaginationControlsProps) {
+  const handlePrevious = () => {
+    onPageChange(Math.max(1, currentPage - 1))
+  }
+
+  const handleNext = () => {
+    onPageChange(Math.min(totalPages, currentPage + 1))
+  }
+
+  // Generate page numbers with ellipsis for a better UX
+  const generatePageNumbers = () => {
+    const pageNumbers: (number | string)[] = []
+    const range = 2 // How many pages to show around the current page
+
+    if (totalPages <= 1) {
+      return []
+    }
+
+    // Always show the first page
+    pageNumbers.push(1)
+
+    // Add ellipsis if current page is far from the start
+    if (currentPage > range + 1) {
+      pageNumbers.push("...")
+    }
+
+    // Add pages around the current page
+    for (let i = Math.max(2, currentPage - range + 1); i <= Math.min(totalPages - 1, currentPage + range - 1); i++) {
+      pageNumbers.push(i)
+    }
+
+    // Add ellipsis if current page is far from the end
+    if (currentPage < totalPages - range) {
+      pageNumbers.push("...")
+    }
+
+    // Always show the last page
+    pageNumbers.push(totalPages)
+
+    return pageNumbers
+  }
+
+  const pages = generatePageNumbers()
+
+  if (totalPages <= 1) {
+    return null
+  }
+
+  return (
+    <Pagination className="mt-8">
+      <PaginationContent>
+        <PaginationItem>
+          <PaginationPrevious
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              handlePrevious()
+            }}
+            aria-disabled={currentPage === 1}
+            className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
+        {pages.map((page, index) => (
+          <PaginationItem key={`${page}-${index}`}>
+            {typeof page === "number" ? (
+              <PaginationLink
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault()
+                  onPageChange(page)
+                }}
+                isActive={currentPage === page}
+              >
+                {page}
+              </PaginationLink>
+            ) : (
+              <PaginationEllipsis />
+            )}
+          </PaginationItem>
+        ))}
+        <PaginationItem>
+          <PaginationNext
+            href="#"
+            onClick={(e) => {
+              e.preventDefault()
+              handleNext()
+            }}
+            aria-disabled={currentPage === totalPages}
+            className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+          />
+        </PaginationItem>
+      </PaginationContent>
+    </Pagination>
+  )
+}
+// END OF app/ta/announcements/components/pagination-controls.tsx
+//END OF app\ta\announcements\components\pagination-controls.tsx
+
 //START OF app\ta\announcements\loading.tsx
 export default function Loading() {
   return null
@@ -6878,156 +7222,296 @@ export default function Loading() {
 //END OF app\ta\announcements\loading.tsx
 
 //START OF app\ta\announcements\page.tsx
+// START OF app/ta/announcements/page.tsx
 "use client"
 
-import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Megaphone, Plus, Send, Clock, User } from "lucide-react"
-import { motion } from "framer-motion"
 import { useState } from "react"
+import { motion } from "framer-motion"
+import { useRequireAuth } from "@/hooks/use-auth"
 import { taAnnouncementsData } from "@/lib/database"
+
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Megaphone, Plus } from "lucide-react"
+
+import { AnnouncementList } from "./components/announcement-list"
+import { CreateAnnouncementForm } from "./components/create-announcement-form"
+import { PaginationControls } from "./components/pagination-controls"
+
+type Announcement = {
+  id: string
+  author: string
+  date: string
+  title: string
+  content: string
+  group: string
+}
+
+const ITEMS_PER_PAGE = 5
 
 export default function TAAnnouncementsPage() {
   const { user, isLoading } = useRequireAuth(["ta"])
-  const [announcements, setAnnouncements] = useState(taAnnouncementsData)
-  const [newAnnouncement, setNewAnnouncement] = useState({ title: "", content: "", group: "all" })
+  const [announcements, setAnnouncements] = useState<Announcement[]>(taAnnouncementsData)
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
 
   if (isLoading) {
-    return <div>Loading...</div>
+    return <div>Loading...</div> // A skeleton loader would be a good enhancement here
   }
 
-  const handleCreateAnnouncement = () => {
-    if (!newAnnouncement.title || !newAnnouncement.content) return
+  const handleCreateAnnouncement = (newAnnouncementData: Omit<Announcement, "id" | "author" | "date">) => {
+    if (!newAnnouncementData.title || !newAnnouncementData.content) return
 
-    const announcement = {
+    const announcement: Announcement = {
       id: `ta-ann-${Date.now()}`,
       author: user?.name || "TA",
       date: new Date().toISOString(),
-      ...newAnnouncement,
+      ...newAnnouncementData,
     }
     setAnnouncements([announcement, ...announcements])
-    setNewAnnouncement({ title: "", content: "", group: "all" })
+    setCurrentPage(1) // Go to the first page to see the new announcement
   }
 
+  // Pagination logic
+  const totalPages = Math.ceil(announcements.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const currentAnnouncements = announcements.slice(startIndex, endIndex)
+
   return (
-    <div className="p-6 space-y-6">
+    <div className="container mx-auto max-w-5xl p-4 sm:p-6 lg:p-8">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">Announcements</h1>
-            <p className="text-gray-600 mt-1">Create and manage announcements for your student groups.</p>
-          </div>
+      <motion.header
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-8"
+      >
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-100 flex items-center gap-3">
+            <div className="bg-primary/10 p-2 rounded-lg">
+              <Megaphone className="h-6 w-6 text-primary" />
+            </div>
+            Announcements
+          </h1>
+          <p className="text-muted-foreground mt-2">Create and manage announcements for your student groups.</p>
         </div>
-      </motion.div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Create Announcement Form */}
-        <motion.div
-          className="lg:col-span-1"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5 text-purple-600" />
-                Create New Announcement
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Title</Label>
-                <Input
-                  id="title"
-                  placeholder="Enter announcement title"
-                  value={newAnnouncement.title}
-                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, title: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="content">Content</Label>
-                <Textarea
-                  id="content"
-                  placeholder="Enter announcement details..."
-                  rows={5}
-                  value={newAnnouncement.content}
-                  onChange={(e) => setNewAnnouncement({ ...newAnnouncement, content: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="group">Target Group</Label>
-                <Select value={newAnnouncement.group} onValueChange={(value) => setNewAnnouncement({ ...newAnnouncement, group: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a group" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Groups</SelectItem>
-                    <SelectItem value="group-a">ICT Fundamentals - Group A</SelectItem>
-                    <SelectItem value="group-b">Mathematics - Group B</SelectItem>
-                    <SelectItem value="group-c">ICT Practical - Group C</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button className="w-full" onClick={handleCreateAnnouncement}>
-                <Send className="h-4 w-4 mr-2" />
-                Post Announcement
-              </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button size="lg" className="w-full md:w-auto">
+              <Plus className="h-4 w-4 mr-2" />
+              Create Announcement
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[480px]">
+            <DialogHeader>
+              <DialogTitle>New Announcement</DialogTitle>
+              <DialogDescription>
+                Fill in the details below to post a new announcement. It will be visible to the selected group.
+              </DialogDescription>
+            </DialogHeader>
+            <CreateAnnouncementForm onSubmit={handleCreateAnnouncement} onSuccess={() => setIsFormOpen(false)} />
+          </DialogContent>
+        </Dialog>
+      </motion.header>
 
-        {/* Posted Announcements List */}
-        <motion.div
-          className="lg:col-span-2 space-y-4"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Megaphone className="h-5 w-5 text-purple-600" />
-                Your Posted Announcements
-              </CardTitle>
-              <CardDescription>A list of announcements you have created.</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {announcements.map((ann) => (
-                <div key={ann.id} className="border rounded-lg p-4">
-                  <div className="flex justify-between items-start">
-                    <h4 className="font-semibold text-gray-900">{ann.title}</h4>
-                    <Badge variant="outline">{ann.group}</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">{ann.content}</p>
-                  <div className="flex justify-between items-center mt-4 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <User className="h-3 w-3" />
-                      <span>{ann.author}</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Clock className="h-3 w-3" />
-                      <span>{new Date(ann.date).toLocaleString()}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
-              {announcements.length === 0 && <p className="text-sm text-center text-gray-500 py-4">No announcements posted yet.</p>}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
+      <main>
+        <AnnouncementList announcements={currentAnnouncements} />
+        <PaginationControls currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+      </main>
     </div>
   )
 }
+// END OF app/ta/announcements/page.tsx
 //END OF app\ta\announcements\page.tsx
+
+//START OF app\ta\groups\components\add-attendance-modal.tsx
+// NEW FILE: components/add-attendance-modal.tsx
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Badge } from "@/components/ui/badge"
+import { format } from "date-fns"
+import { Loader2, AlertCircle, Check } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { useAuth } from "@/hooks/use-auth"
+import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+
+type Student = { id: string; name: string };
+
+interface AddAttendanceModalProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  onSave: (newEntry: TAttendanceSession) => void
+  students: Student[]
+  editingSession: TAttendanceSession | null
+}
+
+export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students, editingSession }: AddAttendanceModalProps) {
+  const { user } = useAuth()
+  const [step, setStep] = useState(1)
+  
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"))
+  const [studentRecords, setStudentRecords] = useState<TAttendanceRecord[]>([])
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (isOpen) {
+      if (editingSession) {
+        setDate(editingSession.date)
+        setStudentRecords(editingSession.records)
+        setStep(2) 
+      } else {
+        setStep(1)
+        setDate(format(new Date(), "yyyy-MM-dd"))
+        setStudentRecords(students.map(s => ({ studentId: s.id, name: s.name, status: 'Present' })))
+      }
+    }
+  }, [isOpen, students, editingSession])
+
+  const handleNext = () => {
+    setStep(2)
+  }
+
+  const handleSave = () => {
+    setIsSaving(true)
+    setTimeout(() => {
+      const newEntry: TAttendanceSession = {
+        id: editingSession?.id || `session-${Date.now()}`,
+        date: date,
+        records: studentRecords,
+      }
+      onSave(newEntry)
+      setIsSaving(false)
+    }, 1000)
+  }
+
+  const toggleStatus = (studentId: string) => {
+    const statuses: Array<'Present' | 'Absent' | 'Tardy'> = ['Present', 'Absent', 'Tardy'];
+    setStudentRecords(prev => prev.map(record => {
+      if (record.studentId === studentId) {
+        const currentIndex = statuses.indexOf(record.status);
+        const nextIndex = (currentIndex + 1) % statuses.length;
+        return { ...record, status: statuses[nextIndex] };
+      }
+      return record;
+    }));
+  };
+
+  const markAllAsPresent = () => {
+    setStudentRecords(prev => prev.map(record => ({ ...record, status: 'Present' })))
+  }
+  
+  const getStatusBadgeVariant = (status: 'Present' | 'Absent' | 'Tardy') => {
+    switch(status) {
+        case 'Present': return 'default';
+        case 'Absent': return 'destructive';
+        case 'Tardy': return 'secondary';
+        default: return 'outline';
+    }
+  };
+
+  const step1Content = (
+    <motion.div key="step1" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.3 }}>
+      <div className="grid gap-6 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="ta-name">TA Name</Label>
+          <TooltipProvider><Tooltip><TooltipTrigger asChild>
+            <Input id="ta-name" value={user?.name || ""} disabled className="cursor-not-allowed" />
+          </TooltipTrigger><TooltipContent><p>Your name is pre-filled and cannot be edited.</p></TooltipContent></Tooltip></TooltipProvider>
+        </div>
+        <div className="grid gap-2">
+            <Label htmlFor="date">Date</Label>
+            <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+        </div>
+      </div>
+    </motion.div>
+  )
+
+  const step2Content = (
+    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
+        <Alert className="mb-4">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+                <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()}
+            </AlertDescription>
+        </Alert>
+        <div className="flex justify-end mb-2">
+            <Button variant="link" size="sm" onClick={markAllAsPresent}>
+                <Check className="mr-2 h-4 w-4"/> Mark all as Present
+            </Button>
+        </div>
+        <div className="max-h-[40vh] overflow-y-auto border rounded-md">
+            <Table>
+                <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                    <TableRow>
+                        <TableHead>Student Name</TableHead>
+                        <TableHead className="w-1/3 text-center">Status</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {studentRecords.map((record) => (
+                        <TableRow key={record.studentId}>
+                            <TableCell className="font-medium">{record.name}</TableCell>
+                            <TableCell className="text-center">
+                                <Badge 
+                                  variant={getStatusBadgeVariant(record.status)} 
+                                  className="cursor-pointer select-none"
+                                  onClick={() => toggleStatus(record.studentId)}
+                                >
+                                    {record.status}
+                                </Badge>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+            </Table>
+        </div>
+    </motion.div>
+  )
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>{editingSession ? 'Edit Attendance' : 'New Attendance Entry'}</DialogTitle>
+          <DialogDescription>
+            {step === 1 ? "Step 1 of 2: Enter attendance details." : "Step 2 of 2: Mark student attendance."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
+
+        <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+          {step === 1 && (
+            <>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button onClick={handleNext}>Next: Mark Attendance</Button>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <Button variant="outline" onClick={() => { if (!editingSession) setStep(1) }} disabled={!!editingSession}>Back</Button>
+              <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? "Saving..." : "Save Attendance"}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+//END OF app\ta\groups\components\add-attendance-modal.tsx
 
 //START OF app\ta\groups\components\add-grade-modal.tsx
 "use client"
@@ -7229,230 +7713,287 @@ export default function AddGradeModal({ isOpen, setIsOpen, onSave }: AddGradeMod
 }
 //END OF app\ta\groups\components\add-grade-modal.tsx
 
-//START OF app\ta\groups\components\attendance-tab.tsx
+//START OF app\ta\groups\components\attendance-history.tsx
+// NEW FILE: components/attendance-history.tsx
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useMemo } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Button } from "@/components/ui/button"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
 import { Badge } from "@/components/ui/badge"
-import { UserCheck, Plus, Check, Edit, Trash2 } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
-import { taAttendancePageData, type TAttendanceGroup, type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+import { Search, History, Edit, Trash2 } from "lucide-react"
+import { motion } from "framer-motion"
+import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
 
-function AttendanceModal({ isOpen, setIsOpen, session, group, onSave }: {
-    isOpen: boolean,
-    setIsOpen: (open: boolean) => void,
-    session: TAttendanceSession | null,
-    group: TAttendanceGroup | null,
-    onSave: (session: TAttendanceSession) => void,
-}) {
-    const [step, setStep] = useState(1);
-    const [details, setDetails] = useState({ date: new Date().toISOString().split('T')[0] });
-    const [records, setRecords] = useState<TAttendanceRecord[]>([]);
-
-    useEffect(() => {
-        if (isOpen) {
-            if (session) {
-                setDetails({ date: session.date });
-                setRecords(session.records);
-                setStep(2);
-            } else {
-                setDetails({ date: new Date().toISOString().split('T')[0] });
-                setRecords([]);
-                setStep(1);
-            }
-        }
-    }, [isOpen, session]);
-
-    const handleNext = () => {
-        if (!details.date) { alert("Please provide a date."); return; }
-        if (group) {
-            const initialRecords = group.students.map(student => ({ studentId: student.id, name: student.name, status: 'Present' as 'Present' | 'Absent' | 'Tardy' }));
-            setRecords(initialRecords);
-        }
-        setStep(2);
-    };
-    
-    const toggleStatus = (studentId: string) => {
-        const statuses = ['Present', 'Absent', 'Tardy'];
-        setRecords(records.map(r => r.studentId === studentId ? { ...r, status: statuses[(statuses.indexOf(r.status) + 1) % statuses.length] as 'Present' | 'Absent' | 'Tardy' } : r));
-    };
-
-    const markAllPresent = () => setRecords(records.map(r => ({ ...r, status: 'Present' })));
-
-    const handleConfirm = () => {
-        const finalSession: TAttendanceSession = { id: session?.id || `session-${Date.now()}`, ...details, records };
-        onSave(finalSession);
-        setIsOpen(false);
-    };
-
-    const getStatusBadgeVariant = (status: string) => {
-        switch(status) {
-            case 'Present': return 'default';
-            case 'Absent': return 'destructive';
-            case 'Tardy': return 'secondary';
-            default: return 'outline';
-        }
-    };
-
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DialogContent className="sm:max-w-[425px] md:max-w-xl">
-                <DialogHeader>
-                    <DialogTitle>{session ? 'Edit Attendance' : 'Add Attendance'}</DialogTitle>
-                    <DialogDescription>{step === 1 ? "Provide session details." : `Mark attendance for ${group?.name}`}</DialogDescription>
-                </DialogHeader>
-                <AnimatePresence mode="wait">
-                    {step === 1 && !session ? (
-                        <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
-                            <div className="space-y-2"><Label htmlFor="date">Date</Label><Input id="date" type="date" value={details.date} onChange={e => setDetails({...details, date: e.target.value})} /></div>
-                        </motion.div>
-                    ) : (
-                        <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="py-4 space-y-4">
-                            <div className="flex justify-between items-center"><p className="text-sm font-medium">{new Date(details.date + 'T00:00:00').toDateString()}</p><Button size="sm" variant="outline" onClick={markAllPresent}><Check className="h-4 w-4 mr-2" /> Mark All Present</Button></div>
-                            <div className="max-h-64 overflow-y-auto pr-2 space-y-2">
-                                {records.map(record => (
-                                    <div key={record.studentId} className="flex items-center justify-between p-2 rounded-md border cursor-pointer hover:bg-gray-50" onClick={() => toggleStatus(record.studentId)}>
-                                        <p>{record.name}</p><Badge variant={getStatusBadgeVariant(record.status)}>{record.status}</Badge>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-                <DialogFooter>
-                    {step === 2 && !session && <Button variant="outline" onClick={() => setStep(1)}>Back</Button>}
-                    {step === 1 && !session ? <Button onClick={handleNext}>Next</Button> : <Button onClick={handleConfirm} className="bg-gradient-to-r from-emerald-500 to-teal-500">Confirm</Button>}
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
+interface AttendanceHistoryProps {
+  history: TAttendanceSession[]
+  onEdit: (session: TAttendanceSession) => void
+  onDelete: (sessionId: string) => void
 }
 
-export default function AttendanceTabContent({ groupId }: { groupId: string }) {
-    const [groupData, setGroupData] = useState<TAttendanceGroup | undefined>(
-        taAttendancePageData.groups.find(g => g.id === groupId)
-    );
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null);
+const ITEMS_PER_PAGE = 5;
 
-    const handleSaveSession = (newSession: TAttendanceSession) => {
-        setGroupData(prevGroup => {
-            if (!prevGroup) return undefined;
-            const sessionExists = prevGroup.sessions.some(s => s.id === newSession.id);
-            let updatedSessions;
-            if (sessionExists) {
-                updatedSessions = prevGroup.sessions.map(s => s.id === newSession.id ? newSession : s);
-            } else {
-                updatedSessions = [newSession, ...prevGroup.sessions];
-            }
-            updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-            return { ...prevGroup, sessions: updatedSessions };
-        });
-    };
+const getSessionSummary = (records: TAttendanceRecord[]) => {
+    const summary = records.reduce((acc, record) => {
+        if (record.status === 'Absent') acc.absent++;
+        if (record.status === 'Tardy') acc.tardy++;
+        return acc;
+    }, { absent: 0, tardy: 0 });
+    return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
+};
 
-    const handleDeleteSession = (sessionId: string) => {
-        setGroupData(prevGroup => {
-            if (!prevGroup) return undefined;
-            const updatedSessions = prevGroup.sessions.filter(s => s.id !== sessionId);
-            return { ...prevGroup, sessions: updatedSessions };
-        });
-    };
-
-    const handleOpenModal = (session: TAttendanceSession | null) => {
-        setEditingSession(session);
-        setIsModalOpen(true);
-    };
-
-    const getSessionSummary = (records: TAttendanceRecord[]) => {
-        const summary = records.reduce((acc, record) => {
-            if (record.status === 'Absent') acc.absent++;
-            if (record.status === 'Tardy') acc.tardy++;
-            return acc;
-        }, { absent: 0, tardy: 0 });
-        return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
-    };
-
-    if (!groupData) {
-        return <div className="text-center py-10">No attendance data for this group.</div>;
+const getStatusBadgeVariant = (status: 'Present' | 'Absent' | 'Tardy') => {
+    switch(status) {
+        case 'Present': return 'default';
+        case 'Absent': return 'destructive';
+        case 'Tardy': return 'secondary';
+        default: return 'outline';
     }
+};
 
-    return (
-        <div className="space-y-4">
-             <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle className="flex items-center gap-2 text-lg">
-                            <UserCheck className="h-5 w-5 text-purple-600" />
-                            Attendance History
-                        </CardTitle>
-                        <Button onClick={() => handleOpenModal(null)} size="sm">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Record
+export default function AttendanceHistory({ history, onEdit, onDelete }: AttendanceHistoryProps) {
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+
+  const filteredHistory = useMemo(() => {
+    return history.filter(entry => 
+      new Date(entry.date + 'T00:00:00').toLocaleDateString().toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [history, searchTerm])
+
+  const totalPages = Math.ceil(filteredHistory.length / ITEMS_PER_PAGE);
+  const paginatedHistory = filteredHistory.slice(
+      (currentPage - 1) * ITEMS_PER_PAGE,
+      currentPage * ITEMS_PER_PAGE
+  );
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: 0.2 }}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <History className="h-5 w-5 text-gray-700" />
+            Attendance History
+          </CardTitle>
+          <CardDescription>Review and manage past attendance entries.</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search by date..."
+                value={searchTerm}
+                onChange={(e) => {
+                    setSearchTerm(e.target.value);
+                    setCurrentPage(1);
+                }}
+                className="pl-10"
+              />
+          </div>
+          
+          <div className="border rounded-lg">
+            {paginatedHistory.length > 0 ? (
+              <Accordion type="single" collapsible>
+                {paginatedHistory.map(entry => (
+                  <AccordionItem value={entry.id} key={entry.id}>
+                    <AccordionTrigger className="px-4 hover:bg-slate-50">
+                      <div className="flex flex-1 items-center justify-between gap-4">
+                          <div className="text-left">
+                            <p className="font-semibold">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
+                            <p className="text-sm text-gray-500">{getSessionSummary(entry.records)}</p>
+                          </div>
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent className="p-4 bg-white">
+                      <div className="max-h-60 overflow-y-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>Student</TableHead>
+                                    <TableHead className="text-right">Status</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {entry.records.map(sg => (
+                                    <TableRow key={sg.studentId}>
+                                        <TableCell>{sg.name}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Badge variant={getStatusBadgeVariant(sg.status)}>{sg.status}</Badge>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                      </div>
+                      <div className="mt-4 flex justify-end space-x-2">
+                        <Button variant="ghost" size="sm" onClick={() => onEdit(entry)}>
+                            <Edit className="h-4 w-4 mr-1" /> Edit
                         </Button>
-                    </div>
-                </CardHeader>
-                <CardContent>
-                    <Accordion type="single" collapsible className="w-full">
-                        {groupData.sessions.map(session => (
-                            <AccordionItem value={session.id} key={session.id}>
-                                <AccordionTrigger>
-                                    <div className="flex justify-between w-full pr-4">
-                                    <span>{new Date(session.date).toDateString()}</span>
-                                    <span className="text-sm text-gray-500">{getSessionSummary(session.records)}</span>
-                                    </div>
-                                </AccordionTrigger>
-                                <AccordionContent>
-                                    <div className="space-y-2">
-                                    {session.records.map(record => (
-                                        <div key={record.studentId} className="flex justify-between items-center p-2 rounded-md bg-gray-50">
-                                        <span>{record.name}</span>
-                                        <Badge variant={record.status === 'Present' ? 'default' : record.status === 'Absent' ? 'destructive' : 'secondary'}>
-                                            {record.status}
-                                        </Badge>
-                                        </div>
-                                    ))}
-                                    </div>
-                                    <div className="flex justify-end space-x-2 mt-4">
-                                        <Button variant="ghost" size="sm" onClick={() => handleOpenModal(session)}><Edit className="h-4 w-4 mr-1" /> Edit</Button>
-                                        <AlertDialog>
-                                            <AlertDialogTrigger asChild>
-                                                <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600"><Trash2 className="h-4 w-4 mr-1" /> Delete</Button>
-                                            </AlertDialogTrigger>
-                                            <AlertDialogContent>
-                                                <AlertDialogHeader>
-                                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the attendance record for this session.</AlertDialogDescription>
-                                                </AlertDialogHeader>
-                                                <AlertDialogFooter>
-                                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                                    <AlertDialogAction onClick={() => handleDeleteSession(session.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                                                </AlertDialogFooter>
-                                            </AlertDialogContent>
-                                        </AlertDialog>
-                                    </div>
-                                </AccordionContent>
-                            </AccordionItem>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600">
+                                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription>This action cannot be undone. This will permanently delete the attendance record for this session.</AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => onDelete(entry.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            ) : (
+              <div className="p-10 text-center text-gray-500">
+                <p>No attendance history found.</p>
+                <p className="text-sm">Try adjusting your search or adding a new attendance entry.</p>
+              </div>
+            )}
+          </div>
+           {totalPages > 1 && (
+                <Pagination>
+                    <PaginationContent>
+                        <PaginationItem>
+                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
+                        </PaginationItem>
+                        {[...Array(totalPages)].map((_, i) => (
+                            <PaginationItem key={i}>
+                                <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
+                                    {i+1}
+                                </PaginationLink>
+                            </PaginationItem>
                         ))}
-                    </Accordion>
-                    {groupData.sessions.length === 0 && <p className="text-center text-gray-500 py-4">No attendance records found for this group.</p>}
-                </CardContent>
-            </Card>
-            <AttendanceModal
-                isOpen={isModalOpen}
-                setIsOpen={setIsModalOpen}
-                session={editingSession}
-                group={groupData}
-                onSave={handleSaveSession}
-            />
+                        <PaginationItem>
+                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
+                        </PaginationItem>
+                    </PaginationContent>
+                </Pagination>
+            )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  )
+}
+//END OF app\ta\groups\components\attendance-history.tsx
+
+//START OF app\ta\groups\components\attendance-tab.tsx
+// MODIFIED FILE: components/attendance-tab.tsx
+"use client"
+
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Plus } from "lucide-react"
+import { motion } from "framer-motion"
+import { Toaster, toast } from "sonner"
+import { taAttendancePageData, type TAttendanceSession, type TAttendanceGroup } from "@/lib/database"
+import AddAttendanceModal from "./add-attendance-modal"
+import AttendanceHistory from "./attendance-history"
+
+export default function AttendanceTabContent({ groupId }: { groupId: string }) {
+  const [groupData, setGroupData] = useState<TAttendanceGroup | undefined>(
+    taAttendancePageData.groups.find(g => g.id === groupId)
+  );
+  
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null)
+
+  const handleSaveSession = (session: TAttendanceSession) => {
+    setGroupData(prevGroup => {
+        if (!prevGroup) return undefined;
+
+        const sessionExists = prevGroup.sessions.some(s => s.id === session.id);
+        let updatedSessions;
+
+        if (sessionExists) {
+            updatedSessions = prevGroup.sessions.map(s => s.id === session.id ? session : s);
+            toast.success(`Attendance for ${new Date(session.date + 'T00:00:00').toLocaleDateString()} updated successfully!`);
+        } else {
+            updatedSessions = [session, ...prevGroup.sessions];
+            toast.success(`Attendance for ${new Date(session.date + 'T00:00:00').toLocaleDateString()} saved successfully!`);
+        }
+
+        updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        
+        return { ...prevGroup, sessions: updatedSessions };
+    });
+    setEditingSession(null);
+    setIsModalOpen(false);
+  }
+
+  const handleDeleteSession = (sessionId: string) => {
+    setGroupData(prevGroup => {
+        if (!prevGroup) return undefined;
+        const updatedSessions = prevGroup.sessions.filter(s => s.id !== sessionId);
+        toast.error("Attendance record has been deleted.");
+        return { ...prevGroup, sessions: updatedSessions };
+    });
+  }
+
+  const handleEditSession = (session: TAttendanceSession) => {
+    setEditingSession(session);
+    setIsModalOpen(true);
+  }
+
+  const handleAddNew = () => {
+    setEditingSession(null);
+    setIsModalOpen(true);
+  }
+  
+  if (!groupData) {
+    return <div className="text-center py-10">No attendance data found for this group.</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <Toaster position="top-center" richColors />
+      <motion.div
+        className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border rounded-lg bg-slate-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="text-center sm:text-left">
+          <h2 className="text-lg font-semibold text-gray-800">New attendance Entry</h2>
+          <p className="text-sm text-gray-600">Click here to add a new attendance record for your students.</p>
         </div>
-    );
+        <Button onClick={handleAddNew} className="w-full sm:w-auto">
+          <Plus className="mr-2 h-4 w-4" />
+          Add new attendance
+        </Button>
+      </motion.div>
+
+      <AttendanceHistory 
+        history={groupData.sessions}
+        onEdit={handleEditSession}
+        onDelete={handleDeleteSession}
+      />
+
+      <AddAttendanceModal
+        isOpen={isModalOpen}
+        setIsOpen={setIsModalOpen}
+        onSave={handleSaveSession}
+        students={groupData.students}
+        editingSession={editingSession}
+      />
+    </div>
+  )
 }
 //END OF app\ta\groups\components\attendance-tab.tsx
 
@@ -7920,118 +8461,8 @@ export default function TALayout({
 "use client"
 
 import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Users, MessageSquare, Calendar, Clock, ArrowRight, Bell } from "lucide-react"
-import Link from "next/link"
 import { motion } from "framer-motion"
-
-// Mock data for TA dashboard
-const mockData = {
-  studentGroups: [
-    {
-      id: "group-1",
-      name: "ICT Fundamentals - Group A",
-      studentCount: 12,
-      course: "ICT Fundamentals",
-      nextSession: "2024-01-15T14:00:00Z",
-      pendingQuestions: 3,
-    },
-    {
-      id: "group-2",
-      name: "Mathematics - Group B",
-      studentCount: 8,
-      course: "Mathematics",
-      nextSession: "2024-01-16T10:00:00Z",
-      pendingQuestions: 1,
-    },
-    {
-      id: "group-3",
-      name: "ICT Practical - Group C",
-      studentCount: 15,
-      course: "ICT Practical",
-      nextSession: "2024-01-17T16:00:00Z",
-      pendingQuestions: 5,
-    },
-  ],
-  forumActivity: [
-    {
-      id: "q1",
-      title: "Help with Python loops",
-      course: "ICT Fundamentals",
-      student: "Emma Johnson",
-      timeAgo: "2 hours ago",
-      priority: "high",
-      replies: 0,
-    },
-    {
-      id: "q2",
-      title: "Algebra equation solving",
-      course: "Mathematics",
-      student: "Michael Chen",
-      timeAgo: "4 hours ago",
-      priority: "medium",
-      replies: 1,
-    },
-    {
-      id: "q3",
-      title: "Database design question",
-      course: "ICT Practical",
-      student: "Sarah Wilson",
-      timeAgo: "6 hours ago",
-      priority: "low",
-      replies: 2,
-    },
-  ],
-  upcomingSessions: [
-    {
-      id: "session-1",
-      title: "ICT Q&A Session",
-      course: "ICT Fundamentals",
-      time: "2024-01-15T14:00:00Z",
-      duration: "1 hour",
-      type: "Q&A",
-      students: 12,
-    },
-    {
-      id: "session-2",
-      title: "Math Problem Solving",
-      course: "Mathematics",
-      time: "2024-01-16T10:00:00Z",
-      duration: "45 minutes",
-      type: "Tutorial",
-      students: 8,
-    },
-    {
-      id: "session-3",
-      title: "Lab Help Session",
-      course: "ICT Practical",
-      time: "2024-01-17T16:00:00Z",
-      duration: "2 hours",
-      type: "Lab Help",
-      students: 15,
-    },
-  ],
-  announcements: [
-    {
-      id: "ann-1",
-      title: "New Assessment Guidelines",
-      content: "Updated guidelines for student assessments have been released.",
-      priority: "high",
-      timeAgo: "1 day ago",
-      from: "Dr. Sarah Johnson",
-    },
-    {
-      id: "ann-2",
-      title: "Office Hours Update",
-      content: "Office hours have been extended for the upcoming exam period.",
-      priority: "medium",
-      timeAgo: "2 days ago",
-      from: "Dr. Sarah Johnson",
-    },
-  ],
-}
 
 export default function TADashboard() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -8040,19 +8471,13 @@ export default function TADashboard() {
     return <div>Loading...</div>
   }
 
-  const totalStudents = mockData.studentGroups.reduce((sum, group) => sum + group.studentCount, 0)
-  const totalPendingQuestions = mockData.studentGroups.reduce((sum, group) => sum + group.pendingQuestions, 0)
-  const todaySessions = mockData.upcomingSessions.filter((session) => {
-    const sessionDate = new Date(session.time)
-    const today = new Date()
-    return sessionDate.toDateString() === today.toDateString()
-  }).length
-
   return (
-    <div className="p-6 space-y-6">
-      {/* Welcome Header */}
+    <div className="p-6 space-y-6 flex flex-col min-h-screen">
+      {/* Welcome Header - Modified for responsiveness */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
-        <div className="flex items-center justify-between">
+        {/* Added 'flex-wrap' to allow items to wrap to the next line on smaller screens. */}
+        {/* Added 'gap-y-4' to provide vertical spacing when items wrap. */}
+        <div className="flex flex-wrap items-center justify-between gap-y-4">
           <div>
             <h1 className="text-3xl font-poppins font-bold text-gray-900">
               Welcome back, {user?.name?.split(" ")[0]}!
@@ -8067,275 +8492,18 @@ export default function TADashboard() {
         </div>
       </motion.div>
 
-      {/* Stats Overview */}
-      <motion.div
-        className="grid grid-cols-1 md:grid-cols-4 gap-6"
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
-        <Card className="bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-purple-100">Total Students</p>
-                <p className="text-3xl font-bold">{totalStudents}</p>
-              </div>
-              <Users className="h-8 w-8 text-purple-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-blue-100">Pending Questions</p>
-                <p className="text-3xl font-bold">{totalPendingQuestions}</p>
-              </div>
-              <MessageSquare className="h-8 w-8 text-blue-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-green-100">Today's Sessions</p>
-                <p className="text-3xl font-bold">{todaySessions}</p>
-              </div>
-              <Calendar className="h-8 w-8 text-green-200" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-orange-100">Student Groups</p>
-                <p className="text-3xl font-bold">{mockData.studentGroups.length}</p>
-              </div>
-              <Users className="h-8 w-8 text-orange-200" />
-            </div>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Student Groups */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="h-fit">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5 text-purple-600" />
-                    My Student Groups
-                  </CardTitle>
-                  <CardDescription>Assigned student groups and their status</CardDescription>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/ta/students">
-                    View All
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockData.studentGroups.map((group) => (
-                <div
-                  key={group.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{group.name}</h4>
-                    <p className="text-sm text-gray-600">{group.studentCount} students</p>
-                    <p className="text-xs text-gray-500">
-                      Next session: {new Date(group.nextSession).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {group.pendingQuestions > 0 && (
-                      <Badge variant="destructive" className="text-xs">
-                        {group.pendingQuestions} pending
-                      </Badge>
-                    )}
-                    <Button asChild variant="ghost" size="sm">
-                      <Link href={`/ta/students/${group.id}`}>
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Forum Activity */}
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-        >
-          <Card className="h-fit">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageSquare className="h-5 w-5 text-blue-600" />
-                    Recent Forum Activity
-                  </CardTitle>
-                  <CardDescription>New and unanswered questions</CardDescription>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/ta/forum">
-                    View Forum
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockData.forumActivity.map((question) => (
-                <div
-                  key={question.id}
-                  className="flex items-start space-x-3 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <h4 className="font-medium text-gray-900">{question.title}</h4>
-                      <Badge
-                        variant={
-                          question.priority === "high"
-                            ? "destructive"
-                            : question.priority === "medium"
-                              ? "default"
-                              : "secondary"
-                        }
-                        className="text-xs"
-                      >
-                        {question.priority}
-                      </Badge>
-                    </div>
-                    <p className="text-sm text-gray-600">
-                      {question.course} • {question.student}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {question.timeAgo} • {question.replies} replies
-                    </p>
-                  </div>
-                  <Button asChild variant="ghost" size="sm">
-                    <Link href={`/ta/forum/question/${question.id}`}>
-                      <ArrowRight className="h-4 w-4" />
-                    </Link>
-                  </Button>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Upcoming Sessions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-        >
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-5 w-5 text-green-600" />
-                    Upcoming Sessions
-                  </CardTitle>
-                  <CardDescription>Your scheduled Q&A and lab sessions</CardDescription>
-                </div>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/ta/schedule">
-                    View Schedule
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockData.upcomingSessions.slice(0, 3).map((session) => (
-                <div
-                  key={session.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <Clock className="h-4 w-4 text-green-600" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900">{session.title}</h4>
-                      <p className="text-sm text-gray-600">{session.course}</p>
-                      <p className="text-xs text-gray-500">
-                        {new Date(session.time).toLocaleDateString()} at{" "}
-                        {new Date(session.time).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <Badge variant="outline">{session.type}</Badge>
-                    <p className="text-xs text-gray-500 mt-1">{session.students} students</p>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Announcements */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-        >
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Bell className="h-5 w-5 text-orange-600" />
-                Announcements
-              </CardTitle>
-              <CardDescription>Latest updates from instructors</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {mockData.announcements.map((announcement) => (
-                <div key={announcement.id} className="p-4 border rounded-lg hover:bg-gray-50 transition-colors">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-gray-900">{announcement.title}</h4>
-                    <Badge variant={announcement.priority === "high" ? "destructive" : "secondary"} className="text-xs">
-                      {announcement.priority}
-                    </Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-2">{announcement.content}</p>
-                  <div className="flex items-center justify-between text-xs text-gray-500">
-                    <span>From: {announcement.from}</span>
-                    <span>{announcement.timeAgo}</span>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </motion.div>
+      {/* Placeholder message for the rest of the page */}
+      <div className="flex-grow flex flex-col items-center justify-center text-center py-16 px-4">
+        <p className="text-2xl md:text-3xl font-bold text-gray-700 mb-4">
+          The full content will be available soon.
+        </p>
+        <p className="text-lg md:text-xl text-gray-500 max-w-2xl">
+          We're diligently working to enhance your dashboard experience with more features and detailed insights. Please check back later for exciting updates!
+        </p>
       </div>
     </div>
   )
 }
-
 //END OF app\ta\page.tsx
 
 //START OF app\ta\profile\page.tsx
@@ -8774,7 +8942,7 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
       setEndTime("")
       setMeetingLink("")
     }
-    setErrors({})
+    setErrors({}) // Always clear errors when modal opens/changes sessionToEdit
   }, [sessionToEdit, isOpen])
 
   const validate = (): boolean => {
@@ -8792,16 +8960,28 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
 
     // Validate against availability
     if (date && startTime && endTime) {
-        const selectedDayIndex = new Date(date + 'T00:00:00').getDay();
+        const selectedDate = new Date(date + 'T00:00:00'); // Use 'T00:00:00' to avoid timezone issues affecting getDay()
+        const selectedDayIndex = selectedDate.getDay();
         const selectedDayName = dayMap[selectedDayIndex] as TAAvailabilitySlot['day'];
         const dayAvailability = availability.find(a => a.day === selectedDayName);
 
         if (!dayAvailability || dayAvailability.slots.length === 0) {
             newErrors.date = `You are not available on ${selectedDayName}s.`
         } else {
+            // Check if selected time range falls completely within any available slot
             const isInSlot = dayAvailability.slots.some(slot => {
                 const [slotStart, slotEnd] = slot.split('-');
-                return startTime >= slotStart && endTime <= slotEnd;
+                // Convert to minutes for easier comparison
+                const timeToMinutes = (time: string) => {
+                    const [hours, minutes] = time.split(':').map(Number);
+                    return hours * 60 + minutes;
+                };
+                const startMinutes = timeToMinutes(startTime);
+                const endMinutes = timeToMinutes(endTime);
+                const slotStartMinutes = timeToMinutes(slotStart);
+                const slotEndMinutes = timeToMinutes(slotEnd);
+
+                return startMinutes >= slotStartMinutes && endMinutes <= slotEndMinutes;
             });
             if (!isInSlot) {
                 newErrors.startTime = `The selected time is outside your available slots for ${selectedDayName}s.`
@@ -8838,41 +9018,41 @@ export default function ScheduleSessionModal({ isOpen, setIsOpen, onSave, sessio
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => { setIsOpen(open); if (!open) setErrors({}); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>{sessionToEdit ? "Edit Session" : "Schedule New Session"}</DialogTitle>
           <DialogDescription>Fill in the details for the online session.</DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="title">Title</Label>
-            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., ICT Midterm Review" />
+            <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g., ICT Midterm Review" autoFocus />
             {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="date">Date</Label>
             <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
             {errors.date && <p className="text-xs text-red-500">{errors.date}</p>}
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="start-time">Start Time</Label>
               <Input id="start-time" type="time" value={startTime} onChange={e => setStartTime(e.target.value)} />
               {errors.startTime && <p className="text-xs text-red-500">{errors.startTime}</p>}
             </div>
-            <div className="grid gap-2">
+            <div className="grid gap-1.5">
               <Label htmlFor="end-time">End Time</Label>
               <Input id="end-time" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
               {errors.endTime && <p className="text-xs text-red-500">{errors.endTime}</p>}
             </div>
           </div>
-          <div className="grid gap-2">
+          <div className="grid gap-1.5">
             <Label htmlFor="meeting-link">Meeting Link</Label>
             <Input id="meeting-link" value={meetingLink} onChange={e => setMeetingLink(e.target.value)} placeholder="https://zoom.us/j/..." />
              {errors.meetingLink && <p className="text-xs text-red-500">{errors.meetingLink}</p>}
           </div>
-           <div className="grid gap-2">
+           <div className="grid gap-1.5">
             <Label htmlFor="description">Description (Optional)</Label>
             <Textarea id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Topics to be covered, etc." />
           </div>
@@ -8907,12 +9087,11 @@ interface SessionListProps {
   mode: 'upcoming' | 'recent'
   onEdit?: (session: TASession) => void
   onCancel?: (sessionId: string) => void
+  initialDisplayCount?: number; // New prop for initial display count (page size)
 }
 
-const SESSIONS_TO_SHOW = 5;
-
-export default function SessionList({ title, sessions, mode, onEdit, onCancel }: SessionListProps) {
-  const [itemsToShow, setItemsToShow] = useState(SESSIONS_TO_SHOW)
+export default function SessionList({ title, sessions, mode, onEdit, onCancel, initialDisplayCount = 5 }: SessionListProps) {
+  const [currentDisplayCount, setCurrentDisplayCount] = useState(initialDisplayCount);
   const [copiedLink, setCopiedLink] = useState<string | null>(null);
 
   const handleCopyLink = (link: string, id: string) => {
@@ -8939,15 +9118,18 @@ export default function SessionList({ title, sessions, mode, onEdit, onCancel }:
     hidden: { opacity: 0, y: 20 },
   }
 
+  const canLoadMore = currentDisplayCount < sessions.length;
+  const canShowLess = currentDisplayCount > initialDisplayCount;
+
   return (
     <section>
       <h2 className="text-xl font-semibold text-gray-700 mb-4">{title}</h2>
       {sessions.length > 0 ? (
         <motion.ul variants={listVariants} initial="hidden" animate="visible" className="space-y-4">
-          {sessions.slice(0, itemsToShow).map(session => {
+          {sessions.slice(0, currentDisplayCount).map(session => {
             const sessionDate = new Date(session.dateTime)
             return (
-              <motion.li key={session.id} variants={itemVariants} className="p-4 border rounded-lg bg-white">
+              <motion.li key={session.id} variants={itemVariants} className="p-4 border rounded-lg bg-white shadow-sm hover:shadow-md transition-shadow">
                 <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-2 mb-3">
                   <h3 className="font-semibold text-gray-800">{session.title}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-500">
@@ -8993,9 +9175,14 @@ export default function SessionList({ title, sessions, mode, onEdit, onCancel }:
               </motion.li>
             )
           })}
-           {sessions.length > itemsToShow && (
-                <div className="text-center mt-4">
-                    <Button variant="link" onClick={() => setItemsToShow(itemsToShow + SESSIONS_TO_SHOW)}>Load More</Button>
+           {(canLoadMore || canShowLess) && (
+                <div className="text-center mt-4 space-x-2">
+                    {canLoadMore && (
+                        <Button variant="link" onClick={() => setCurrentDisplayCount(prev => prev + initialDisplayCount)}>Load More ({sessions.length - currentDisplayCount} left)</Button>
+                    )}
+                    {canShowLess && (
+                        <Button variant="link" onClick={() => setCurrentDisplayCount(initialDisplayCount)}>Show Less</Button>
+                    )}
                 </div>
             )}
         </motion.ul>
@@ -9023,7 +9210,7 @@ interface WeeklyAvailabilityProps {
 export default function WeeklyAvailability({ availability }: WeeklyAvailabilityProps) {
   return (
     <section>
-      <h2 className="text-xl font-semibold text-gray-700 mb-4">Weekly Availability</h2>
+      <h2 className="text-xl font-semibold text-gray-800 mb-4">Weekly Availability</h2>
       <div className="p-4 border rounded-lg bg-white">
         <div className="hidden md:grid md:grid-cols-7 gap-px">
           {availability.map(daySlot => (
@@ -9041,7 +9228,7 @@ export default function WeeklyAvailability({ availability }: WeeklyAvailabilityP
             </div>
           ))}
         </div>
-        <div className="md:hidden space-y-3">
+        <div className="md:hidden space-y-2">
              {availability.map(daySlot => (
                 <div key={daySlot.day} className="flex items-start gap-4 p-2 border-b last:border-b-0">
                     <p className="font-semibold text-sm w-20 shrink-0">{daySlot.day}</p>
@@ -9070,13 +9257,15 @@ import { useState, useMemo } from "react"
 import { useRequireAuth } from "@/hooks/use-auth"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { Toaster, toast } from "sonner"
 import { isAfter, isBefore, subDays } from "date-fns"
 import { taScheduleData, taAvailabilityData, type TASession } from "@/lib/database"
 import WeeklyAvailability from "./components/WeeklyAvailability"
 import ScheduleSessionModal from "./components/ScheduleSessionModal"
 import SessionList from "./components/SessionList"
+
+const INITIAL_SESSIONS_DISPLAY = 5; // Define a constant for initial display count
 
 export default function TASchedulePage() {
   const { user, isLoading } = useRequireAuth(["ta"])
@@ -9128,11 +9317,11 @@ export default function TASchedulePage() {
   }
 
   return (
-    <div className="p-4 sm:p-6 space-y-8">
+    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8 space-y-8">
       <Toaster position="top-center" richColors />
       <header className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 tracking-tight">Schedule & Meetings</h1>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-800 tracking-tight">Schedule & Meetings</h1>
           <p className="text-gray-500 mt-1">Manage your availability and scheduled sessions.</p>
         </div>
         <Button onClick={() => handleOpenModal()} variant="outline" className="w-full sm:w-auto">
@@ -9141,7 +9330,7 @@ export default function TASchedulePage() {
         </Button>
       </header>
 
-      <motion.section initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
+      <motion.section initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.5 }}>
         <WeeklyAvailability availability={taAvailabilityData} />
       </motion.section>
 
@@ -9152,21 +9341,27 @@ export default function TASchedulePage() {
           mode="upcoming"
           onEdit={handleOpenModal}
           onCancel={handleCancelSession}
+          initialDisplayCount={INITIAL_SESSIONS_DISPLAY}
         />
         <SessionList 
           title="Recent Sessions"
           sessions={recentSessions}
           mode="recent"
+          initialDisplayCount={INITIAL_SESSIONS_DISPLAY}
         />
       </div>
 
-      <ScheduleSessionModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        onSave={handleSaveSession}
-        sessionToEdit={editingSession}
-        availability={taAvailabilityData}
-      />
+      <AnimatePresence>
+        {isModalOpen && (
+          <ScheduleSessionModal
+            isOpen={isModalOpen}
+            setIsOpen={setIsModalOpen}
+            onSave={handleSaveSession}
+            sessionToEdit={editingSession}
+            availability={taAvailabilityData}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -11400,8 +11595,6 @@ export async function debugPasswordHash(password: string): Promise<void> {
 //END OF lib\auth.ts
 
 //START OF lib\database.ts
-// lib/database.ts
-
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
@@ -11648,6 +11841,270 @@ export const studentDetailedCourses = [
   },
 ];
 
+// --- STUDENT PORTAL DATA - Course Details (Expanded) ---
+
+export type VideoDetail = {
+  id: string;
+  title: string;
+  description: string;
+  locked: boolean;
+};
+
+export type AssignmentDetail = {
+  id: string;
+  title: string;
+  dueDate: string;
+  status: 'Graded' | 'Submitted' | 'Missing' | 'Late' | 'Needs Grading';
+  grade: string | null;
+};
+
+export type QuizDetail = {
+  id: string;
+  title: string;
+  date: string;
+  status: 'Passed' | 'Failed' | 'Pending';
+  score: string | null;
+};
+
+export type AttendanceDetail = {
+  id: string;
+  date: string;
+  status: 'Present' | 'Absent' | 'Tardy';
+};
+
+export type CourseProgress = {
+  assignmentsCompleted: number; // Percentage, e.g., 75 for 75%
+  quizzesPassed: [number, number]; // [passedCount, totalCount]
+  attendanceRate: number; // Percentage, e.g., 98 for 98%
+};
+
+export type CourseDetailsInfo = {
+  instructor: string;
+  ta: string;
+  contact: string; // TA Contact Email
+};
+
+export type CourseAnnouncement = {
+  id: string;
+  title: string;
+  date: string; // "YYYY-MM-DD"
+};
+
+export type CourseDetail = {
+  id: string;
+  title: string;
+  group: string; // e.g., "Group A"
+  endMonth: string; // e.g., "June"
+  progress: CourseProgress;
+  videos: VideoDetail[];
+  assignments: AssignmentDetail[];
+  quizzes: QuizDetail[];
+  attendance: AttendanceDetail[];
+  details: CourseDetailsInfo;
+  announcements: CourseAnnouncement[];
+};
+
+export const courseDetailsData: { [key: string]: CourseDetail } = {
+  "ict-101": {
+    id: "ict-101",
+    title: "ICT Fundamentals",
+    group: "Group A",
+    endMonth: "June",
+    progress: {
+      assignmentsCompleted: 75,
+      quizzesPassed: [8, 10], // 8 passed out of 10 total
+      attendanceRate: 98,
+    },
+    videos: [
+      { id: "vid-ict-1", title: "Introduction to ICT", description: "Overview of Information and Communication Technology. Dive into the core concepts and historical context.", locked: false },
+      { id: "vid-ict-2", title: "Basic Networking Concepts", description: "Understanding IP addresses, routers, switches, and network topologies.", locked: false },
+      { id: "vid-ict-3", title: "Cybersecurity Fundamentals", description: "Introduction to common cyber threats, attack vectors, and basic protective measures.", locked: true },
+      { id: "vid-ict-4", title: "Database Design Principles", description: "Learn about relational databases, normalization, and an introduction to SQL queries.", locked: true },
+      { id: "vid-ict-5", title: "Web Development: HTML & CSS", description: "Building static web pages with semantic HTML and styling with CSS.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100" },
+      { id: "assign-ict-2", title: "Networking Fundamentals Quiz", dueDate: "2024-05-25", status: "Submitted", grade: null },
+      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null },
+      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null },
+      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", date: "2024-05-10", status: "Passed", score: "85%" },
+      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", date: "2024-05-17", status: "Passed", score: "90%" },
+      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", date: "2024-05-24", status: "Failed", score: "60%" },
+      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", date: "2024-05-31", status: "Pending", score: null },
+    ],
+    attendance: [
+      { id: "att-ict-1", date: "2024-05-22", status: "Present" },
+      { id: "att-ict-2", date: "2024-05-15", status: "Present" },
+      { id: "att-ict-3", date: "2024-05-08", status: "Absent" },
+      { id: "att-ict-4", date: "2024-05-01", status: "Tardy" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-ict-1", title: "Reminder: Midterm Exam next week", date: "2024-05-20" },
+      { id: "ann-ict-2", title: "New optional practice exercises available", date: "2024-05-15" },
+      { id: "ann-ict-3", title: "Guest Speaker on AI in Tech this Friday!", date: "2024-05-10" },
+    ],
+  },
+  "math-201": {
+    id: "math-201",
+    title: "Advanced Mathematics",
+    group: "Group B",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 60,
+      quizzesPassed: [6, 9],
+      attendanceRate: 90,
+    },
+    videos: [
+      { id: "vid-math-1", title: "Complex Numbers Deep Dive", description: "Exploration of complex numbers and their applications in engineering and physics.", locked: false },
+      { id: "vid-math-2", title: "Vectors and Matrices", description: "Understanding linear algebra fundamentals, vector spaces, and matrix operations.", locked: false },
+      { id: "vid-math-3", title: "Introduction to Calculus", description: "Limits, derivatives, and their rules with real-world examples.", locked: true },
+      { id: "vid-math-4", title: "Integral Calculus Techniques", description: "Methods of integration, definite and indefinite integrals.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100" },
+      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null },
+      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-math-1", title: "Algebra Review Quiz", date: "2024-05-12", status: "Passed", score: "78%" },
+      { id: "quiz-math-2", title: "Geometry Quiz", date: "2024-05-19", status: "Failed", score: "65%" },
+      { id: "quiz-math-3", title: "Pre-Calc Assessment", date: "2024-05-26", status: "Passed", score: "82%" },
+    ],
+    attendance: [
+      { id: "att-math-1", date: "2024-05-23", status: "Present" },
+      { id: "att-math-2", date: "2024-05-16", status: "Tardy" },
+      { id: "att-math-3", date: "2024-05-09", status: "Present" },
+      { id: "att-math-4", date: "2024-05-02", status: "Absent" },
+    ],
+    details: {
+      instructor: "Prof. Michael Chen",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-math-1", title: "Office hours moved to Thursday", date: "2024-05-21" },
+      { id: "ann-math-2", title: "Upcoming guest lecture on advanced statistics", date: "2024-05-18" },
+    ],
+  },
+  "web-dev-101": {
+    id: "web-dev-101",
+    title: "Web Development Basics",
+    group: "Group C",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 90,
+      quizzesPassed: [7, 7],
+      attendanceRate: 100,
+    },
+    videos: [
+      { id: "vid-web-1", title: "Intro to HTML5", description: "Fundamental concepts of HTML for web page structure.", locked: false },
+      { id: "vid-web-2", title: "Styling with CSS3", description: "Advanced CSS techniques for responsive and beautiful designs.", locked: false },
+      { id: "vid-web-3", title: "JavaScript Fundamentals", description: "Adding interactivity to web pages with JavaScript.", locked: false },
+    ],
+    assignments: [
+      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100" },
+      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100" },
+    ],
+    quizzes: [
+      { id: "quiz-web-1", title: "HTML Structures Quiz", date: "2024-05-05", status: "Passed", score: "92%" },
+      { id: "quiz-web-2", title: "CSS Selectors Quiz", date: "2024-05-12", status: "Passed", score: "88%" },
+    ],
+    attendance: [
+      { id: "att-web-1", date: "2024-05-21", status: "Present" },
+      { id: "att-web-2", date: "2024-05-14", status: "Present" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-web-1", title: "New CSS Frameworks lesson added", date: "2024-05-19" },
+    ],
+  },
+  "stats-101": {
+    id: "stats-101",
+    title: "Statistics and Probability",
+    group: "Group D",
+    endMonth: "June",
+    progress: {
+      assignmentsCompleted: 50,
+      quizzesPassed: [4, 8],
+      attendanceRate: 85,
+    },
+    videos: [
+      { id: "vid-stats-1", title: "Introduction to Probability", description: "Basic concepts of probability and discrete distributions.", locked: false },
+      { id: "vid-stats-2", title: "Descriptive Statistics", description: "Measures of central tendency and dispersion.", locked: false },
+      { id: "vid-stats-3", title: "Inferential Statistics: Hypothesis Testing", description: "Understanding null and alternative hypotheses.", locked: true },
+    ],
+    assignments: [
+      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100" },
+      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-stats-1", title: "Intro to Stats Quiz", date: "2024-05-08", status: "Passed", score: "75%" },
+      { id: "quiz-stats-2", title: "Probability Distributions Quiz", date: "2024-05-15", status: "Failed", score: "55%" },
+    ],
+    attendance: [
+      { id: "att-stats-1", date: "2024-05-20", status: "Present" },
+      { id: "att-stats-2", date: "2024-05-13", status: "Absent" },
+    ],
+    details: {
+      instructor: "Prof. Michael Chen",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-stats-1", title: "Review session for final exam", date: "2024-05-25" },
+    ],
+  },
+  "python-101": {
+    id: "python-101",
+    title: "Introduction to Python",
+    group: "Group E",
+    endMonth: "July",
+    progress: {
+      assignmentsCompleted: 80,
+      quizzesPassed: [7, 8],
+      attendanceRate: 95,
+    },
+    videos: [
+      { id: "vid-python-1", title: "Python Basics: Variables & Data Types", description: "First steps in Python programming.", locked: false },
+      { id: "vid-python-2", title: "Control Flow: Loops & Conditionals", description: "Making your programs dynamic with logic.", locked: false },
+      { id: "vid-python-3", title: "Functions and Modules", description: "Organizing your code with functions.", locked: false },
+    ],
+    assignments: [
+      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100" },
+      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null },
+    ],
+    quizzes: [
+      { id: "quiz-python-1", title: "Module 1 Assessment", date: "2024-05-07", status: "Passed", score: "90%" },
+      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", date: "2024-05-14", status: "Passed", score: "88%" },
+    ],
+    attendance: [
+      { id: "att-python-1", date: "2024-05-24", status: "Present" },
+      { id: "att-python-2", date: "2024-05-17", status: "Present" },
+    ],
+    details: {
+      instructor: "Dr. Sarah Johnson",
+      ta: "Alex Smith",
+      contact: "alex.smith.ta@example.com",
+    },
+    announcements: [
+      { id: "ann-python-1", title: "Python Coding Challenge this weekend!", date: "2024-05-22" },
+    ],
+  },
+};
+
+
 export const studentAnnouncements = [
     { id: "1", title: "New ICT Module Released: Database Design Principles", content: "We're excited to announce the release of Module 10...", date: "2024-01-15T10:30:00Z", course: "ICT Fundamentals", priority: "high", type: "course_update", author: "Dr. Sarah Johnson", read: false, },
     { id: "2", title: "Math Assignment Due Reminder", content: "This is a friendly reminder that your calculus problem set is due this Friday...", date: "2024-01-14T14:15:00Z", course: "Advanced Mathematics", priority: "medium", type: "assignment", author: "Prof. Michael Chen", read: true, },
@@ -11874,7 +12331,7 @@ export function cn(...inputs: ClassValue[]) {
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --hostname 0.0.0.0",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
