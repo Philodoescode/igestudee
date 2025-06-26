@@ -61,7 +61,7 @@ export function Footer() {
               Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Join
               our digital campus and excel in your studies with personalized support and expert guidance.
             </motion.p>
-            <motion.div className="flex space-x-4" variants={itemVariants}>
+            {/* <motion.div className="flex space-x-4" variants={itemVariants}>
               {["facebook", "twitter", "linkedin", "youtube"].map((social, index) => (
                 <motion.a
                   key={social}
@@ -74,7 +74,7 @@ export function Footer() {
                   <div className="w-5 h-5 bg-current rounded" />
                 </motion.a>
               ))}
-            </motion.div>
+            </motion.div> */}
           </motion.div>
 
           <motion.div variants={itemVariants}>
@@ -108,9 +108,7 @@ export function Footer() {
             <h3 className="font-poppins font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Contact Info</h3>
             <ul className="space-y-4">
               {[
-                { icon: Mail, text: "info@edutechacademy.com" },
-                { icon: Phone, text: "+1 (555) 123-4567" },
-                { icon: MapPin, text: "Online Learning Platform" },
+                { icon: Phone, text: "(+20) 122 5223 840" },
               ].map((item, index) => (
                 <motion.li
                   key={index}
@@ -134,7 +132,7 @@ export function Footer() {
           className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center"
           variants={itemVariants}
         >
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2024 EduTech Academy. All rights reserved.</p>
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 EduTech Academy. All rights reserved.</p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={scrollToTop}

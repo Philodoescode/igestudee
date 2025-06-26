@@ -12,8 +12,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle, MessageSquare, Calendar, Headphones } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
+import { redirect } from "next/navigation"
 
 export default function ContactPage() {
+  redirect('/under-construction');
   const [formData, setFormData] = useState({
     name: "",
     email: "",

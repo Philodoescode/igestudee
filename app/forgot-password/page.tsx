@@ -11,8 +11,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ArrowLeft, Mail, CheckCircle, Shield, Clock, HelpCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
+import { redirect } from "next/navigation"
 
 export default function ForgotPasswordPage() {
+  redirect('/under-construction');
   const [email, setEmail] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)

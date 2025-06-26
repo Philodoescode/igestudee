@@ -87,13 +87,6 @@ export function Header() {
                 </Button>
               </motion.div>
             </Link>
-            <Link href="/login">
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-gradient-to-r from-[var(--color-gossamer-600)] to-[var(--color-gossamer-700)] hover:from-[var(--color-gossamer-700)] hover:to-[var(--color-gossamer-800)] shadow-lg">
-                  Enroll Now
-                </Button>
-              </motion.div>
-            </Link>
           </div>
 
           {/* Mobile menu button */}

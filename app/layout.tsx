@@ -17,7 +17,6 @@ export const metadata: Metadata = {
   description:
     "Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Expert instruction, interactive learning, and personalized support.",
   keywords: "ICT tutoring, Mathematics tutoring, online education, IG courses, programming, web development",
-    generator: 'v0.dev'
 }
 
 export default function RootLayout({

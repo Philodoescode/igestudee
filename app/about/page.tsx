@@ -6,8 +6,10 @@ import { GraduationCap, Award, Users, BookOpen, Star, Target, Heart, Lightbulb }
 import { motion } from "framer-motion"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { FloatingElements } from "@/components/floating-elements"
+import { redirect } from "next/navigation"
 
 export default function AboutPage() {
+  redirect('/under-construction');
   const philosophyPoints = [
     {
       icon: Target,

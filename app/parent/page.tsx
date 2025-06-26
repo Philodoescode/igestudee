@@ -20,8 +20,10 @@ import { motion } from "framer-motion"
 import Link from "next/link"
 import { AnimatedCounter } from "@/components/animated-counter"
 import { parentDashboardChildren, parentDashboardData } from "@/lib/database"
+import { redirect } from 'next/navigation'
 
 export default function ParentDashboard() {
+  redirect('/under-construction');
   const [currentChild, setCurrentChild] = useState("Emma Johnson")
 
   const selectedChildData = parentDashboardData[currentChild as keyof typeof parentDashboardData]

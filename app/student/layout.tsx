@@ -4,7 +4,7 @@ import type React from "react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { BookOpen, Calendar, MessageSquare, GraduationCap, Settings, User , LayoutDashboard} from "lucide-react"
+import { BookOpen, Calendar, GraduationCap, Settings, User , LayoutDashboard} from "lucide-react"
 
 const navigation = [
   {
@@ -24,26 +24,6 @@ const navigation = [
         title: "Schedule",
         href: "/student/schedule",
         icon: Calendar,
-      },
-      {
-        title: "Discussion Forum",
-        href: "/student/forum",
-        icon: MessageSquare,
-      },
-    ],
-  },
-  {
-    title: "GENERAL",
-    items: [
-      {
-        title: "My Profile",
-        href: "/student/profile",
-        icon: User,
-      },
-      {
-        title: "Settings",
-        href: "/student/settings",
-        icon: Settings,
       },
     ],
   },

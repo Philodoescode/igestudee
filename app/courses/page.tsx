@@ -9,8 +9,10 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useState } from "react"
 import Link from "next/link"
 import { FloatingElements } from "@/components/floating-elements"
+import { redirect } from "next/navigation"
 
 export default function CoursesPage() {
+  redirect('/under-construction');
   const [activeTab, setActiveTab] = useState("ict")
 
   const ictModules = [
