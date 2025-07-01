@@ -1,7 +1,7 @@
 // app/ta/groups/components/group-form-modal.tsx
 "use client";
 
-import { useState, useEffect, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,8 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-import { type TaGroup, type Student, type Instructor, taGroupsData } from "@/lib/database";
+import { taGroupsData, type TaGroup, type Student, type Instructor } from "@/lib/database";
+import SelectStudentsModal from "./select-students-modal";
 
 interface GroupFormModalProps {
   isOpen: boolean;
@@ -53,6 +54,7 @@ export default function GroupFormModal({
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isStudentSelectorOpen, setIsStudentSelectorOpen] = useState(false);
 
   useEffect(() => {
     if (group) {
@@ -64,7 +66,7 @@ export default function GroupFormModal({
         isActive: group.isActive,
       });
     } else {
-      const existingGroupNumbers = new Set(
+       const existingGroupNumbers = new Set(
         taGroupsData.map(g => {
           const match = g.groupName.match(/Group (\d+)/);
           return match ? parseInt(match[1], 10) : 0;
@@ -92,20 +94,22 @@ export default function GroupFormModal({
     if (!formData.courseName.trim()) newErrors.courseName = "Course Name is required.";
     if (!formData.instructorName) newErrors.instructorName = "Instructor is required.";
     
-    if (!group) { // Only check for duplicates when adding a new group
-        const groupExists = taGroupsData.some(g => g.groupName === formData.groupName);
-        if (groupExists) {
-            newErrors.groupName = "This group number already exists. The number should auto-increment to the next available one.";
+    // Check for duplicate group number only when adding a new group
+    // and if the generated name wasn't manually overridden.
+    if (!group && formData.groupName.startsWith("Group ")) {
+        const groupNumber = parseInt(formData.groupName.replace("Group ", ""), 10);
+        const existingGroup = taGroupsData.find(g => g.groupName === `Group ${groupNumber}`);
+        if(existingGroup) {
+             newErrors.groupName = `Group ${groupNumber} already exists. The number should auto-increment.`;
         }
     }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+  
   const handleStudentListChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
     const { value } = e.target;
-    // Automatically parse comma/semicolon separated values on input change
     if (value.includes(",") || value.includes(";")) {
       const studentNames = value
         .split(/[,;\n]/)
@@ -116,6 +120,20 @@ export default function GroupFormModal({
       setFormData({ ...formData, studentsText: value });
     }
   };
+  
+  const handleStudentsSelected = (selected: Student[]) => {
+    const studentNames = selected.map(s => s.name).join('\n');
+    setFormData(prev => ({ ...prev, studentsText: studentNames }));
+  };
+  
+  const availableStudentsForCourse = useMemo(() => {
+    if (!formData.courseName) return [];
+    return allStudents.filter(s => s.registeredCourses.includes(formData.courseName as 'ICT' | 'Mathematics'));
+  }, [formData.courseName, allStudents]);
+
+  const currentSelectedStudentNames = useMemo(() => {
+    return formData.studentsText.split(/[\n]/).map(s => s.trim()).filter(Boolean);
+  }, [formData.studentsText]);
 
   const handleSave = () => {
     if (!validate()) return;
@@ -124,7 +142,7 @@ export default function GroupFormModal({
     const studentNames = formData.studentsText.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
     const students: Student[] = studentNames.map(name => {
       const existingStudent = allStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
-      return existingStudent || { id: `new-stu-${Date.now()}-${Math.random()}`, name };
+      return existingStudent || { id: `new-stu-${Date.now()}-${Math.random()}`, name, registeredCourses: [] };
     });
 
     const groupData: TaGroup = {
@@ -145,92 +163,113 @@ export default function GroupFormModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>{group ? "Edit Group" : "Add Group"}</DialogTitle>
-          <DialogDescription>
-            {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="courseName">Course Name</Label>
-            <Select
-              value={formData.courseName}
-              onValueChange={(value) => setFormData({ ...formData, courseName: value })}
-            >
-              <SelectTrigger id="courseName">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Mathematics">Mathematics</SelectItem>
-                <SelectItem value="ICT">ICT</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
-          </div>
+    <>
+      <Dialog open={isOpen && !isStudentSelectorOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>{group ? "Edit Group" : "Add Group"}</DialogTitle>
+            <DialogDescription>
+              {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="courseName">Course Name</Label>
+              <Select
+                value={formData.courseName}
+                onValueChange={(value) => setFormData({ ...formData, courseName: value })}
+              >
+                <SelectTrigger id="courseName">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mathematics">Mathematics</SelectItem>
+                  <SelectItem value="ICT">ICT</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
+            </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="groupName">Group Number</Label>
-            <Input
-              id="groupName"
-              value={formData.groupName}
-              disabled
-            />
-            {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+            <div className="grid gap-2">
+              <Label htmlFor="groupName">Group Number</Label>
+              <Input
+                id="groupName"
+                value={formData.groupName}
+                disabled
+              />
+              {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="instructorName">Instructor Name</Label>
+              <Select
+                value={formData.instructorName}
+                onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
+              >
+                <SelectTrigger id="instructorName">
+                  <SelectValue placeholder="Select an instructor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allInstructors.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.name}>
+                      {inst.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                    <Label htmlFor="students">Student List</Label>
+                    <Button
+                        type="button"
+                        variant="link"
+                        className="p-0 h-auto"
+                        onClick={() => setIsStudentSelectorOpen(true)}
+                        disabled={!formData.courseName}
+                    >
+                        Select from List...
+                    </Button>
+                </div>
+                <Textarea
+                    id="students"
+                    placeholder="Enter student names: one per line, comma/semicolon separated, or select from list."
+                    value={formData.studentsText}
+                    onChange={handleStudentListChange}
+                    rows={5}
+                />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              />
+              <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+            </div>
           </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="instructorName">Instructor Name</Label>
-            <Select
-              value={formData.instructorName}
-              onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
-            >
-              <SelectTrigger id="instructorName">
-                <SelectValue placeholder="Select an instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {allInstructors.map((inst) => (
-                  <SelectItem key={inst.id} value={inst.name}>
-                    {inst.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="students">Student List</Label>
-            <Textarea
-              id="students"
-              placeholder="Enter student names: one per line, or comma/semicolon separated."
-              value={formData.studentsText}
-              onChange={handleStudentListChange}
-              rows={5}
-            />
-          </div>
-          
-          <div className="flex items-center space-x-2 pt-2">
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-            />
-            <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {group ? "Save Changes" : "Add Group"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {group ? "Save Changes" : "Add Group"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <SelectStudentsModal
+        isOpen={isStudentSelectorOpen}
+        setIsOpen={setIsStudentSelectorOpen}
+        allStudents={availableStudentsForCourse}
+        initiallySelectedNames={currentSelectedStudentNames}
+        onSelect={handleStudentsSelected}
+      />
+    </>
   );
 }

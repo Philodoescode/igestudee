@@ -706,6 +706,7 @@ export const taScheduleData: TASession[] = [
 export type Student = {
   id: string;
   name: string;
+  registeredCourses: ('ICT' | 'Mathematics')[];
 };
 
 export type Instructor = {
@@ -727,21 +728,21 @@ export type TaGroup = {
 
 // --- NEW DUMMY DATA for Group Management ---
 export const allStudents: Student[] = [
-  { id: "stu-01", name: "Emma Johnson" },
-  { id: "stu-02", name: "Michael Chen" },
-  { id: "stu-03", name: "Sarah Wilson" },
-  { id: "stu-04", name: "David Brown" },
-  { id: "stu-05", name: "Lisa Williams" },
-  { id: "stu-06", name: "James Taylor" },
-  { id: "stu-07", name: "Olivia Martinez" },
-  { id: "stu-08", name: "William Garcia" },
-  { id: "stu-09", name: "Sophia Rodriguez" },
-  { id: "stu-10", name: "Daniel Miller" },
-  { id: "stu-11", name: "Isabella Davis" },
-  { id: "stu-12", name: "Joseph Anderson" },
-  { id: "stu-13", name: "Charlotte White" },
-  { id: "stu-14", name: "Liam Harris" },
-  { id: "stu-15", name: "Ava Clark" },
+  { id: "stu-01", name: "Emma Johnson", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-02", name: "Michael Chen", registeredCourses: ['ICT'] },
+  { id: "stu-03", name: "Sarah Wilson", registeredCourses: ['Mathematics'] },
+  { id: "stu-04", name: "David Brown", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-05", name: "Lisa Williams", registeredCourses: ['ICT'] },
+  { id: "stu-06", name: "James Taylor", registeredCourses: ['Mathematics'] },
+  { id: "stu-07", name: "Olivia Martinez", registeredCourses: ['ICT'] },
+  { id: "stu-08", name: "William Garcia", registeredCourses: ['Mathematics'] },
+  { id: "stu-09", name: "Sophia Rodriguez", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-10", name: "Daniel Miller", registeredCourses: ['ICT'] },
+  { id: "stu-11", name: "Isabella Davis", registeredCourses: ['Mathematics'] },
+  { id: "stu-12", name: "Joseph Anderson", registeredCourses: ['ICT'] },
+  { id: "stu-13", name: "Charlotte White", registeredCourses: ['Mathematics'] },
+  { id: "stu-14", name: "Liam Harris", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-15", name: "Ava Clark", registeredCourses: ['ICT'] },
 ];
 
 export const allInstructors: Instructor[] = [
