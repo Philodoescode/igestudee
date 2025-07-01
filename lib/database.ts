@@ -1,3 +1,4 @@
+// lib/database.ts
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
@@ -525,7 +526,7 @@ export const studentRecentForumTopics = [ { id: "1", title: "Database Normalizat
 
 export const studentEnrolledCourses = [ { id: "ict-101", title: "ICT Fundamentals", instructor: "Dr. Sarah Johnson", progress: 75, totalModules: 12, completedModules: 9, nextModule: "Database Design Principles", color: "from-blue-500 to-cyan-500", }, { id: "math-201", title: "Advanced Mathematics", instructor: "Prof. Michael Chen", progress: 60, totalModules: 15, completedModules: 9, nextModule: "Calculus Applications", color: "from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)]", }, ];
 
-export const studentUpcomingSessions = [ { id: "1", title: "ICT Q&A Session", instructor: "Dr. Sarah Johnson", date: "Today", time: "3:00 PM", type: "Q&A", course: "ICT Fundamentals", }, { id: "2", title: "Math Lab Help", instructor: "Alex Smith (TA)", date: "Tomorrow", time: "2:00 PM", type: "Lab Help", course: "Advanced Mathematics", }, ];
+export const studentUpcomingSessions = [ { id: "1", title: "ICT Q&A Session", instructor: "Dr. Sarah Johnson", date: "Today", time: "3:00 PM", type: "Q&A", course: "ICT Fundamentals", }, { id: "2", title: "Math Lab Help Session", instructor: "Alex Smith (TA)", date: "Tomorrow", time: "2:00 PM", type: "Lab Help", course: "Advanced Mathematics", }, ];
 
 export const studentRecentAnnouncements = [ { id: "1", title: "New ICT Module Released", content: "Module 10: Database Design Principles is now available...", date: "2 hours ago", course: "ICT Fundamentals", priority: "high", }, { id: "2", title: "Math Assignment Due Reminder", content: "Don't forget to submit your calculus problem set...", date: "1 day ago", course: "Advanced Mathematics", priority: "medium", }, ];
 
@@ -701,7 +702,18 @@ export const taScheduleData: TASession[] = [
     { id: "session-4", title: "Math Concepts", dateTime: "2024-05-15T13:00:00Z", durationMinutes: 90, meetingLink: "https://zoom.us/j/5544332211" },
 ];
 
-// --- TA GROUPS DATA ---
+// --- NEW DATA STRUCTURES for Group Management ---
+export type Student = {
+  id: string;
+  name: string;
+};
+
+export type Instructor = {
+  id: string;
+  name: string;
+};
+
+// Updated TaGroup type
 export type TaGroup = {
   id: string;
   courseName: string;
@@ -709,10 +721,115 @@ export type TaGroup = {
   groupName: string;
   studentCount: number;
   instructorName: string;
+  students: Student[];
+  isActive: boolean;
 };
 
-export const taGroupsData: TaGroup[] = [
-  { id: "group-ict-a", courseName: "ICT Fundamentals", courseId: "ict-fundamentals", groupName: "ICT Fundamentals - Group A", studentCount: 8, instructorName: "Dr. Sarah Johnson", },
-  { id: "group-math-b", courseName: "Mathematics", courseId: "mathematics", groupName: "Mathematics - Group B", studentCount: 8, instructorName: "Prof. Michael Chen", },
-  { id: "group-ict-c", courseName: "ICT Practical", courseId: "ict-practical", groupName: "ICT Practical - Group C", studentCount: 4, instructorName: "Dr. Sarah Johnson", },
+// --- NEW DUMMY DATA for Group Management ---
+export const allStudents: Student[] = [
+  { id: "stu-01", name: "Emma Johnson" },
+  { id: "stu-02", name: "Michael Chen" },
+  { id: "stu-03", name: "Sarah Wilson" },
+  { id: "stu-04", name: "David Brown" },
+  { id: "stu-05", name: "Lisa Williams" },
+  { id: "stu-06", name: "James Taylor" },
+  { id: "stu-07", name: "Olivia Martinez" },
+  { id: "stu-08", name: "William Garcia" },
+  { id: "stu-09", name: "Sophia Rodriguez" },
+  { id: "stu-10", name: "Daniel Miller" },
+  { id: "stu-11", name: "Isabella Davis" },
+  { id: "stu-12", name: "Joseph Anderson" },
+  { id: "stu-13", name: "Charlotte White" },
+  { id: "stu-14", name: "Liam Harris" },
+  { id: "stu-15", name: "Ava Clark" },
 ];
+
+export const allInstructors: Instructor[] = [
+  { id: "inst-01", name: "Dr. Sarah Johnson" },
+  { id: "inst-02", name: "Prof. Michael Chen" },
+  { id: "inst-03", name: "Dr. Evelyn Reed" },
+];
+
+// --- TA GROUPS DATA (Updated with new structure) ---
+export let taGroupsData: TaGroup[] = [
+  {
+    id: "group-ict-a",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 1",
+    instructorName: "Dr. Sarah Johnson",
+    students: allStudents.slice(0, 8),
+    studentCount: 8,
+    isActive: true,
+  },
+  {
+    id: "group-math-b",
+    courseName: "Mathematics",
+    courseId: "mathematics",
+    groupName: "Group 2",
+    instructorName: "Prof. Michael Chen",
+    students: allStudents.slice(4, 12),
+    studentCount: 8,
+    isActive: true,
+  },
+  {
+    id: "group-ict-c",
+    courseName: "ICT",
+    courseId: "ict-practical",
+    groupName: "Group 3",
+    instructorName: "Dr. Sarah Johnson",
+    students: allStudents.slice(8, 12),
+    studentCount: 4,
+    isActive: true,
+  },
+  {
+    id: "group-web-d",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 4",
+    instructorName: "Dr. Evelyn Reed",
+    students: allStudents.slice(2, 7),
+    studentCount: 5,
+    isActive: false,
+  },
+  {
+    id: "group-python-e",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 5",
+    instructorName: "Dr. Evelyn Reed",
+    students: allStudents.slice(10, 15),
+    studentCount: 5,
+    isActive: true,
+  },
+];
+
+
+// --- CRUD HELPER FUNCTIONS for Group Management ---
+// Note: These mutate the in-memory array for simulation purposes.
+// In a real app, these would be API calls.
+
+export const addGroup = (newGroupData: Omit<TaGroup, 'id' | 'studentCount'>): TaGroup => {
+  const newGroup: TaGroup = {
+    ...newGroupData,
+    id: `group-${Date.now()}`,
+    studentCount: newGroupData.students.length,
+  };
+  taGroupsData.unshift(newGroup); // Add to the beginning of the array
+  return newGroup;
+};
+
+export const updateGroup = (updatedGroup: TaGroup): TaGroup | undefined => {
+  const index = taGroupsData.findIndex(g => g.id === updatedGroup.id);
+  if (index !== -1) {
+    taGroupsData[index] = { ...updatedGroup, studentCount: updatedGroup.students.length };
+    return taGroupsData[index];
+  }
+  return undefined;
+};
+
+export const deleteGroup = (groupId: string): boolean => {
+  const initialLength = taGroupsData.length;
+  taGroupsData = taGroupsData.filter(g => g.id !== groupId);
+  return taGroupsData.length < initialLength;
+};

@@ -11,10 +11,12 @@ import { taScheduleData, taAvailabilityData, type TASession } from "@/lib/databa
 import WeeklyAvailability from "./components/WeeklyAvailability"
 import ScheduleSessionModal from "./components/ScheduleSessionModal"
 import SessionList from "./components/SessionList"
+import { redirect } from "next/navigation"
 
 const INITIAL_SESSIONS_DISPLAY = 5; // Define a constant for initial display count
 
 export default function TASchedulePage() {
+  redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
   const [sessions, setSessions] = useState<TASession[]>(taScheduleData)
   const [isModalOpen, setIsModalOpen] = useState(false)

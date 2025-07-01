@@ -8,8 +8,10 @@ import { Video, BookOpen, ExternalLink } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
 import { taResourceData } from "@/lib/database"
+import { redirect } from "next/navigation"
 
 export default function TAResourcesPage() {
+  redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
 
   if (isLoading) {

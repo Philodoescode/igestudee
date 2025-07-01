@@ -1,12 +1,11 @@
 "use client"
 
-import type React from "react"
-import { useState, useMemo } from "react"
+import React, { useState, useMemo } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -54,20 +53,16 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
   const initials = useMemo(() => {
     if (!user?.name) return "U"
     const parts = user.name.trim().split(/\s+/)
-    if (parts.length === 1) {
-      return parts[0].charAt(0).toUpperCase()
-    }
-    const first = parts[0].charAt(0).toUpperCase()
-    const last = parts[parts.length - 1].charAt(0).toUpperCase()
-    return first + last
+    if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+    return (
+      parts[0].charAt(0).toUpperCase() +
+      parts[parts.length - 1].charAt(0).toUpperCase()
+    )
   }, [user?.name])
 
-  // Refined isActive check for better route matching
   const isActive = (href: string) => {
     const portalRoot = `/${user?.role}`
-    if (href === portalRoot) {
-      return pathname === portalRoot
-    }
+    if (href === portalRoot) return pathname === portalRoot
     return pathname?.startsWith(href)
   }
 
@@ -91,7 +86,9 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
       <nav className="flex-1 space-y-6 px-4 py-4">
         {navigation.map((group) => (
           <div key={group.title}>
-            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-gray-400">{group.title}</h3>
+            <h3 className="mb-2 px-3 text-xs font-semibold uppercase text-gray-400">
+              {group.title}
+            </h3>
             <ul className="space-y-1">
               {group.items.map((item) => (
                 <li key={item.href}>
@@ -102,7 +99,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
                       "group relative flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition-colors",
                       isActive(item.href)
                         ? "font-bold text-gray-900"
-                        : "text-gray-600 hover:bg-white hover:text-gray-900",
+                        : "text-gray-600 hover:bg-white hover:text-gray-900"
                     )}
                   >
                     {isActive(item.href) && (
@@ -114,7 +111,9 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
                     <item.icon
                       className={cn(
                         "h-5 w-5 shrink-0",
-                        isActive(item.href) ? "text-emerald-500" : "text-gray-400 group-hover:text-gray-600",
+                        isActive(item.href)
+                          ? "text-emerald-500"
+                          : "text-gray-400 group-hover:text-gray-600"
                       )}
                     />
                     <span>{item.title}</span>
@@ -135,16 +134,18 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
               className="h-auto w-full justify-start gap-3 p-2 text-left hover:bg-white"
             >
               <Avatar className="h-10 w-10">
-                {/* If you want to keep image, you can leave AvatarImage; fallback shows initials */}
-                <AvatarImage src={`https://avatar.vercel.sh/${user?.email}.png`} alt={user?.name || "User"} />
                 <AvatarFallback className="bg-emerald-100 text-emerald-700">
                   {initials}
                 </AvatarFallback>
               </Avatar>
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-800">{user?.name}</p>
+                <p className="truncate text-sm font-semibold text-gray-800">
+                  {user?.name}
+                </p>
                 <p className="truncate text-xs text-gray-500">
-                  {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"}
+                  {user?.role
+                    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                    : "User"}
                 </p>
               </div>
               <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
@@ -157,7 +158,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/${user?.role}/profile`}>
+              <Link href={`/${user?.role}/profile`}>  
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
@@ -181,16 +182,18 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
 
   return (
     <>
-      <div className="lg:hidden">
+      {/* Mobile Header with Toggle */}
+      <header className="fixed top-0 left-0 right-0 z-50 flex h-14 items-center justify-between bg-white border-b px-4 lg:hidden">
         <Button
           variant="outline"
           size="icon"
-          className="fixed left-4 top-4 z-[60] bg-white/80 backdrop-blur-sm"
-          onClick={() => setIsMobileOpen(true)}
+          onClick={() => setIsMobileOpen((prev) => !prev)}
         >
-          <Menu className="h-5 w-5" />
+          {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}  
         </Button>
-      </div>
+        <span className="text-lg font-semibold">{title}</span>
+        <div />
+      </header>
 
       <AnimatePresence>
         {isMobileOpen && (
@@ -200,7 +203,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+              className="fixed inset-0 top-14 z-40 bg-black/50"
               onClick={() => setIsMobileOpen(false)}
             />
             <motion.aside
@@ -208,7 +211,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
               animate={{ x: "0%" }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
-              className="fixed left-0 top-0 z-50 h-full w-72 shadow-2xl"
+              className="fixed left-0 top-14 z-50 h-[calc(100%-3.5rem)] w-72 shadow-2xl"
             >
               {sidebarContent}
             </motion.aside>
@@ -216,6 +219,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
         )}
       </AnimatePresence>
 
+      {/* Desktop Sidebar */}
       <aside className="hidden w-72 shrink-0 border-r border-gray-200/80 shadow-sm lg:block">
         {sidebarContent}
       </aside>

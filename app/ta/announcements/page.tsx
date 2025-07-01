@@ -13,6 +13,7 @@ import { Megaphone, Plus } from "lucide-react"
 import { AnnouncementList } from "./components/announcement-list"
 import { CreateAnnouncementForm } from "./components/create-announcement-form"
 import { PaginationControls } from "./components/pagination-controls"
+import { redirect } from "next/navigation"
 
 type Announcement = {
   id: string
@@ -26,6 +27,7 @@ type Announcement = {
 const ITEMS_PER_PAGE = 5
 
 export default function TAAnnouncementsPage() {
+  redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
   const [announcements, setAnnouncements] = useState<Announcement[]>(taAnnouncementsData)
   const [isFormOpen, setIsFormOpen] = useState(false)

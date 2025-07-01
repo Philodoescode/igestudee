@@ -11,7 +11,7 @@ import { useRef } from "react"
 import { redirect } from "next/navigation"
 
 export default function HomePage() {
-  redirect('/under-construction');
+  redirect('/login');
   const heroRef = useRef(null)
   const { scrollYProgress } = useScroll({
     target: heroRef,

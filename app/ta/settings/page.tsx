@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Settings, Lock, Bell, Eye, Save } from "lucide-react"
 import { motion } from "framer-motion"
 import { useState } from "react"
+import { redirect } from "next/navigation"
 
 export default function TASettingsPage() {
+  redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
   const [settings, setSettings] = useState({
     // Notification Settings

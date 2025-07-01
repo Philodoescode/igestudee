@@ -13,8 +13,10 @@ import { useState } from "react"
 import { useAuth } from "@/hooks/use-auth"
 import { motion } from "framer-motion"
 import { studentProfileData } from "@/lib/database"
+import { redirect } from "next/navigation"
 
 export default function StudentProfilePage() {
+  redirect('/under-construction');
   const { user } = useAuth()
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState(studentProfileData)

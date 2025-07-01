@@ -10,8 +10,10 @@ import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Bell, Key, Save, Eye, EyeOff } from "lucide-react"
 import { motion } from "framer-motion"
+import { redirect } from "next/navigation"
 
 export default function StudentSettingsPage() {
+  redirect('/under-construction');
   const [notificationSettings, setNotificationSettings] = useState({
     newAnnouncements: true,
     upcomingDeadlines: true,

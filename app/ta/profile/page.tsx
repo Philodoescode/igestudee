@@ -12,8 +12,10 @@ import { User, Mail, Phone, MapPin, Calendar, Award, Edit, Save, X, CheckCircle 
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { taDefaultProfileData, taProfileAchievements, taProfileStats } from "@/lib/database"
+import { redirect } from "next/navigation"
 
 export default function TAProfilePage() {
+  redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState(taDefaultProfileData)

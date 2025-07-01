@@ -8,8 +8,10 @@ import { CalendarIcon, Clock, Video, Users, MapPin } from "lucide-react"
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { studentScheduleSessions } from "@/lib/database"
+import { redirect } from "next/navigation"
 
 export default function SchedulePage() {
+  redirect('/under-construction');
   const [selectedView, setSelectedView] = useState("week")
 
   // Assuming "today" means a fixed date for demo purposes, adjust as needed in a real app
