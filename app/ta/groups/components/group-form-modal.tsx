@@ -43,7 +43,6 @@ export default function GroupFormModal({
   group,
   allStudents,
   allInstructors,
-  totalGroups,
 }: GroupFormModalProps) {
   const [formData, setFormData] = useState({
     groupName: "",
@@ -56,8 +55,10 @@ export default function GroupFormModal({
   const [isSaving, setIsSaving] = useState(false);
   const [isStudentSelectorOpen, setIsStudentSelectorOpen] = useState(false);
 
+  // Effect to initialize the form when it opens or when editing a group
   useEffect(() => {
     if (group) {
+      // Editing an existing group
       setFormData({
         groupName: group.groupName,
         courseName: group.courseName,
@@ -66,19 +67,9 @@ export default function GroupFormModal({
         isActive: group.isActive,
       });
     } else {
-       const existingGroupNumbers = new Set(
-        taGroupsData.map(g => {
-          const match = g.groupName.match(/Group (\d+)/);
-          return match ? parseInt(match[1], 10) : 0;
-        })
-      );
-      let nextGroupNumber = 1;
-      while(existingGroupNumbers.has(nextGroupNumber)) {
-        nextGroupNumber++;
-      }
-
+      // Adding a new group - reset form
       setFormData({
-        groupName: `Group ${nextGroupNumber}`,
+        groupName: "", // This will be set by the next effect
         courseName: "",
         instructorName: "",
         studentsText: "",
@@ -86,21 +77,49 @@ export default function GroupFormModal({
       });
     }
     setErrors({});
-  }, [group, isOpen, totalGroups]);
+  }, [group, isOpen]);
+
+  // Effect to generate the next group number based on the selected course
+  useEffect(() => {
+    // Only run this for new groups, not when editing
+    if (!group && formData.courseName) {
+      const groupsInCourse = taGroupsData.filter(g => g.courseName === formData.courseName);
+      
+      const existingNumbers = new Set(
+        groupsInCourse.map(g => {
+          const match = g.groupName.match(/Group (\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+      );
+
+      let nextNumber = 1;
+      while (existingNumbers.has(nextNumber)) {
+        nextNumber++;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        groupName: `Group ${nextNumber}`
+      }));
+    } else if (!group && !formData.courseName) {
+      // If no course is selected, the group name should be empty
+      setFormData(prev => ({ ...prev, groupName: "" }));
+    }
+  }, [formData.courseName, group]);
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!formData.groupName.trim()) newErrors.groupName = "Group Number is required.";
+    if (!formData.groupName.trim()) newErrors.groupName = "A course must be selected to generate a group number.";
     if (!formData.courseName.trim()) newErrors.courseName = "Course Name is required.";
     if (!formData.instructorName) newErrors.instructorName = "Instructor is required.";
     
-    // Check for duplicate group number only when adding a new group
-    // and if the generated name wasn't manually overridden.
-    if (!group && formData.groupName.startsWith("Group ")) {
-        const groupNumber = parseInt(formData.groupName.replace("Group ", ""), 10);
-        const existingGroup = taGroupsData.find(g => g.groupName === `Group ${groupNumber}`);
-        if(existingGroup) {
-             newErrors.groupName = `Group ${groupNumber} already exists. The number should auto-increment.`;
+    // Uniqueness validation for the group number within the selected course
+    if (!group) { // Only run for new groups
+        const groupExists = taGroupsData.some(
+            g => g.courseName === formData.courseName && g.groupName === formData.groupName
+        );
+        if (groupExists) {
+            newErrors.groupName = `Group number ${formData.groupName} already exists for ${formData.courseName}. The number should auto-increment.`;
         }
     }
 
@@ -196,6 +215,7 @@ export default function GroupFormModal({
                 id="groupName"
                 value={formData.groupName}
                 disabled
+                placeholder="Select a course to generate number"
               />
               {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
             </div>

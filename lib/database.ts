@@ -260,14 +260,17 @@ export type AssignmentDetail = {
   dueDate: string;
   status: 'Graded' | 'Submitted' | 'Missing' | 'Late' | 'Needs Grading';
   grade: string | null;
+  gradedBy: string;
 };
 
 export type QuizDetail = {
   id: string;
   title: string;
-  date: string;
+  dueDate: string;
   status: 'Passed' | 'Failed' | 'Pending';
-  score: string | null;
+  score: number | null;
+  maxScore: number;
+  gradedBy: string;
 };
 
 export type AttendanceDetail = {
@@ -327,17 +330,17 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-ict-5", title: "Web Development: HTML & CSS", description: "Building static web pages with semantic HTML and styling with CSS.", locked: true },
     ],
     assignments: [
-      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100" },
-      { id: "assign-ict-2", title: "Networking Fundamentals Quiz", dueDate: "2024-05-25", status: "Submitted", grade: null },
-      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null },
-      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null },
-      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null },
+      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100", gradedBy: "Alex Smith" },
+      { id: "assign-ict-2", title: "Networking Fundamentals Essay", dueDate: "2024-05-25", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null, gradedBy: "Dr. Sarah Johnson" },
     ],
     quizzes: [
-      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", date: "2024-05-10", status: "Passed", score: "85%" },
-      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", date: "2024-05-17", status: "Passed", score: "90%" },
-      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", date: "2024-05-24", status: "Failed", score: "60%" },
-      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", date: "2024-05-31", status: "Pending", score: null },
+      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", dueDate: "2024-05-10", status: "Passed", score: 85, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", dueDate: "2024-05-17", status: "Passed", score: 90, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", dueDate: "2024-05-24", status: "Failed", score: 60, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", dueDate: "2024-05-31", status: "Pending", score: null, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-ict-1", date: "2024-05-22", status: "Present" },
@@ -373,14 +376,14 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-math-4", title: "Integral Calculus Techniques", description: "Methods of integration, definite and indefinite integrals.", locked: true },
     ],
     assignments: [
-      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100" },
-      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null },
-      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null },
+      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100", gradedBy: "Alex Smith" },
+      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null, gradedBy: "Prof. Michael Chen" },
     ],
     quizzes: [
-      { id: "quiz-math-1", title: "Algebra Review Quiz", date: "2024-05-12", status: "Passed", score: "78%" },
-      { id: "quiz-math-2", title: "Geometry Quiz", date: "2024-05-19", status: "Failed", score: "65%" },
-      { id: "quiz-math-3", title: "Pre-Calc Assessment", date: "2024-05-26", status: "Passed", score: "82%" },
+      { id: "quiz-math-1", title: "Algebra Review Quiz", dueDate: "2024-05-12", status: "Passed", score: 78, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-math-2", title: "Geometry Quiz", dueDate: "2024-05-19", status: "Failed", score: 65, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-math-3", title: "Pre-Calc Assessment", dueDate: "2024-05-26", status: "Passed", score: 82, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-math-1", date: "2024-05-23", status: "Present" },
@@ -414,12 +417,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-web-3", title: "JavaScript Fundamentals", description: "Adding interactivity to web pages with JavaScript.", locked: false },
     ],
     assignments: [
-      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100" },
-      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100" },
+      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100", gradedBy: "Alex Smith" },
+      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100", gradedBy: "Alex Smith" },
     ],
     quizzes: [
-      { id: "quiz-web-1", title: "HTML Structures Quiz", date: "2024-05-05", status: "Passed", score: "92%" },
-      { id: "quiz-web-2", title: "CSS Selectors Quiz", date: "2024-05-12", status: "Passed", score: "88%" },
+      { id: "quiz-web-1", title: "HTML Structures Quiz", dueDate: "2024-05-05", status: "Passed", score: 92, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-web-2", title: "CSS Selectors Quiz", dueDate: "2024-05-12", status: "Passed", score: 88, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-web-1", date: "2024-05-21", status: "Present" },
@@ -450,12 +453,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-stats-3", title: "Inferential Statistics: Hypothesis Testing", description: "Understanding null and alternative hypotheses.", locked: true },
     ],
     assignments: [
-      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100" },
-      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null },
+      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100", gradedBy: "Alex Smith" },
+      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null, gradedBy: "Prof. Michael Chen" },
     ],
     quizzes: [
-      { id: "quiz-stats-1", title: "Intro to Stats Quiz", date: "2024-05-08", status: "Passed", score: "75%" },
-      { id: "quiz-stats-2", title: "Probability Distributions Quiz", date: "2024-05-15", status: "Failed", score: "55%" },
+      { id: "quiz-stats-1", title: "Intro to Stats Quiz", dueDate: "2024-05-08", status: "Passed", score: 75, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-stats-2", title: "Probability Distributions Quiz", dueDate: "2024-05-15", status: "Failed", score: 55, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-stats-1", date: "2024-05-20", status: "Present" },
@@ -486,12 +489,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-python-3", title: "Functions and Modules", description: "Organizing your code with functions.", locked: false },
     ],
     assignments: [
-      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100" },
-      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null },
+      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100", gradedBy: "Alex Smith" },
+      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
     ],
     quizzes: [
-      { id: "quiz-python-1", title: "Module 1 Assessment", date: "2024-05-07", status: "Passed", score: "90%" },
-      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", date: "2024-05-14", status: "Passed", score: "88%" },
+      { id: "quiz-python-1", title: "Module 1 Assessment", dueDate: "2024-05-07", status: "Passed", score: 90, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", dueDate: "2024-05-14", status: "Passed", score: 88, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-python-1", date: "2024-05-24", status: "Present" },

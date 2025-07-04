@@ -1,475 +1,445 @@
 // app/student/courses/[courseId]/page.tsx
 "use client"
 
-import { notFound, useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-import { courseDetailsData, type AssignmentDetail, type QuizDetail, type AttendanceDetail } from "@/lib/database"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+// MODIFIED: Accordion components imported, Calendar icon removed
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion"
-import {
-  BookOpen,
-  Calendar,
-  CheckCircle,
-  FileText,
-  GraduationCap,
-  PlayCircle,
-  User,
-  Bell,
-  Lock,
-  Percent,
-  ChevronLeft,
-  XCircle,
-  Clock,
   Mail,
-  Construction, // Added for under construction icon
+  Video,
+  TrendingUp,
+  Info,
+  User,
+  Lock,
+  ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react"
-import { AnimatedCounter } from "@/components/animated-counter"
+import { motion, AnimatePresence } from "framer-motion"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { courseDetailsData, type CourseDetail, type AssignmentDetail, type QuizDetail } from "@/lib/database"
+import { notFound } from "next/navigation"
+// MODIFIED: Imported more hooks for media query
+import { useMemo, useState, useRef, useEffect, useCallback } from "react"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
 
-// A responsive circular progress bar.
-const CircularProgress = ({ value }: { value: number }) => (
-  <div className="relative h-24 w-24 md:h-32 md:w-32">
-    <svg className="h-full w-full" viewBox="0 0 100 100">
-      <circle className="text-gray-200" strokeWidth="8" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
-      <motion.circle
-        className="text-emerald-500"
-        strokeWidth="8"
-        strokeLinecap="round"
-        stroke="currentColor"
-        fill="transparent"
-        r="42"
-        cx="50"
-        cy="50"
-        initial={{ strokeDashoffset: 2 * Math.PI * 42 }}
-        animate={{ strokeDashoffset: 2 * Math.PI * 42 * (1 - value / 100) }}
-        transition={{ duration: 1.5, ease: "circOut" }}
-        style={{ strokeDasharray: 2 * Math.PI * 42 }}
-        transform="rotate(-90 50 50)"
-      />
-    </svg>
-    <div className="absolute inset-0 flex items-center justify-center text-xl font-bold text-gray-800 md:text-2xl">
-      <AnimatedCounter end={value} suffix="%" />
-    </div>
-  </div>
-)
+// NEW: A simple hook to detect screen size for responsive rendering
+function useMediaQuery(query: string) {
+  const [matches, setMatches] = useState(false)
 
-// A shared icon component to display status.
-const StatusIcon = ({ status }: { status: string }) => {
-  switch (status.toLowerCase()) {
-    case "graded":
-    case "submitted":
-    case "passed":
-    case "present":
-      return <CheckCircle className="h-4 w-4 text-green-500" />
-    case "missing":
-    case "failed":
-    case "absent":
-      return <XCircle className="h-4 w-4 text-red-500" />
-    case "late":
-      return <Clock className="h-4 w-4 text-yellow-500" />
+  useEffect(() => {
+    const media = window.matchMedia(query)
+    if (media.matches !== matches) {
+      setMatches(media.matches)
+    }
+    const listener = () => setMatches(media.matches)
+    window.addEventListener("resize", listener)
+    return () => window.removeEventListener("resize", listener)
+  }, [matches, query])
+
+  return matches
+}
+
+
+// Helper function to calculate overall grade
+const calculateOverallGrade = (course: CourseDetail) => {
+  const gradedAssignments = course.assignments.filter((a) => a.grade !== null)
+  const gradedQuizzes = course.quizzes.filter((q) => q.score !== null)
+
+  if (gradedAssignments.length === 0 && gradedQuizzes.length === 0) {
+    return null
+  }
+
+  let totalAssignmentScore = 0
+  gradedAssignments.forEach((a) => {
+    const [score, max] = a.grade!.split("/").map(Number)
+    totalAssignmentScore += (score / max) * 100
+  })
+  const avgAssignmentGrade = gradedAssignments.length > 0 ? totalAssignmentScore / gradedAssignments.length : 0
+
+  let totalQuizScore = 0
+  gradedQuizzes.forEach((q) => {
+    totalQuizScore += (q.score! / q.maxScore) * 100
+  })
+  const avgQuizGrade = gradedQuizzes.length > 0 ? totalQuizScore / gradedQuizzes.length : 0
+
+  if (gradedAssignments.length > 0 && gradedQuizzes.length > 0) {
+    return Math.round(avgAssignmentGrade * 0.6 + avgQuizGrade * 0.4)
+  }
+  if (gradedAssignments.length > 0) return Math.round(avgAssignmentGrade)
+  if (gradedQuizzes.length > 0) return Math.round(avgQuizGrade)
+
+  return null
+}
+
+// Component for displaying grade/score or status
+const GradeDisplay = ({
+  item,
+}: {
+  item: (AssignmentDetail & { type: "Assignment" }) | (QuizDetail & { type: "Quiz" })
+}) => {
+  if (item.type === "Assignment") {
+    if (item.grade) {
+      return <span className="font-mono">{item.grade}</span>
+    }
+  } else {
+    if (item.score !== null) {
+      return (
+        <span className="font-mono">
+          {item.score} / {item.maxScore}
+        </span>
+      )
+    }
+  }
+
+  switch (item.status) {
+    case "Submitted":
+    case "Needs Grading":
+      return (
+        <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+          Pending
+        </Badge>
+      )
+    case "Late":
+      return <Badge variant="destructive">Late</Badge>
+    case "Missing":
+      return <Badge variant="destructive">Missing</Badge>
+    case "Pending":
+      return <Badge variant="outline">Not Taken</Badge>
     default:
-      return null
+      return <Badge variant="outline">Not Available</Badge>
   }
 }
 
-export default function StudentCoursePage({ params }: { params: { courseId: string } }) {
-  const router = useRouter()
+export default function CourseDetailPage({ params }: { params: { courseId: string } }) {
   const course = courseDetailsData[params.courseId]
+  const isMobile = useMediaQuery("(max-width: 768px)")
+
+  const tabsListRef = useRef<HTMLDivElement>(null)
+  const [showLeftArrow, setShowLeftArrow] = useState(false)
+  const [showRightArrow, setShowRightArrow] = useState(false)
+
+  const checkArrows = useCallback(() => {
+    const el = tabsListRef.current
+    if (el) {
+      const isOverflowing = el.scrollWidth > el.clientWidth
+      setShowLeftArrow(isOverflowing && el.scrollLeft > 5)
+      setShowRightArrow(isOverflowing && el.scrollLeft < el.scrollWidth - el.clientWidth - 5)
+    }
+  }, [])
+
+  useEffect(() => {
+    const el = tabsListRef.current
+    if (el) {
+      checkArrows()
+      el.addEventListener("scroll", checkArrows, { passive: true })
+      window.addEventListener("resize", checkArrows)
+
+      return () => {
+        el.removeEventListener("scroll", checkArrows)
+        window.removeEventListener("resize", checkArrows)
+      }
+    }
+  }, [checkArrows, course])
+
+  const handleScroll = (direction: "left" | "right") => {
+    const el = tabsListRef.current
+    if (el) {
+      const scrollAmount = direction === "left" ? -200 : 200
+      el.scrollBy({ left: scrollAmount, behavior: "smooth" })
+    }
+  }
 
   if (!course) {
     notFound()
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
-  }
+  const overallGrade = useMemo(() => calculateOverallGrade(course), [course])
 
-  const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.5 } },
-  }
+  const combinedGrades = useMemo(() => {
+    const assignments = course.assignments.map((a) => ({ ...a, type: "Assignment" as const, date: new Date(a.dueDate) }))
+    const quizzes = course.quizzes.map((q) => ({ ...q, type: "Quiz" as const, date: new Date(q.dueDate) }))
+    return [...assignments, ...quizzes].sort((a, b) => b.date.getTime() - a.date.getTime())
+  }, [course])
 
-  // Component for "Under Construction" message
-  const UnderConstructionMessage = () => (
-    <div className="flex flex-col items-center justify-center py-12 text-center text-gray-500">
-      <Construction className="h-16 w-16 text-gray-400 mb-4" />
-      <h3 className="text-xl font-semibold mb-2">Content Under Construction</h3>
-      <p className="text-base">We're working hard to bring you this content. Please check back soon!</p>
-    </div>
-  );
-
+  // REMOVED: upcomingDeadlines useMemo hook is no longer needed
 
   return (
-    <motion.div className="space-y-6 md:space-y-8" variants={containerVariants} initial="hidden" animate="visible">
-      {/* Header */}
-      <motion.div variants={itemVariants} className="relative">
-        <div className="overflow-hidden rounded-t-2xl md:rounded-t-3xl">
-          <div className="bg-gradient-to-br from-emerald-600 to-teal-600 p-4 pb-20 text-white md:p-8 md:pb-24">
-            <div className="flex items-center gap-x-4 mb-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="-ml-3 text-white/80 hover:bg-white/10 hover:text-white"
-                onClick={() => router.back()}
-              >
-                <ChevronLeft className="h-5 w-5 mr-1" />
-                Back
-              </Button>
-              <Badge variant="secondary" className="bg-white/20 text-white">
-                {course.group}
-              </Badge>
-            </div>
-            <h1 className="text-3xl font-bold md:text-4xl">{course.title}</h1>
-            <p className="mt-2 max-w-2xl text-base text-emerald-100 md:text-lg">
-              Course progress until end of {course.endMonth}. Let's keep up the great work!
-            </p>
-          </div>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-gray-50 to-transparent" />
+    <div className="space-y-6">
+      <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+        <h1 className="text-3xl font-bold text-gray-900">{course.title}</h1>
+        <p className="text-gray-600 mt-1">Instructor: {course.details.instructor}</p>
       </motion.div>
 
-      {/* Progress Stats */}
-      <motion.div
-        variants={itemVariants}
-        className="relative z-10 -mt-16 grid grid-cols-1 gap-4 px-4 md:-mt-20 md:grid-cols-3 md:gap-6 lg:px-0"
-      >
-        <Card>
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">Assignments</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-center p-4 pt-0 md:p-6 md:pt-0">
-            <CircularProgress value={course.progress.assignmentsCompleted} />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">Quizzes Passed</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center p-4 pt-2 md:p-6 md:pt-4">
-            <div className="text-4xl font-bold text-emerald-600 md:text-5xl">
-              <AnimatedCounter end={course.progress.quizzesPassed[0]} /> / {course.progress.quizzesPassed[1]}
-            </div>
-            <p className="mt-2 text-sm text-gray-500 md:text-base">Total Quizzes</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="p-4 md:p-6">
-            <CardTitle className="text-base md:text-lg">Attendance</CardTitle>
-          </CardHeader>
-          <CardContent className="flex flex-col items-center justify-center p-4 pt-2 md:p-6 md:pt-4">
-            <div className="text-4xl font-bold text-emerald-600 md:text-5xl">
-              <AnimatedCounter end={course.progress.attendanceRate} suffix="%" />
-            </div>
-            <p className="mt-2 text-sm text-gray-500 md:text-base">Attendance Rate</p>
-          </CardContent>
-        </Card>
-      </motion.div>
-
-      {/* Main Content Area */}
-      <div className="grid grid-cols-1 gap-8 px-4 lg:grid-cols-3 lg:gap-8 lg:px-0">
-        <div className="lg:col-span-2">
-          <Tabs defaultValue="syllabus">
-            {/* Responsive tab list: 2x2 on mobile, 1x4 on larger screens */}
-            <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4">
-              <TabsTrigger value="syllabus">Syllabus</TabsTrigger>
-              <TabsTrigger value="assignments">Assignments</TabsTrigger>
-              <TabsTrigger value="quizzes">Quizzes</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            </TabsList>
-
-            {/* SYLLABUS TAB - MODIFIED */}
-            <TabsContent value="syllabus" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BookOpen className="h-5 w-5 mr-2 text-emerald-600" />
-                    Course Syllabus & Videos
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <UnderConstructionMessage /> {/* Display under construction message */}
-                  {/* Original Accordion content commented out for demonstration:
-                  <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
-                    {course.videos.map((video, index) => (
-                      <AccordionItem value={`item-${index}`} key={video.id}>
-                        <AccordionTrigger className="hover:no-underline">
-                          <div className="flex items-center space-x-4 text-left">
-                            <div
-                              className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-                                video.locked ? "bg-gray-100" : "bg-emerald-100"
-                              }`}
-                            >
-                              {video.locked ? (
-                                <Lock className="h-4 w-4 text-gray-400" />
-                              ) : (
-                                <PlayCircle className="h-4 w-4 text-emerald-500" />
-                              )}
-                            </div>
-                            <span className={`font-medium ${video.locked ? "text-gray-500" : "text-gray-800"}`}>
-                              {video.title}
-                            </span>
-                          </div>
-                        </AccordionTrigger>
-                        <AccordionContent>
-                          <div className="space-y-4 pl-12">
-                            <p className="text-gray-600">{video.description}</p>
-                            <Button variant="default" size="sm" disabled={video.locked}>
-                              <PlayCircle className="mr-2 h-4 w-4" />
-                              Watch Video
-                            </Button>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    ))}
-                  </Accordion>
-                  */}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* REFACTOR: Assignments now uses a card list on mobile and a table on desktop */}
-            <TabsContent value="assignments" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <FileText className="h-5 w-5 mr-2 text-emerald-600" />
-                    Assignments
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Mobile Card View */}
-                  <div className="space-y-4 md:hidden">
-                    {course.assignments.map((item) => (
-                      <div key={item.id} className="rounded-lg border bg-card p-4">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="space-y-1.5">
-                            <p className="font-semibold">{item.title}</p>
-                            <p className="text-sm text-muted-foreground">Due: {item.dueDate}</p>
-                            <div className="flex items-center space-x-2 pt-1 text-sm font-medium">
-                              <StatusIcon status={item.status} />
-                              <span className="capitalize">{item.status}</span>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-sm text-muted-foreground">Grade</p>
-                            <p className="font-bold text-lg">{item.grade || "–"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Due Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Grade</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {course.assignments.map((item: AssignmentDetail) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.title}</TableCell>
-                            <TableCell>{item.dueDate}</TableCell>
-                            <TableCell className="flex items-center space-x-2">
-                              <StatusIcon status={item.status} /> <span className="capitalize">{item.status}</span>
-                            </TableCell>
-                            <TableCell>{item.grade || "N/A"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* REFACTOR: Quizzes now uses a card list on mobile and a table on desktop */}
-            <TabsContent value="quizzes" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Percent className="h-5 w-5 mr-2 text-emerald-600" />
-                    Quizzes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Mobile Card View */}
-                  <div className="space-y-4 md:hidden">
-                    {course.quizzes.map((item) => (
-                      <div key={item.id} className="rounded-lg border bg-card p-4">
-                        <div className="flex justify-between items-start gap-4">
-                          <div className="space-y-1.5">
-                            <p className="font-semibold">{item.title}</p>
-                            <p className="text-sm text-muted-foreground">Date: {item.date}</p>
-                            <div className="flex items-center space-x-2 pt-1 text-sm font-medium">
-                              <StatusIcon status={item.status} />
-                              <span className="capitalize">{item.status}</span>
-                            </div>
-                          </div>
-                          <div className="text-right flex-shrink-0">
-                            <p className="text-sm text-muted-foreground">Score</p>
-                            <p className="font-bold text-lg">{item.score || "–"}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Title</TableHead>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead>Score</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {course.quizzes.map((item: QuizDetail) => (
-                          <TableRow key={item.id}>
-                            <TableCell className="font-medium">{item.title}</TableCell>
-                            <TableCell>{item.date}</TableCell>
-                            <TableCell className="flex items-center space-x-2">
-                              <StatusIcon status={item.status} /> <span className="capitalize">{item.status}</span>
-                            </TableCell>
-                            <TableCell>{item.score || "N/A"}</TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* REFACTOR: Attendance now uses a card list on mobile and a table on desktop */}
-            <TabsContent value="attendance" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Calendar className="h-5 w-5 mr-2 text-emerald-600" />
-                    Attendance Record
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {/* Mobile Card View */}
-                  <div className="space-y-4 md:hidden">
-                    {course.attendance.map((item) => (
-                      <div key={item.id} className="rounded-lg border bg-card p-4">
-                        <div className="flex justify-between items-center">
-                          <p className="font-semibold">{item.date}</p>
-                          <div className="flex items-center space-x-2 text-sm font-medium">
-                            <StatusIcon status={item.status} />
-                            <span className="capitalize">{item.status}</span>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Desktop Table View */}
-                  <div className="hidden md:block rounded-md border">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Status</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {course.attendance.map((item: AttendanceDetail) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.date}</TableCell>
-                            <TableCell className="flex items-center space-x-2">
-                              <StatusIcon status={item.status} /> <span className="capitalize">{item.status}</span>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Sidebar Content */}
-        <div className="space-y-8">
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Course Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start space-x-3">
-                  <GraduationCap className="h-5 w-5 mt-1 flex-shrink-0 text-emerald-600" />
-                  <div>
-                    <p className="font-semibold">Instructor</p>
-                    <p className="text-sm text-gray-600">{course.details.instructor}</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <User className="h-5 w-5 mt-1 flex-shrink-0 text-emerald-600" />
-                  <div>
-                    <p className="font-semibold">Teaching Assistant (TA)</p>
-                    <p className="text-sm text-gray-600">{course.details.ta}</p>
-                  </div>
-                </div>
-                <div className="flex items-start space-x-3">
-                  <Mail className="h-5 w-5 mt-1 flex-shrink-0 text-emerald-600" />
-                  <div>
-                    <p className="font-semibold">TA Contact</p>
-                    <p className="text-sm text-gray-600">{course.details.contact}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* ANNOUNCEMENTS CARD - MODIFIED */}
-          <motion.div variants={itemVariants}>
-            <Card>
-              <CardHeader>
-                <CardTitle>Announcements</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <UnderConstructionMessage /> {/* Display under construction message */}
-                {/* Original Announcements list commented out for demonstration:
-                <ul className="space-y-4">
-                  {course.announcements.map((ann) => (
-                    <li key={ann.id} className="flex items-start space-x-3">
-                      <Bell className="h-4 w-4 mt-1 flex-shrink-0 text-emerald-600" />
-                      <div>
-                        <p className="font-medium text-sm">{ann.title}</p>
-                        <p className="text-xs text-gray-500">{ann.date}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-                */}
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+      {/* MODIFIED: Grid changed to md:grid-cols-2 and Upcoming Deadlines card removed */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.1 }}
+        >
+          <Card className="h-full bg-gradient-to-br from-emerald-500 to-teal-500 text-white">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white/90">
+                <TrendingUp className="h-5 w-5" /> Overall Grade
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="text-center">
+              <p className="text-5xl font-bold">{overallGrade !== null ? `${overallGrade}%` : "N/A"}</p>
+              <p className="text-sm text-white/80 mt-1">
+                {overallGrade !== null ? "Current calculated grade" : "No graded items yet"}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <Card className="h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-gray-800">
+                <User className="h-5 w-5 text-purple-500" /> Teaching Assistant
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <p className="font-semibold">{course.details.ta}</p>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <Mail className="h-4 w-4" />
+                <a href={`mailto:${course.details.contact}`} className="hover:underline">
+                  {course.details.contact}
+                </a>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       </div>
-    </motion.div>
+
+      <Tabs defaultValue="grades" className="w-full">
+        <div className="relative">
+          {/* MODIFIED: Added 'hide-scrollbar' class */}
+          <TabsList
+            ref={tabsListRef}
+            className="w-full justify-start overflow-x-auto border-b sm:justify-center hide-scrollbar"
+          >
+            <TabsTrigger value="videos">Videos</TabsTrigger>
+            <TabsTrigger value="grades">Grades</TabsTrigger>
+            <TabsTrigger value="attendance">Attendance</TabsTrigger>
+            <TabsTrigger value="announcements">Announcements</TabsTrigger>
+            <TabsTrigger value="details">Details</TabsTrigger>
+          </TabsList>
+          
+          <AnimatePresence>
+            {showLeftArrow && (
+              <motion.div
+                key="left-arrow"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute left-0 top-0 h-full flex items-center bg-gradient-to-r from-background from-50% to-transparent pointer-events-none"
+              >
+                <Button
+                  variant="ghost"
+                  className="h-full rounded-none px-2 pointer-events-auto"
+                  onClick={() => handleScroll("left")}
+                >
+                  <ChevronLeft className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
+            
+            {showRightArrow && (
+              <motion.div
+                key="right-arrow"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="absolute right-0 top-0 h-full flex items-center bg-gradient-to-l from-background from-50% to-transparent pointer-events-none"
+              >
+                <Button
+                  variant="ghost"
+                  className="h-full rounded-none px-2 pointer-events-auto"
+                  onClick={() => handleScroll("right")}
+                >
+                  <ChevronRight className="h-5 w-5" />
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* ... Other TabsContent ... */}
+
+        <TabsContent value="grades" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Grades Overview</CardTitle>
+              <CardDescription>A combined list of your assignments and quizzes.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* MODIFIED: Conditionally render Table or Accordion */}
+              {isMobile ? (
+                <Accordion type="single" collapsible className="w-full">
+                  {combinedGrades.map((item) => (
+                    <AccordionItem value={item.id} key={item.id}>
+                      <AccordionTrigger>
+                        <div className="flex justify-between items-center w-full pr-4">
+                          <span className="font-medium text-left truncate">{item.title}</span>
+                          <div className="flex-shrink-0 ml-4">
+                            <GradeDisplay item={item} />
+                          </div>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent>
+                        <ul className="space-y-2 text-sm text-muted-foreground pl-2 border-l-2 ml-2">
+                          <li className="flex justify-between">
+                            <span className="font-semibold">Type:</span>
+                            <Badge variant={item.type === "Assignment" ? "default" : "secondary"}>{item.type}</Badge>
+                          </li>
+                          <li className="flex justify-between">
+                            <span className="font-semibold">Due Date:</span>
+                            <span>{format(item.date, "MMM dd, yyyy")}</span>
+                          </li>
+                          <li className="flex justify-between">
+                            <span className="font-semibold">Graded By:</span>
+                            <span>{item.gradedBy || 'N/A'}</span>
+                          </li>
+                        </ul>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Title</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Due Date</TableHead>
+                      <TableHead>Graded By</TableHead>
+                      <TableHead className="text-right">Score</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {combinedGrades.map((item) => (
+                      <TableRow key={item.id}>
+                        <TableCell className="font-medium">{item.title}</TableCell>
+                        <TableCell>
+                          <Badge variant={item.type === "Assignment" ? "default" : "secondary"}>{item.type}</Badge>
+                        </TableCell>
+                        <TableCell>{format(item.date, "MMM dd, yyyy")}</TableCell>
+                        <TableCell>{item.gradedBy}</TableCell>
+                        <TableCell className="text-right">
+                          <GradeDisplay item={item} />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ... Other TabsContent ... */}
+        <TabsContent value="videos" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Video Lectures</CardTitle>
+            </CardHeader>
+            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {course.videos.map((video) => (
+                <Card key={video.id} className="flex items-center p-4 gap-4">
+                  <div className={cn("p-2 rounded-lg", video.locked ? "bg-gray-200" : "bg-emerald-100")}>
+                    {video.locked ? (
+                      <Lock className="h-5 w-5 text-gray-500" />
+                    ) : (
+                      <ExternalLink className="h-5 w-5 text-emerald-600" />
+                    )}
+                  </div>
+                  <div>
+                    <h3 className={cn("font-semibold", video.locked ? "text-gray-500" : "")}>{video.title}</h3>
+                    <p className="text-sm text-gray-600">{video.description}</p>
+                  </div>
+                </Card>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="attendance" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Attendance Record</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Date</TableHead>
+                    <TableHead className="text-right">Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {course.attendance.map((att) => (
+                    <TableRow key={att.id}>
+                      <TableCell>{format(new Date(att.date), "MMM dd, yyyy")}</TableCell>
+                      <TableCell className="text-right">
+                        <Badge
+                          className={
+                            att.status === "Present"
+                              ? "bg-green-100 text-green-800"
+                              : att.status === "Absent"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-yellow-100 text-yellow-800"
+                          }
+                        >
+                          {att.status}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="announcements" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Announcements</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {course.announcements.map((ann) => (
+                <div key={ann.id} className="p-4 border rounded-lg flex items-start gap-3">
+                  <Info className="h-5 w-5 text-blue-500 mt-1" />
+                  <div>
+                    <p className="font-medium">{ann.title}</p>
+                    <p className="text-sm text-gray-500">{format(new Date(ann.date), "MMM dd, yyyy")}</p>
+                  </div>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        <TabsContent value="details" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Course Details</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Course details here...</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   )
 }

@@ -718,6 +718,18 @@ html {
   background: linear-gradient(135deg, var(--color-gossamer-600) 0%, var(--color-gossamer-700) 100%);
 }
 
+/* In app/globals.css */
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.hide-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
 //END OF app\globals.css
 
 //START OF app\instructor\analytics\engagement\page.tsx
@@ -7859,7 +7871,7 @@ export default function GradingTabContent({ courseId }: { courseId: string }) {
 // app/ta/groups/components/group-form-modal.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, type ChangeEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7879,8 +7891,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Loader2 } from "lucide-react";
-import type { TaGroup, Student, Instructor } from "@/lib/database";
+import { taGroupsData, type TaGroup, type Student, type Instructor } from "@/lib/database";
+import SelectStudentsModal from "./select-students-modal";
 
 interface GroupFormModalProps {
   isOpen: boolean;
@@ -7889,6 +7903,7 @@ interface GroupFormModalProps {
   group: TaGroup | null;
   allStudents: Student[];
   allInstructors: Instructor[];
+  totalGroups: number;
 }
 
 export default function GroupFormModal({
@@ -7904,60 +7919,132 @@ export default function GroupFormModal({
     courseName: "",
     instructorName: "",
     studentsText: "",
+    isActive: true,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isStudentSelectorOpen, setIsStudentSelectorOpen] = useState(false);
 
+  // Effect to initialize the form when it opens or when editing a group
   useEffect(() => {
     if (group) {
+      // Editing an existing group
       setFormData({
         groupName: group.groupName,
         courseName: group.courseName,
         instructorName: group.instructorName,
         studentsText: group.students.map((s) => s.name).join("\n"),
+        isActive: group.isActive,
       });
     } else {
+      // Adding a new group - reset form
       setFormData({
-        groupName: "",
+        groupName: "", // This will be set by the next effect
         courseName: "",
         instructorName: "",
         studentsText: "",
+        isActive: true,
       });
     }
     setErrors({});
   }, [group, isOpen]);
 
+  // Effect to generate the next group number based on the selected course
+  useEffect(() => {
+    // Only run this for new groups, not when editing
+    if (!group && formData.courseName) {
+      const groupsInCourse = taGroupsData.filter(g => g.courseName === formData.courseName);
+      
+      const existingNumbers = new Set(
+        groupsInCourse.map(g => {
+          const match = g.groupName.match(/Group (\d+)/);
+          return match ? parseInt(match[1], 10) : 0;
+        })
+      );
+
+      let nextNumber = 1;
+      while (existingNumbers.has(nextNumber)) {
+        nextNumber++;
+      }
+
+      setFormData(prev => ({
+        ...prev,
+        groupName: `Group ${nextNumber}`
+      }));
+    } else if (!group && !formData.courseName) {
+      // If no course is selected, the group name should be empty
+      setFormData(prev => ({ ...prev, groupName: "" }));
+    }
+  }, [formData.courseName, group]);
+
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-    if (!formData.groupName.trim()) newErrors.groupName = "Group Name is required.";
+    if (!formData.groupName.trim()) newErrors.groupName = "A course must be selected to generate a group number.";
     if (!formData.courseName.trim()) newErrors.courseName = "Course Name is required.";
     if (!formData.instructorName) newErrors.instructorName = "Instructor is required.";
+    
+    // Uniqueness validation for the group number within the selected course
+    if (!group) { // Only run for new groups
+        const groupExists = taGroupsData.some(
+            g => g.courseName === formData.courseName && g.groupName === formData.groupName
+        );
+        if (groupExists) {
+            newErrors.groupName = `Group number ${formData.groupName} already exists for ${formData.courseName}. The number should auto-increment.`;
+        }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+  
+  const handleStudentListChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    const { value } = e.target;
+    if (value.includes(",") || value.includes(";")) {
+      const studentNames = value
+        .split(/[,;\n]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
+      setFormData({ ...formData, studentsText: studentNames.join("\n") });
+    } else {
+      setFormData({ ...formData, studentsText: value });
+    }
+  };
+  
+  const handleStudentsSelected = (selected: Student[]) => {
+    const studentNames = selected.map(s => s.name).join('\n');
+    setFormData(prev => ({ ...prev, studentsText: studentNames }));
+  };
+  
+  const availableStudentsForCourse = useMemo(() => {
+    if (!formData.courseName) return [];
+    return allStudents.filter(s => s.registeredCourses.includes(formData.courseName as 'ICT' | 'Mathematics'));
+  }, [formData.courseName, allStudents]);
+
+  const currentSelectedStudentNames = useMemo(() => {
+    return formData.studentsText.split(/[\n]/).map(s => s.trim()).filter(Boolean);
+  }, [formData.studentsText]);
 
   const handleSave = () => {
     if (!validate()) return;
     setIsSaving(true);
 
-    const studentNames = formData.studentsText.split("\n").map(s => s.trim()).filter(Boolean);
+    const studentNames = formData.studentsText.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
     const students: Student[] = studentNames.map(name => {
       const existingStudent = allStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
-      return existingStudent || { id: `new-stu-${Date.now()}-${Math.random()}`, name };
+      return existingStudent || { id: `new-stu-${Date.now()}-${Math.random()}`, name, registeredCourses: [] };
     });
 
     const groupData: TaGroup = {
-      id: group?.id || "", // ID will be generated by addGroup if new
+      id: group?.id || "", 
       groupName: formData.groupName,
       courseName: formData.courseName,
-      // For simplicity, courseId is derived from courseName
       courseId: formData.courseName.toLowerCase().replace(/\s+/g, '-'),
       instructorName: formData.instructorName,
       students,
       studentCount: students.length,
+      isActive: formData.isActive,
     };
     
-    // Simulate save
     setTimeout(() => {
         onSave(groupData);
         setIsSaving(false);
@@ -7965,77 +8052,115 @@ export default function GroupFormModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[525px]">
-        <DialogHeader>
-          <DialogTitle>{group ? "Edit Group" : "Create New Group"}</DialogTitle>
-          <DialogDescription>
-            {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="groupName">Group Name</Label>
-            <Input
-              id="groupName"
-              value={formData.groupName}
-              onChange={(e) => setFormData({ ...formData, groupName: e.target.value })}
-            />
-            {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+    <>
+      <Dialog open={isOpen && !isStudentSelectorOpen} onOpenChange={setIsOpen}>
+        <DialogContent className="sm:max-w-[525px]">
+          <DialogHeader>
+            <DialogTitle>{group ? "Edit Group" : "Add Group"}</DialogTitle>
+            <DialogDescription>
+              {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="courseName">Course Name</Label>
+              <Select
+                value={formData.courseName}
+                onValueChange={(value) => setFormData({ ...formData, courseName: value })}
+              >
+                <SelectTrigger id="courseName">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mathematics">Mathematics</SelectItem>
+                  <SelectItem value="ICT">ICT</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="groupName">Group Number</Label>
+              <Input
+                id="groupName"
+                value={formData.groupName}
+                disabled
+                placeholder="Select a course to generate number"
+              />
+              {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="instructorName">Instructor Name</Label>
+              <Select
+                value={formData.instructorName}
+                onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
+              >
+                <SelectTrigger id="instructorName">
+                  <SelectValue placeholder="Select an instructor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allInstructors.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.name}>
+                      {inst.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+                <div className="flex justify-between items-center">
+                    <Label htmlFor="students">Student List</Label>
+                    <Button
+                        type="button"
+                        variant="link"
+                        className="p-0 h-auto"
+                        onClick={() => setIsStudentSelectorOpen(true)}
+                        disabled={!formData.courseName}
+                    >
+                        Select from List...
+                    </Button>
+                </div>
+                <Textarea
+                    id="students"
+                    placeholder="Enter student names: one per line, comma/semicolon separated, or select from list."
+                    value={formData.studentsText}
+                    onChange={handleStudentListChange}
+                    rows={5}
+                />
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              />
+              <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+            </div>
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="courseName">Course Name</Label>
-            <Input
-              id="courseName"
-              value={formData.courseName}
-              onChange={(e) => setFormData({ ...formData, courseName: e.target.value })}
-            />
-            {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="instructorName">Instructor Name</Label>
-            <Select
-              value={formData.instructorName}
-              onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
-            >
-              <SelectTrigger id="instructorName">
-                <SelectValue placeholder="Select an instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {allInstructors.map((inst) => (
-                  <SelectItem key={inst.id} value={inst.name}>
-                    {inst.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="students">Students</Label>
-            <Textarea
-              id="students"
-              placeholder="Enter student names, one per line."
-              value={formData.studentsText}
-              onChange={(e) => setFormData({ ...formData, studentsText: e.target.value })}
-              rows={5}
-            />
-            <p className="text-xs text-muted-foreground">
-              Each name should be on a new line.
-            </p>
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {group ? "Save Changes" : "Create Group"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {group ? "Save Changes" : "Add Group"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <SelectStudentsModal
+        isOpen={isStudentSelectorOpen}
+        setIsOpen={setIsStudentSelectorOpen}
+        allStudents={availableStudentsForCourse}
+        initiallySelectedNames={currentSelectedStudentNames}
+        onSelect={handleStudentsSelected}
+      />
+    </>
   );
 }
 //END OF app\ta\groups\components\group-form-modal.tsx
@@ -8074,6 +8199,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 
 import {
   taGroupsData as initialGroups,
@@ -8217,6 +8343,7 @@ export default function GroupManagementView({ onBack }: GroupManagementViewProps
                 <TableHead>Course</TableHead>
                 <TableHead>Instructor</TableHead>
                 <TableHead className="text-center">Students</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -8228,6 +8355,11 @@ export default function GroupManagementView({ onBack }: GroupManagementViewProps
                     <TableCell>{group.courseName}</TableCell>
                     <TableCell>{group.instructorName}</TableCell>
                     <TableCell className="text-center">{group.studentCount}</TableCell>
+                    <TableCell>
+                      <Badge variant={group.isActive ? "default" : "outline"} className={group.isActive ? "bg-green-100 text-green-800" : ""}>
+                        {group.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
                     <TableCell className="text-right space-x-2">
                       <Button
                         variant="ghost"
@@ -8249,7 +8381,7 @@ export default function GroupManagementView({ onBack }: GroupManagementViewProps
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
+                  <TableCell colSpan={6} className="h-24 text-center">
                     No groups found.
                   </TableCell>
                 </TableRow>
@@ -8307,6 +8439,7 @@ export default function GroupManagementView({ onBack }: GroupManagementViewProps
         group={editingGroup}
         allStudents={allStudents}
         allInstructors={allInstructors}
+        totalGroups={groups.length}
       />
 
       <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
@@ -8330,6 +8463,162 @@ export default function GroupManagementView({ onBack }: GroupManagementViewProps
   );
 }
 //END OF app\ta\groups\components\group-management-view.tsx
+
+//START OF app\ta\groups\components\select-students-modal.tsx
+// app/ta/groups/components/select-students-modal.tsx
+"use client";
+
+import { useState, useEffect, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import type { Student } from "@/lib/database";
+import { Search } from "lucide-react";
+
+interface SelectStudentsModalProps {
+  isOpen: boolean;
+  setIsOpen: (isOpen: boolean) => void;
+  onSelect: (selectedStudents: Student[]) => void;
+  allStudents: Student[];
+  initiallySelectedNames: string[];
+}
+
+export default function SelectStudentsModal({
+  isOpen,
+  setIsOpen,
+  onSelect,
+  allStudents,
+  initiallySelectedNames,
+}: SelectStudentsModalProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (isOpen) {
+      const initialIds = new Set(
+        allStudents
+          .filter((s) => initiallySelectedNames.includes(s.name))
+          .map((s) => s.id)
+      );
+      setSelectedIds(initialIds);
+    }
+  }, [isOpen, initiallySelectedNames, allStudents]);
+
+  const filteredStudents = useMemo(() => {
+    return allStudents.filter((student) =>
+      student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [allStudents, searchTerm]);
+
+  const handleToggleStudent = (studentId: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(studentId)) {
+        newSet.delete(studentId);
+      } else {
+        newSet.add(studentId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleSelectAll = () => {
+    setSelectedIds(new Set(filteredStudents.map((s) => s.id)));
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds(new Set());
+  };
+
+  const handleConfirm = () => {
+    const selectedStudents = allStudents.filter((s) => selectedIds.has(s.id));
+    onSelect(selectedStudents);
+    setIsOpen(false);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Select Students</DialogTitle>
+          <DialogDescription>
+            Choose students to add to the group.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-col gap-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Input
+              placeholder="Search students..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          <div className="flex items-center justify-between">
+            <div className="space-x-2">
+              <Button variant="link" size="sm" onClick={handleSelectAll}>
+                Select All
+              </Button>
+              <Button variant="link" size="sm" onClick={handleDeselectAll}>
+                Deselect All
+              </Button>
+            </div>
+            <Badge variant="secondary">{selectedIds.size} selected</Badge>
+          </div>
+
+          <ScrollArea className="h-72 w-full rounded-md border p-2">
+            <div className="space-y-2">
+              {filteredStudents.length > 0 ? (
+                filteredStudents.map((student) => (
+                  <div
+                    key={student.id}
+                    className="flex items-center space-x-3 rounded-md p-2 hover:bg-slate-50 cursor-pointer"
+                    onClick={() => handleToggleStudent(student.id)}
+                  >
+                    <Checkbox
+                      id={`student-${student.id}`}
+                      checked={selectedIds.has(student.id)}
+                      onCheckedChange={() => handleToggleStudent(student.id)}
+                    />
+                    <label
+                      htmlFor={`student-${student.id}`}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 cursor-pointer"
+                    >
+                      {student.name}
+                    </label>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-sm text-gray-500 py-10">
+                  No students found.
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleConfirm}>Confirm Selection</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+//END OF app\ta\groups\components\select-students-modal.tsx
 
 //START OF app\ta\groups\loading.tsx
 export default function Loading() {
@@ -8357,18 +8646,20 @@ export default function Loading() {
 
 import { useState } from "react"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, User, ArrowLeft, Settings } from "lucide-react"
+import { ArrowLeft, Settings, ArrowRight, Users, User } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Toaster } from "sonner";
+import { Toaster } from "sonner"
+import { cn } from "@/lib/utils"
 
 import { taGroupsData, type TaGroup } from "@/lib/database"
 import GradingTabContent from "./components/grading-tab"
 import AttendanceTabContent from "./components/attendance-tab"
 import GroupManagementView from "./components/group-management-view"
 
+// --- Main Page Component (Unchanged) ---
 export default function GroupsPage() {
   const { user, isLoading } = useRequireAuth(["ta"])
   const [view, setView] = useState<"landing" | "manage" | "detail">("landing");
@@ -8397,15 +8688,15 @@ export default function GroupsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
        <Toaster position="top-center" richColors />
       <AnimatePresence mode="wait">
         {view === 'landing' && (
           <motion.div
             key="landing-view"
-            initial={{ opacity: 0, x: 0 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.3 }}
           >
             <GroupsLandingView 
@@ -8441,6 +8732,7 @@ export default function GroupsPage() {
   )
 }
 
+// --- REFACTORED: GroupsLandingView ---
 function GroupsLandingView({ onSelectGroup, onGoToManage }: { onSelectGroup: (group: TaGroup) => void; onGoToManage: () => void; }) {
   return (
     <>
@@ -8448,44 +8740,63 @@ function GroupsLandingView({ onSelectGroup, onGoToManage }: { onSelectGroup: (gr
         initial={{ opacity: 0, y: -20 }} 
         animate={{ opacity: 1, y: 0 }} 
         transition={{ duration: 0.5 }}
-        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
       >
         <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">Groups</h1>
-            <p className="text-gray-600 mt-1">Select a group to manage or manage all groups.</p>
+            <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-gray-100">Your Groups</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Select a group to manage its details.</p>
         </div>
-        <Button onClick={onGoToManage} variant="outline" className="w-full sm:w-auto">
+        <Button onClick={onGoToManage} variant="outline" className="w-full sm:w-auto flex-shrink-0">
             <Settings className="mr-2 h-4 w-4" />
-            Manage Groups
+            Manage All Groups
         </Button>
       </motion.div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
         {taGroupsData.map((group, index) => (
           <motion.div
             key={group.id}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
-            whileHover={{ y: -5, boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)" }}
-            className="cursor-pointer"
+            transition={{ duration: 0.4, delay: index * 0.05, ease: "easeOut" }}
+            className="group cursor-pointer"
             onClick={() => onSelectGroup(group)}
           >
-            <Card className="h-full flex flex-col">
-              <CardHeader>
-                <CardTitle>{group.groupName}</CardTitle>
-                <CardDescription>{group.courseName}</CardDescription>
-              </CardHeader>
-              <CardContent className="flex-grow space-y-3">
-                <div className="flex items-center space-x-2 text-sm text-gray-700">
-                    <Users className="h-4 w-4 text-gray-500" />
-                    <span>{group.studentCount} Students</span>
+            <div className={cn(
+                "h-full flex flex-col justify-between p-5 rounded-lg border",
+                "bg-white dark:bg-zinc-900",
+                "border-zinc-200 dark:border-zinc-800",
+                "transition-all duration-300 ease-in-out",
+                "group-hover:border-primary/50 group-hover:shadow-lg group-hover:shadow-primary/10 dark:group-hover:border-primary/40"
+            )}>
+                {/* Top Section: Title & Status */}
+                <div>
+                    <div className="flex justify-between items-start">
+                        <h3 className="font-semibold text-lg text-zinc-800 dark:text-zinc-100 pr-2">{group.groupName}</h3>
+                        <div title={group.isActive ? "Active" : "Inactive"} className="flex-shrink-0">
+                            <span className={cn(
+                                "h-2.5 w-2.5 rounded-full inline-block mt-1.5",
+                                group.isActive ? "bg-green-500" : "bg-gray-400"
+                            )} />
+                        </div>
+                    </div>
+                    <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">{group.courseName}</p>
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-gray-700">
-                    <User className="h-4 w-4 text-gray-500" />
-                    <span>{group.instructorName}</span>
+                
+                {/* Bottom Section: Stats & Action Indicator */}
+                <div className="mt-6 pt-4 flex items-end justify-between border-t border-zinc-200 dark:border-zinc-800">
+                    <div className="flex flex-col space-y-2 text-sm text-zinc-600 dark:text-zinc-300">
+                        <div className="flex items-center gap-2">
+                            <Users className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                            <span>{group.studentCount} Students</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-zinc-400 dark:text-zinc-500" />
+                            <span>{group.instructorName}</span>
+                        </div>
+                    </div>
+                    <ArrowRight className="h-5 w-5 text-zinc-400 dark:text-zinc-500 transition-transform duration-300 group-hover:translate-x-1 group-hover:text-primary" />
                 </div>
-              </CardContent>
-            </Card>
+            </div>
           </motion.div>
         ))}
       </div>
@@ -8493,6 +8804,8 @@ function GroupsLandingView({ onSelectGroup, onGoToManage }: { onSelectGroup: (gr
   )
 }
 
+
+// --- GroupDetailView (Unchanged) ---
 function GroupDetailView({ group, onBack }: { group: TaGroup; onBack: () => void }) {
   return (
     <div className="space-y-6">
@@ -12081,14 +12394,17 @@ export type AssignmentDetail = {
   dueDate: string;
   status: 'Graded' | 'Submitted' | 'Missing' | 'Late' | 'Needs Grading';
   grade: string | null;
+  gradedBy: string;
 };
 
 export type QuizDetail = {
   id: string;
   title: string;
-  date: string;
+  dueDate: string;
   status: 'Passed' | 'Failed' | 'Pending';
-  score: string | null;
+  score: number | null;
+  maxScore: number;
+  gradedBy: string;
 };
 
 export type AttendanceDetail = {
@@ -12148,17 +12464,17 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-ict-5", title: "Web Development: HTML & CSS", description: "Building static web pages with semantic HTML and styling with CSS.", locked: true },
     ],
     assignments: [
-      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100" },
-      { id: "assign-ict-2", title: "Networking Fundamentals Quiz", dueDate: "2024-05-25", status: "Submitted", grade: null },
-      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null },
-      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null },
-      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null },
+      { id: "assign-ict-1", title: "HTML Basics Project", dueDate: "2024-05-20", status: "Graded", grade: "92/100", gradedBy: "Alex Smith" },
+      { id: "assign-ict-2", title: "Networking Fundamentals Essay", dueDate: "2024-05-25", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-3", title: "Cybersecurity Case Study", dueDate: "2024-06-01", status: "Missing", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-4", title: "Database Schema Design", dueDate: "2024-06-08", status: "Late", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-ict-5", title: "Final Web Portfolio", dueDate: "2024-06-15", status: "Needs Grading", grade: null, gradedBy: "Dr. Sarah Johnson" },
     ],
     quizzes: [
-      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", date: "2024-05-10", status: "Passed", score: "85%" },
-      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", date: "2024-05-17", status: "Passed", score: "90%" },
-      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", date: "2024-05-24", status: "Failed", score: "60%" },
-      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", date: "2024-05-31", status: "Pending", score: null },
+      { id: "quiz-ict-1", title: "Module 1 Quiz: Intro", dueDate: "2024-05-10", status: "Passed", score: 85, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-2", title: "Module 2 Quiz: Networking", dueDate: "2024-05-17", status: "Passed", score: 90, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-3", title: "Module 3 Quiz: Security", dueDate: "2024-05-24", status: "Failed", score: 60, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-ict-4", title: "Module 4 Quiz: Databases", dueDate: "2024-05-31", status: "Pending", score: null, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-ict-1", date: "2024-05-22", status: "Present" },
@@ -12194,14 +12510,14 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-math-4", title: "Integral Calculus Techniques", description: "Methods of integration, definite and indefinite integrals.", locked: true },
     ],
     assignments: [
-      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100" },
-      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null },
-      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null },
+      { id: "assign-math-1", title: "Trigonometry Problem Set", dueDate: "2024-05-18", status: "Graded", grade: "85/100", gradedBy: "Alex Smith" },
+      { id: "assign-math-2", title: "Calculus Homework 1", dueDate: "2024-05-28", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
+      { id: "assign-math-3", title: "Linear Algebra Project", dueDate: "2024-06-10", status: "Needs Grading", grade: null, gradedBy: "Prof. Michael Chen" },
     ],
     quizzes: [
-      { id: "quiz-math-1", title: "Algebra Review Quiz", date: "2024-05-12", status: "Passed", score: "78%" },
-      { id: "quiz-math-2", title: "Geometry Quiz", date: "2024-05-19", status: "Failed", score: "65%" },
-      { id: "quiz-math-3", title: "Pre-Calc Assessment", date: "2024-05-26", status: "Passed", score: "82%" },
+      { id: "quiz-math-1", title: "Algebra Review Quiz", dueDate: "2024-05-12", status: "Passed", score: 78, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-math-2", title: "Geometry Quiz", dueDate: "2024-05-19", status: "Failed", score: 65, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-math-3", title: "Pre-Calc Assessment", dueDate: "2024-05-26", status: "Passed", score: 82, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-math-1", date: "2024-05-23", status: "Present" },
@@ -12235,12 +12551,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-web-3", title: "JavaScript Fundamentals", description: "Adding interactivity to web pages with JavaScript.", locked: false },
     ],
     assignments: [
-      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100" },
-      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100" },
+      { id: "assign-web-1", title: "Personal Portfolio Page", dueDate: "2024-05-10", status: "Graded", grade: "98/100", gradedBy: "Alex Smith" },
+      { id: "assign-web-2", title: "Interactive Calculator", dueDate: "2024-05-25", status: "Graded", grade: "95/100", gradedBy: "Alex Smith" },
     ],
     quizzes: [
-      { id: "quiz-web-1", title: "HTML Structures Quiz", date: "2024-05-05", status: "Passed", score: "92%" },
-      { id: "quiz-web-2", title: "CSS Selectors Quiz", date: "2024-05-12", status: "Passed", score: "88%" },
+      { id: "quiz-web-1", title: "HTML Structures Quiz", dueDate: "2024-05-05", status: "Passed", score: 92, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-web-2", title: "CSS Selectors Quiz", dueDate: "2024-05-12", status: "Passed", score: 88, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-web-1", date: "2024-05-21", status: "Present" },
@@ -12271,12 +12587,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-stats-3", title: "Inferential Statistics: Hypothesis Testing", description: "Understanding null and alternative hypotheses.", locked: true },
     ],
     assignments: [
-      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100" },
-      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null },
+      { id: "assign-stats-1", title: "Probability Problem Set", dueDate: "2024-05-15", status: "Graded", grade: "80/100", gradedBy: "Alex Smith" },
+      { id: "assign-stats-2", title: "Data Analysis Project", dueDate: "2024-06-01", status: "Missing", grade: null, gradedBy: "Prof. Michael Chen" },
     ],
     quizzes: [
-      { id: "quiz-stats-1", title: "Intro to Stats Quiz", date: "2024-05-08", status: "Passed", score: "75%" },
-      { id: "quiz-stats-2", title: "Probability Distributions Quiz", date: "2024-05-15", status: "Failed", score: "55%" },
+      { id: "quiz-stats-1", title: "Intro to Stats Quiz", dueDate: "2024-05-08", status: "Passed", score: 75, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-stats-2", title: "Probability Distributions Quiz", dueDate: "2024-05-15", status: "Failed", score: 55, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-stats-1", date: "2024-05-20", status: "Present" },
@@ -12307,12 +12623,12 @@ export const courseDetailsData: { [key: string]: CourseDetail } = {
       { id: "vid-python-3", title: "Functions and Modules", description: "Organizing your code with functions.", locked: false },
     ],
     assignments: [
-      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100" },
-      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null },
+      { id: "assign-python-1", title: "First Python Program", dueDate: "2024-05-10", status: "Graded", grade: "95/100", gradedBy: "Alex Smith" },
+      { id: "assign-python-2", title: "Simple Calculator App", dueDate: "2024-05-20", status: "Submitted", grade: null, gradedBy: "Alex Smith" },
     ],
     quizzes: [
-      { id: "quiz-python-1", title: "Module 1 Assessment", date: "2024-05-07", status: "Passed", score: "90%" },
-      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", date: "2024-05-14", status: "Passed", score: "88%" },
+      { id: "quiz-python-1", title: "Module 1 Assessment", dueDate: "2024-05-07", status: "Passed", score: 90, maxScore: 100, gradedBy: "System" },
+      { id: "quiz-python-2", title: "Loops and If-Statements Quiz", dueDate: "2024-05-14", status: "Passed", score: 88, maxScore: 100, gradedBy: "System" },
     ],
     attendance: [
       { id: "att-python-1", date: "2024-05-24", status: "Present" },
@@ -12527,6 +12843,7 @@ export const taScheduleData: TASession[] = [
 export type Student = {
   id: string;
   name: string;
+  registeredCourses: ('ICT' | 'Mathematics')[];
 };
 
 export type Instructor = {
@@ -12542,26 +12859,27 @@ export type TaGroup = {
   groupName: string;
   studentCount: number;
   instructorName: string;
-  students: Student[]; // Added students array
+  students: Student[];
+  isActive: boolean;
 };
 
 // --- NEW DUMMY DATA for Group Management ---
 export const allStudents: Student[] = [
-  { id: "stu-01", name: "Emma Johnson" },
-  { id: "stu-02", name: "Michael Chen" },
-  { id: "stu-03", name: "Sarah Wilson" },
-  { id: "stu-04", name: "David Brown" },
-  { id: "stu-05", name: "Lisa Williams" },
-  { id: "stu-06", name: "James Taylor" },
-  { id: "stu-07", name: "Olivia Martinez" },
-  { id: "stu-08", name: "William Garcia" },
-  { id: "stu-09", name: "Sophia Rodriguez" },
-  { id: "stu-10", name: "Daniel Miller" },
-  { id: "stu-11", name: "Isabella Davis" },
-  { id: "stu-12", name: "Joseph Anderson" },
-  { id: "stu-13", name: "Charlotte White" },
-  { id: "stu-14", name: "Liam Harris" },
-  { id: "stu-15", name: "Ava Clark" },
+  { id: "stu-01", name: "Emma Johnson", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-02", name: "Michael Chen", registeredCourses: ['ICT'] },
+  { id: "stu-03", name: "Sarah Wilson", registeredCourses: ['Mathematics'] },
+  { id: "stu-04", name: "David Brown", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-05", name: "Lisa Williams", registeredCourses: ['ICT'] },
+  { id: "stu-06", name: "James Taylor", registeredCourses: ['Mathematics'] },
+  { id: "stu-07", name: "Olivia Martinez", registeredCourses: ['ICT'] },
+  { id: "stu-08", name: "William Garcia", registeredCourses: ['Mathematics'] },
+  { id: "stu-09", name: "Sophia Rodriguez", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-10", name: "Daniel Miller", registeredCourses: ['ICT'] },
+  { id: "stu-11", name: "Isabella Davis", registeredCourses: ['Mathematics'] },
+  { id: "stu-12", name: "Joseph Anderson", registeredCourses: ['ICT'] },
+  { id: "stu-13", name: "Charlotte White", registeredCourses: ['Mathematics'] },
+  { id: "stu-14", name: "Liam Harris", registeredCourses: ['ICT', 'Mathematics'] },
+  { id: "stu-15", name: "Ava Clark", registeredCourses: ['ICT'] },
 ];
 
 export const allInstructors: Instructor[] = [
@@ -12574,48 +12892,53 @@ export const allInstructors: Instructor[] = [
 export let taGroupsData: TaGroup[] = [
   {
     id: "group-ict-a",
-    courseName: "ICT Fundamentals",
-    courseId: "ict-fundamentals",
-    groupName: "ICT Fundamentals - Group A",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 1",
     instructorName: "Dr. Sarah Johnson",
     students: allStudents.slice(0, 8),
     studentCount: 8,
+    isActive: true,
   },
   {
     id: "group-math-b",
     courseName: "Mathematics",
     courseId: "mathematics",
-    groupName: "Mathematics - Group B",
+    groupName: "Group 2",
     instructorName: "Prof. Michael Chen",
     students: allStudents.slice(4, 12),
     studentCount: 8,
+    isActive: true,
   },
   {
     id: "group-ict-c",
-    courseName: "ICT Practical",
+    courseName: "ICT",
     courseId: "ict-practical",
-    groupName: "ICT Practical - Group C",
+    groupName: "Group 3",
     instructorName: "Dr. Sarah Johnson",
     students: allStudents.slice(8, 12),
     studentCount: 4,
+    isActive: true,
   },
   {
     id: "group-web-d",
-    courseName: "Web Development",
-    courseId: "web-dev",
-    groupName: "Web Dev - Group D",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 4",
     instructorName: "Dr. Evelyn Reed",
     students: allStudents.slice(2, 7),
     studentCount: 5,
+    isActive: false,
   },
   {
     id: "group-python-e",
-    courseName: "Python Programming",
-    courseId: "python-prog",
-    groupName: "Python - Group E",
+    courseName: "ICT",
+    courseId: "ict",
+    groupName: "Group 5",
     instructorName: "Dr. Evelyn Reed",
     students: allStudents.slice(10, 15),
     studentCount: 5,
+    isActive: true,
   },
 ];
 
