@@ -52,7 +52,7 @@ export default function EngagementAnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Student Engagement Report</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Student Engagement Report</h1>
           <p className="text-gray-600 mt-2">Monitor student activity, completion rates, and forum engagement</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -173,7 +173,7 @@ export default function EngagementAnalyticsPage() {
       {/* Course Engagement */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Course Engagement Overview</CardTitle>
+          <CardTitle>Course Engagement Overview</CardTitle>
           <CardDescription>Detailed engagement metrics for each course</CardDescription>
         </CardHeader>
         <CardContent>
@@ -224,7 +224,7 @@ export default function EngagementAnalyticsPage() {
       {/* Student Activity */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Recent Student Activity</CardTitle>
+          <CardTitle>Recent Student Activity</CardTitle>
           <CardDescription>Individual student engagement and progress</CardDescription>
         </CardHeader>
         <CardContent>

@@ -27,7 +27,7 @@ export default function InstructorDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your platform.</p>
         </div>
         <div className="mt-4 sm:mt-0">
@@ -120,7 +120,7 @@ export default function InstructorDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Quick Actions</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Frequently used administrative tasks</CardDescription>
         </CardHeader>
         <CardContent>
@@ -159,7 +159,7 @@ export default function InstructorDashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Recent Activity</CardTitle>
+            <CardTitle>Recent Activity</CardTitle>
             <CardDescription>Latest platform activity and user interactions</CardDescription>
           </CardHeader>
           <CardContent>
@@ -223,7 +223,7 @@ export default function InstructorDashboard() {
         {/* Upcoming Sessions */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Upcoming Sessions</CardTitle>
+            <CardTitle>Upcoming Sessions</CardTitle>
             <CardDescription>Scheduled classes and Q&A sessions</CardDescription>
           </CardHeader>
           <CardContent>

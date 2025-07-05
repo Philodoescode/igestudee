@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
               >
                 <CheckCircle className="h-8 w-8 text-white" />
               </motion.div>
-              <CardTitle className="font-poppins">Check Your Email</CardTitle>
+              <CardTitle>Check Your Email</CardTitle>
               <CardDescription>We've sent password reset instructions to your email address</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -141,7 +141,7 @@ export default function ForgotPasswordPage() {
           >
             <Shield className="h-8 w-8 text-white" />
           </motion.div>
-          <h2 className="text-3xl font-poppins font-bold text-gray-900">Reset Your Password</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Reset Your Password</h2>
           <p className="mt-2 text-gray-600">
             Enter your email address and we'll send you a link to reset your password
           </p>
@@ -155,7 +155,7 @@ export default function ForgotPasswordPage() {
         >
           <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="font-poppins">Password Reset</CardTitle>
+              <CardTitle>Password Reset</CardTitle>
               <CardDescription>We'll send reset instructions to your registered email address</CardDescription>
             </CardHeader>
             <CardContent>

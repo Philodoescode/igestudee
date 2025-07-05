@@ -26,7 +26,7 @@ export default function UnderConstructionPage() {
             >
               <HardHat className="h-8 w-8 text-white" />
             </motion.div>
-            <CardTitle className="font-poppins text-2xl">Under Construction</CardTitle>
+            <CardTitle className="text-2xl">Under Construction</CardTitle>
             <CardDescription className="text-lg">This page is currently being built.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">

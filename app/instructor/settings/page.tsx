@@ -1,3 +1,4 @@
+// app/instructor/settings/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -30,7 +31,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Platform Settings</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Platform Settings</h1>
           <p className="text-gray-600 mt-2">Configure general application settings and preferences</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -61,7 +62,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
                   General Settings
                 </CardTitle>
@@ -136,7 +137,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Bell className="h-5 w-5 mr-2" />
                   Notification Settings
                 </CardTitle>
@@ -208,7 +209,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Shield className="h-5 w-5 mr-2" />
                   Security Settings
                 </CardTitle>
@@ -269,7 +270,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Database className="h-5 w-5 mr-2" />
                   Course Settings
                 </CardTitle>
@@ -330,7 +331,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Mail className="h-5 w-5 mr-2" />
                   Payment Settings
                 </CardTitle>

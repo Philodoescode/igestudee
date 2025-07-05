@@ -47,7 +47,7 @@ export function Header() {
               <div className="h-8 w-8 text-[var(--color-gossamer-600)]">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <span className="font-poppins font-bold text-xl text-gray-900">EduTech Academy</span>
+              <span className="font-bold text-xl text-gray-900">EduTech Academy</span>
             </Link>
           </motion.div>
 

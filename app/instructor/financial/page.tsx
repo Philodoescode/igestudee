@@ -73,7 +73,7 @@ export default function FinancialPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Financial Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Financial Management</h1>
           <p className="text-gray-600 mt-2">Monitor payments, invoices, and revenue</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -155,7 +155,7 @@ export default function FinancialPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Payment Status Overview</CardTitle>
+            <CardTitle>Payment Status Overview</CardTitle>
             <CardDescription>Current payment status breakdown</CardDescription>
           </CardHeader>
           <CardContent>
@@ -210,7 +210,7 @@ export default function FinancialPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Quick Actions</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common financial management tasks</CardDescription>
           </CardHeader>
           <CardContent>
@@ -254,7 +254,7 @@ export default function FinancialPage() {
       {/* Transaction History */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Transaction History</CardTitle>
+          <CardTitle>Transaction History</CardTitle>
           <CardDescription>Recent payment transactions and invoices</CardDescription>
         </CardHeader>
         <CardContent>

@@ -25,7 +25,7 @@ export default function UnauthorizedPage() {
             >
               <Shield className="h-8 w-8 text-white" />
             </motion.div>
-            <CardTitle className="font-poppins text-2xl">Access Denied</CardTitle>
+            <CardTitle className="text-2xl">Access Denied</CardTitle>
             <CardDescription className="text-lg">You don't have permission to access this page</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">

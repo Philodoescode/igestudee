@@ -83,7 +83,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">User Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-2">Manage all users, roles, and permissions</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -202,7 +202,7 @@ export default function UsersPage() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">All Users</CardTitle>
+          <CardTitle>All Users</CardTitle>
           <CardDescription>View and manage all platform users</CardDescription>
         </CardHeader>
         <CardContent>

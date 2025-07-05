@@ -100,7 +100,7 @@ export default function HomePage() {
             </motion.div>
 
             <motion.h1
-              className="text-4xl md:text-6xl lg:text-7xl font-poppins font-bold text-gray-900 mb-6"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6"
               variants={itemVariants}
             >
               Excel in{" "}
@@ -215,7 +215,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-poppins font-bold text-gray-900 mb-4">Course Offerings</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Course Offerings</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Comprehensive curriculum designed to help you master ICT and Mathematics concepts
             </p>
@@ -263,7 +263,7 @@ export default function HomePage() {
                   />
 
                   <CardHeader className="relative z-10">
-                    <CardTitle className="text-2xl text-[var(--color-gossamer-600)] font-poppins">
+                    <CardTitle className="text-2xl text-[var(--color-gossamer-600)]">
                       {course.title}
                     </CardTitle>
                     <CardDescription className="text-lg">{course.description}</CardDescription>
@@ -315,7 +315,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-poppins font-bold text-gray-900 mb-4">Why Choose Our Program?</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Why Choose Our Program?</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Experience a comprehensive digital learning environment designed for your success
             </p>
@@ -343,7 +343,7 @@ export default function HomePage() {
                     >
                       <feature.icon className="h-8 w-8 text-white" />
                     </motion.div>
-                    <CardTitle className="text-xl font-poppins">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
                   </CardHeader>
 
                   <CardContent className="relative z-10">
@@ -369,7 +369,7 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
         >
           <motion.h2
-            className="text-3xl md:text-5xl font-poppins font-bold text-white mb-4"
+            className="text-3xl md:text-5xl font-bold text-white mb-4"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}

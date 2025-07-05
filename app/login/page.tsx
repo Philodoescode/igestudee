@@ -136,7 +136,7 @@ export default function LoginPage() {
               <GraduationCap className="h-12 w-12 text-white" />
             </div>
           </motion.div>
-          <h2 className="text-3xl font-poppins font-bold text-gray-900">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-gray-600">Sign in to access your learning dashboard</p>
         </motion.div>
 
@@ -148,7 +148,7 @@ export default function LoginPage() {
         >
           <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="font-poppins">Sign In</CardTitle>
+              <CardTitle>Sign In</CardTitle>
               <CardDescription>Enter your credentials to access the platform</CardDescription>
             </CardHeader>
             <CardContent>

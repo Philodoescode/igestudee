@@ -19,7 +19,7 @@ export default function TADashboard() {
         {/* Added 'gap-y-4' to provide vertical spacing when items wrap. */}
         <div className="flex flex-wrap items-center justify-between gap-y-4">
           <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900">
               Welcome back, {user?.name?.split(" ")[0]}!
             </h1>
             <p className="text-gray-600 mt-1">Here's what's happening with your student groups today.</p>

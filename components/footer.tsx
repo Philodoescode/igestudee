@@ -55,7 +55,7 @@ export function Footer() {
               <div className="h-8 w-8 text-[var(--color-gossamer-400)]">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <span className="font-poppins font-bold text-xl">EduTech Academy</span>
+              <span className="font-bold text-xl">EduTech Academy</span>
             </div>
             <motion.p className="text-gray-300 mb-6 max-w-md leading-relaxed" variants={itemVariants}>
               Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Join
@@ -78,7 +78,7 @@ export function Footer() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h3 className="font-poppins font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Quick Links</h3>
+            <h3 className="font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Quick Links</h3>
             <ul className="space-y-3">
               {[
                 { name: "About Program", href: "/about" },
@@ -105,7 +105,7 @@ export function Footer() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h3 className="font-poppins font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Contact Info</h3>
+            <h3 className="font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Contact Info</h3>
             <ul className="space-y-4">
               {[
                 { icon: Phone, text: "(+20) 122 5223 840" },

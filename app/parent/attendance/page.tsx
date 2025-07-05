@@ -77,7 +77,7 @@ export default function AttendancePage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2 flex items-center">
+          <h1 className="text-3xl font-bold mb-2 flex items-center">
             <CalendarCheck className="h-8 w-8 mr-3" />
             Attendance Record
           </h1>
@@ -91,7 +91,7 @@ export default function AttendancePage() {
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-poppins">Attendance Summary</CardTitle>
+            <CardTitle>Attendance Summary</CardTitle>
             <CardDescription>Overview of attendance for the current school year</CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,15 +1,15 @@
+// START OF app\layout.tsx
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Poppins } from "next/font/google"
+import { Lexend } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/hooks/use-auth"
 import { ClientLayoutWrapper } from "./client-layout-wrapper"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
-const poppins = Poppins({
+const lexend = Lexend({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-sans",
 })
 
 export const metadata: Metadata = {
@@ -25,8 +25,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
-      <body className="font-inter antialiased">
+    <html lang="en" className={lexend.variable}>
+      <body className="font-sans antialiased">
         <AuthProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </AuthProvider>

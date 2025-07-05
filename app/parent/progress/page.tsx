@@ -61,7 +61,7 @@ export default function ChildProgressPage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2">Academic Progress</h1>
+          <h1 className="text-3xl font-bold mb-2">Academic Progress</h1>
           <p className="text-blue-100 text-lg">Detailed view of grades, assignments, and reports for Emma Johnson</p>
         </div>
       </motion.div>

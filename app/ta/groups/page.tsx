@@ -100,7 +100,7 @@ function GroupsLandingView({ onSelectGroup, onGoToManage }: { onSelectGroup: (gr
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
       >
         <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-gray-100">Your Groups</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Your Groups</h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Select a group to manage its details.</p>
         </div>
         <Button onClick={onGoToManage} variant="outline" className="w-full sm:w-auto flex-shrink-0">

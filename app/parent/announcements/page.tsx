@@ -90,7 +90,7 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2 flex items-center">
+          <h1 className="text-3xl font-bold mb-2 flex items-center">
             <Bell className="h-8 w-8 mr-3" />
             Announcements
           </h1>
@@ -102,7 +102,7 @@ export default function AnnouncementsPage() {
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-poppins flex items-center">
+            <CardTitle className="text-lg flex items-center">
               <Filter className="h-5 w-5 mr-2 text-emerald-600" />
               Filter Announcements
             </CardTitle>
@@ -177,7 +177,7 @@ export default function AnnouncementsPage() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           {getPriorityIcon(announcement.priority)}
-                          <CardTitle className="text-lg font-poppins">{announcement.title}</CardTitle>
+                          <CardTitle className="text-lg">{announcement.title}</CardTitle>
                           {!announcement.read && (
                             <motion.div
                               initial={{ scale: 0 }}
