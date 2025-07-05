@@ -1,4 +1,4 @@
-// MODIFIED FILE: components/attendance-tab.tsx
+// app/ta/groups/components/attendance-tab.tsx
 "use client"
 
 import { useState } from "react"
@@ -74,12 +74,12 @@ export default function AttendanceTabContent({ groupId }: { groupId: string }) {
         transition={{ duration: 0.5 }}
       >
         <div className="text-center sm:text-left">
-          <h2 className="text-lg font-semibold text-gray-800">New attendance Entry</h2>
+          <h2 className="text-lg font-semibold text-gray-800">New Attendance Entry</h2>
           <p className="text-sm text-gray-600">Click here to add a new attendance record for your students.</p>
         </div>
         <Button onClick={handleAddNew} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
-          Add new attendance
+          Add New Attendance
         </Button>
       </motion.div>
 

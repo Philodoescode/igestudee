@@ -329,7 +329,7 @@ export default function ForgotPasswordPage() {
               >
                 <CheckCircle className="h-8 w-8 text-white" />
               </motion.div>
-              <CardTitle className="font-poppins">Check Your Email</CardTitle>
+              <CardTitle>Check Your Email</CardTitle>
               <CardDescription>We've sent password reset instructions to your email address</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -419,7 +419,7 @@ export default function ForgotPasswordPage() {
           >
             <Shield className="h-8 w-8 text-white" />
           </motion.div>
-          <h2 className="text-3xl font-poppins font-bold text-gray-900">Reset Your Password</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Reset Your Password</h2>
           <p className="mt-2 text-gray-600">
             Enter your email address and we'll send you a link to reset your password
           </p>
@@ -433,7 +433,7 @@ export default function ForgotPasswordPage() {
         >
           <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="font-poppins">Password Reset</CardTitle>
+              <CardTitle>Password Reset</CardTitle>
               <CardDescription>We'll send reset instructions to your registered email address</CardDescription>
             </CardHeader>
             <CardContent>
@@ -569,7 +569,6 @@ export default function ForgotPasswordPage() {
     </div>
   )
 }
-
 //END OF app\forgot-password\page.tsx
 
 //START OF app\globals.css
@@ -654,15 +653,6 @@ export default function ForgotPasswordPage() {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Custom font classes */
-.font-poppins {
-  font-family: var(--font-poppins);
-}
-
-.font-inter {
-  font-family: var(--font-inter);
 }
 
 /* Smooth scrolling */
@@ -787,7 +777,7 @@ export default function EngagementAnalyticsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Student Engagement Report</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Student Engagement Report</h1>
           <p className="text-gray-600 mt-2">Monitor student activity, completion rates, and forum engagement</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -908,7 +898,7 @@ export default function EngagementAnalyticsPage() {
       {/* Course Engagement */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Course Engagement Overview</CardTitle>
+          <CardTitle>Course Engagement Overview</CardTitle>
           <CardDescription>Detailed engagement metrics for each course</CardDescription>
         </CardHeader>
         <CardContent>
@@ -959,7 +949,7 @@ export default function EngagementAnalyticsPage() {
       {/* Student Activity */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Recent Student Activity</CardTitle>
+          <CardTitle>Recent Student Activity</CardTitle>
           <CardDescription>Individual student engagement and progress</CardDescription>
         </CardHeader>
         <CardContent>
@@ -1009,7 +999,6 @@ export default function EngagementAnalyticsPage() {
     </div>
   )
 }
-
 //END OF app\instructor\analytics\engagement\page.tsx
 
 //START OF app\instructor\financial\loading.tsx
@@ -1095,7 +1084,7 @@ export default function FinancialPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Financial Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Financial Management</h1>
           <p className="text-gray-600 mt-2">Monitor payments, invoices, and revenue</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -1177,7 +1166,7 @@ export default function FinancialPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Payment Status Overview</CardTitle>
+            <CardTitle>Payment Status Overview</CardTitle>
             <CardDescription>Current payment status breakdown</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1232,7 +1221,7 @@ export default function FinancialPage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Quick Actions</CardTitle>
+            <CardTitle>Quick Actions</CardTitle>
             <CardDescription>Common financial management tasks</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1276,7 +1265,7 @@ export default function FinancialPage() {
       {/* Transaction History */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Transaction History</CardTitle>
+          <CardTitle>Transaction History</CardTitle>
           <CardDescription>Recent payment transactions and invoices</CardDescription>
         </CardHeader>
         <CardContent>
@@ -1387,7 +1376,6 @@ export default function FinancialPage() {
     </div>
   )
 }
-
 //END OF app\instructor\financial\page.tsx
 
 //START OF app\instructor\layout.tsx
@@ -1526,7 +1514,7 @@ export default function InstructorDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Admin Dashboard</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="text-gray-600 mt-2">Welcome back! Here's what's happening with your platform.</p>
         </div>
         <div className="mt-4 sm:mt-0">
@@ -1619,7 +1607,7 @@ export default function InstructorDashboard() {
       {/* Quick Actions */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">Quick Actions</CardTitle>
+          <CardTitle>Quick Actions</CardTitle>
           <CardDescription>Frequently used administrative tasks</CardDescription>
         </CardHeader>
         <CardContent>
@@ -1658,7 +1646,7 @@ export default function InstructorDashboard() {
         {/* Recent Activity */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Recent Activity</CardTitle>
+            <CardTitle>Recent Activity</CardTitle>
             <CardDescription>Latest platform activity and user interactions</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1722,7 +1710,7 @@ export default function InstructorDashboard() {
         {/* Upcoming Sessions */}
         <Card>
           <CardHeader>
-            <CardTitle className="font-poppins">Upcoming Sessions</CardTitle>
+            <CardTitle>Upcoming Sessions</CardTitle>
             <CardDescription>Scheduled classes and Q&A sessions</CardDescription>
           </CardHeader>
           <CardContent>
@@ -1767,10 +1755,10 @@ export default function InstructorDashboard() {
     </div>
   )
 }
-
 //END OF app\instructor\page.tsx
 
 //START OF app\instructor\settings\page.tsx
+// app/instructor/settings/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -1803,7 +1791,7 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">Platform Settings</h1>
+          <h1 className="text-3xl font-bold text-gray-900">Platform Settings</h1>
           <p className="text-gray-600 mt-2">Configure general application settings and preferences</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -1834,7 +1822,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Globe className="h-5 w-5 mr-2" />
                   General Settings
                 </CardTitle>
@@ -1909,7 +1897,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Bell className="h-5 w-5 mr-2" />
                   Notification Settings
                 </CardTitle>
@@ -1981,7 +1969,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Shield className="h-5 w-5 mr-2" />
                   Security Settings
                 </CardTitle>
@@ -2042,7 +2030,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Database className="h-5 w-5 mr-2" />
                   Course Settings
                 </CardTitle>
@@ -2103,7 +2091,7 @@ export default function SettingsPage() {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center font-poppins">
+                <CardTitle className="flex items-center">
                   <Mail className="h-5 w-5 mr-2" />
                   Payment Settings
                 </CardTitle>
@@ -2292,7 +2280,7 @@ export default function UsersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold font-poppins text-gray-900">User Management</h1>
+          <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-2">Manage all users, roles, and permissions</p>
         </div>
         <div className="mt-4 sm:mt-0 flex space-x-3">
@@ -2411,7 +2399,7 @@ export default function UsersPage() {
       {/* Users Table */}
       <Card>
         <CardHeader>
-          <CardTitle className="font-poppins">All Users</CardTitle>
+          <CardTitle>All Users</CardTitle>
           <CardDescription>View and manage all platform users</CardDescription>
         </CardHeader>
         <CardContent>
@@ -2559,18 +2547,18 @@ export default function UsersPage() {
 //END OF app\instructor\users\page.tsx
 
 //START OF app\layout.tsx
+// START OF app\layout.tsx
 import type React from "react"
 import type { Metadata } from "next"
-import { Inter, Poppins } from "next/font/google"
+import { Lexend } from "next/font/google"
 import "./globals.css"
 import { AuthProvider } from "@/hooks/use-auth"
 import { ClientLayoutWrapper } from "./client-layout-wrapper"
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" })
-const poppins = Poppins({
+const lexend = Lexend({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-poppins",
+  weight: ["100", "200", "300", "400", "500", "600", "700", "800", "900"],
+  variable: "--font-sans",
 })
 
 export const metadata: Metadata = {
@@ -2586,8 +2574,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
-      <body className="font-inter antialiased">
+    <html lang="en" className={lexend.variable}>
+      <body className="font-sans antialiased">
         <AuthProvider>
           <ClientLayoutWrapper>{children}</ClientLayoutWrapper>
         </AuthProvider>
@@ -2595,7 +2583,6 @@ export default function RootLayout({
     </html>
   )
 }
-
 //END OF app\layout.tsx
 
 //START OF app\login\page.tsx
@@ -2737,7 +2724,7 @@ export default function LoginPage() {
               <GraduationCap className="h-12 w-12 text-white" />
             </div>
           </motion.div>
-          <h2 className="text-3xl font-poppins font-bold text-gray-900">Welcome Back</h2>
+          <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>
           <p className="mt-2 text-gray-600">Sign in to access your learning dashboard</p>
         </motion.div>
 
@@ -2749,7 +2736,7 @@ export default function LoginPage() {
         >
           <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="font-poppins">Sign In</CardTitle>
+              <CardTitle>Sign In</CardTitle>
               <CardDescription>Enter your credentials to access the platform</CardDescription>
             </CardHeader>
             <CardContent>
@@ -3140,7 +3127,7 @@ export default function HomePage() {
             </motion.div>
 
             <motion.h1
-              className="text-4xl md:text-6xl lg:text-7xl font-poppins font-bold text-gray-900 mb-6"
+              className="text-4xl md:text-6xl lg:text-7xl font-bold text-gray-900 mb-6"
               variants={itemVariants}
             >
               Excel in{" "}
@@ -3255,7 +3242,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-poppins font-bold text-gray-900 mb-4">Course Offerings</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Course Offerings</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Comprehensive curriculum designed to help you master ICT and Mathematics concepts
             </p>
@@ -3303,7 +3290,7 @@ export default function HomePage() {
                   />
 
                   <CardHeader className="relative z-10">
-                    <CardTitle className="text-2xl text-[var(--color-gossamer-600)] font-poppins">
+                    <CardTitle className="text-2xl text-[var(--color-gossamer-600)]">
                       {course.title}
                     </CardTitle>
                     <CardDescription className="text-lg">{course.description}</CardDescription>
@@ -3355,7 +3342,7 @@ export default function HomePage() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-3xl md:text-5xl font-poppins font-bold text-gray-900 mb-4">Why Choose Our Program?</h2>
+            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">Why Choose Our Program?</h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
               Experience a comprehensive digital learning environment designed for your success
             </p>
@@ -3383,7 +3370,7 @@ export default function HomePage() {
                     >
                       <feature.icon className="h-8 w-8 text-white" />
                     </motion.div>
-                    <CardTitle className="text-xl font-poppins">{feature.title}</CardTitle>
+                    <CardTitle className="text-xl">{feature.title}</CardTitle>
                   </CardHeader>
 
                   <CardContent className="relative z-10">
@@ -3409,7 +3396,7 @@ export default function HomePage() {
           transition={{ duration: 0.6 }}
         >
           <motion.h2
-            className="text-3xl md:text-5xl font-poppins font-bold text-white mb-4"
+            className="text-3xl md:text-5xl font-bold text-white mb-4"
             initial={{ opacity: 0, scale: 0.9 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
@@ -3570,7 +3557,7 @@ export default function AnnouncementsPage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2 flex items-center">
+          <h1 className="text-3xl font-bold mb-2 flex items-center">
             <Bell className="h-8 w-8 mr-3" />
             Announcements
           </h1>
@@ -3582,7 +3569,7 @@ export default function AnnouncementsPage() {
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-poppins flex items-center">
+            <CardTitle className="text-lg flex items-center">
               <Filter className="h-5 w-5 mr-2 text-emerald-600" />
               Filter Announcements
             </CardTitle>
@@ -3657,7 +3644,7 @@ export default function AnnouncementsPage() {
                       <div className="flex-1">
                         <div className="flex items-center space-x-3 mb-2">
                           {getPriorityIcon(announcement.priority)}
-                          <CardTitle className="text-lg font-poppins">{announcement.title}</CardTitle>
+                          <CardTitle className="text-lg">{announcement.title}</CardTitle>
                           {!announcement.read && (
                             <motion.div
                               initial={{ scale: 0 }}
@@ -3806,7 +3793,7 @@ export default function AttendancePage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-orange-500 to-red-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2 flex items-center">
+          <h1 className="text-3xl font-bold mb-2 flex items-center">
             <CalendarCheck className="h-8 w-8 mr-3" />
             Attendance Record
           </h1>
@@ -3820,7 +3807,7 @@ export default function AttendancePage() {
       <motion.div variants={itemVariants}>
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl font-poppins">Attendance Summary</CardTitle>
+            <CardTitle>Attendance Summary</CardTitle>
             <CardDescription>Overview of attendance for the current school year</CardDescription>
           </CardHeader>
           <CardContent>
@@ -4317,7 +4304,7 @@ export default function ParentDashboard() {
       <motion.div variants={itemVariants}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">Parent Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Parent Dashboard</h1>
             <p className="text-gray-600 mt-2">
               Viewing dashboard for <span className="font-semibold">{currentChild}</span>
             </p>
@@ -4977,7 +4964,7 @@ export default function ChildProgressPage() {
       {/* Header */}
       <motion.div variants={itemVariants}>
         <div className="bg-gradient-to-r from-blue-500 to-purple-500 rounded-2xl p-6 text-white">
-          <h1 className="text-3xl font-poppins font-bold mb-2">Academic Progress</h1>
+          <h1 className="text-3xl font-bold mb-2">Academic Progress</h1>
           <p className="text-blue-100 text-lg">Detailed view of grades, assignments, and reports for Emma Johnson</p>
         </div>
       </motion.div>
@@ -6982,7 +6969,6 @@ export default function TAAnnouncementsPage() {
 //END OF app\ta\announcements\page.tsx
 
 //START OF app\ta\groups\components\add-attendance-modal.tsx
-// NEW FILE: components/add-attendance-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7092,17 +7078,19 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
   )
 
   const step2Content = (
-    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
-        <Alert className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-                <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()}
-            </AlertDescription>
-        </Alert>
-        <div className="flex justify-end mb-2">
-            <Button variant="link" size="sm" onClick={markAllAsPresent}>
-                <Check className="mr-2 h-4 w-4"/> Mark all as Present
-            </Button>
+    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }} className="flex flex-col">
+        <div className="flex-shrink-0">
+            <Alert className="mb-4 sticky top-0 bg-background z-20">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                    <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()}
+                </AlertDescription>
+            </Alert>
+            <div className="flex justify-end mb-2">
+                <Button variant="link" size="sm" onClick={markAllAsPresent}>
+                    <Check className="mr-2 h-4 w-4"/> Mark all as Present
+                </Button>
+            </div>
         </div>
         <div className="max-h-[40vh] overflow-y-auto border rounded-md">
             <Table>
@@ -7138,7 +7126,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
       <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{editingSession ? 'Edit Attendance' : 'New Attendance Entry'}</DialogTitle>
-          <DialogDescription>
+           <DialogDescription>
             {step === 1 ? "Step 1 of 2: Enter attendance details." : "Step 2 of 2: Mark student attendance."}
           </DialogDescription>
         </DialogHeader>
@@ -7169,6 +7157,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
 //END OF app\ta\groups\components\add-attendance-modal.tsx
 
 //START OF app\ta\groups\components\add-grade-modal.tsx
+// app/ta/groups/components/add-grade-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7296,15 +7285,17 @@ export default function AddGradeModal({ isOpen, setIsOpen, onSave }: AddGradeMod
   )
 
   const step2Content = (
-    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
-        <Alert className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-                <span className="font-semibold">Title:</span> {title} | <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()} | <span className="font-semibold">Max Score:</span> {maxScore}
-            </AlertDescription>
-        </Alert>
-        <div className="flex justify-end mb-2">
-            <Button variant="link" size="sm" onClick={() => handleCopyGrade(firstGrade)} disabled={firstGrade === null}>Copy first grade to all</Button>
+    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }} className="flex flex-col">
+        <div className="flex-shrink-0">
+            <Alert className="mb-4 sticky top-0 bg-background z-20">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                    <span className="font-semibold">Title:</span> {title} | <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()} | <span className="font-semibold">Max Score:</span> {maxScore}
+                </AlertDescription>
+            </Alert>
+            <div className="flex justify-end mb-2">
+                <Button variant="link" size="sm" onClick={() => handleCopyGrade(firstGrade)} disabled={firstGrade === null}>Copy first grade to all</Button>
+            </div>
         </div>
         <div className="max-h-[40vh] overflow-y-auto border rounded-md">
             <Table>
@@ -7549,7 +7540,7 @@ export default function AttendanceHistory({ history, onEdit, onDelete }: Attenda
 //END OF app\ta\groups\components\attendance-history.tsx
 
 //START OF app\ta\groups\components\attendance-tab.tsx
-// MODIFIED FILE: components/attendance-tab.tsx
+// app/ta/groups/components/attendance-tab.tsx
 "use client"
 
 import { useState } from "react"
@@ -7625,12 +7616,12 @@ export default function AttendanceTabContent({ groupId }: { groupId: string }) {
         transition={{ duration: 0.5 }}
       >
         <div className="text-center sm:text-left">
-          <h2 className="text-lg font-semibold text-gray-800">New attendance Entry</h2>
+          <h2 className="text-lg font-semibold text-gray-800">New Attendance Entry</h2>
           <p className="text-sm text-gray-600">Click here to add a new attendance record for your students.</p>
         </div>
         <Button onClick={handleAddNew} className="w-full sm:w-auto">
           <Plus className="mr-2 h-4 w-4" />
-          Add new attendance
+          Add New Attendance
         </Button>
       </motion.div>
 
@@ -7871,7 +7862,7 @@ export default function GradingTabContent({ courseId }: { courseId: string }) {
 // app/ta/groups/components/group-form-modal.tsx
 "use client";
 
-import { useState, useEffect, useMemo, type ChangeEvent } from "react";
+import { useState, useEffect, useMemo } from "react";
 import {
   Dialog,
   DialogContent,
@@ -7880,10 +7871,23 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Select,
   SelectContent,
@@ -7892,9 +7896,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Loader2 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
 import { taGroupsData, type TaGroup, type Student, type Instructor } from "@/lib/database";
-import SelectStudentsModal from "./select-students-modal";
+import { cn } from "@/lib/utils";
+
 
 interface GroupFormModalProps {
   isOpen: boolean;
@@ -7918,61 +7924,49 @@ export default function GroupFormModal({
     groupName: "",
     courseName: "",
     instructorName: "",
-    studentsText: "",
+    students: [] as Student[],
     isActive: true,
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const [isStudentSelectorOpen, setIsStudentSelectorOpen] = useState(false);
 
-  // Effect to initialize the form when it opens or when editing a group
   useEffect(() => {
     if (group) {
-      // Editing an existing group
       setFormData({
         groupName: group.groupName,
         courseName: group.courseName,
         instructorName: group.instructorName,
-        studentsText: group.students.map((s) => s.name).join("\n"),
+        students: group.students,
         isActive: group.isActive,
       });
     } else {
-      // Adding a new group - reset form
       setFormData({
-        groupName: "", // This will be set by the next effect
+        groupName: "",
         courseName: "",
         instructorName: "",
-        studentsText: "",
+        students: [],
         isActive: true,
       });
     }
     setErrors({});
   }, [group, isOpen]);
 
-  // Effect to generate the next group number based on the selected course
   useEffect(() => {
-    // Only run this for new groups, not when editing
     if (!group && formData.courseName) {
       const groupsInCourse = taGroupsData.filter(g => g.courseName === formData.courseName);
-      
       const existingNumbers = new Set(
         groupsInCourse.map(g => {
           const match = g.groupName.match(/Group (\d+)/);
           return match ? parseInt(match[1], 10) : 0;
         })
       );
-
       let nextNumber = 1;
       while (existingNumbers.has(nextNumber)) {
         nextNumber++;
       }
-
-      setFormData(prev => ({
-        ...prev,
-        groupName: `Group ${nextNumber}`
-      }));
+      setFormData(prev => ({ ...prev, groupName: `Group ${nextNumber}` }));
     } else if (!group && !formData.courseName) {
-      // If no course is selected, the group name should be empty
       setFormData(prev => ({ ...prev, groupName: "" }));
     }
   }, [formData.courseName, group]);
@@ -7982,12 +7976,10 @@ export default function GroupFormModal({
     if (!formData.groupName.trim()) newErrors.groupName = "A course must be selected to generate a group number.";
     if (!formData.courseName.trim()) newErrors.courseName = "Course Name is required.";
     if (!formData.instructorName) newErrors.instructorName = "Instructor is required.";
+    if (formData.students.length === 0) newErrors.students = "At least one student is required.";
     
-    // Uniqueness validation for the group number within the selected course
-    if (!group) { // Only run for new groups
-        const groupExists = taGroupsData.some(
-            g => g.courseName === formData.courseName && g.groupName === formData.groupName
-        );
+    if (!group) {
+        const groupExists = taGroupsData.some(g => g.courseName === formData.courseName && g.groupName === formData.groupName);
         if (groupExists) {
             newErrors.groupName = `Group number ${formData.groupName} already exists for ${formData.courseName}. The number should auto-increment.`;
         }
@@ -7997,51 +7989,18 @@ export default function GroupFormModal({
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleStudentListChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
-    const { value } = e.target;
-    if (value.includes(",") || value.includes(";")) {
-      const studentNames = value
-        .split(/[,;\n]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      setFormData({ ...formData, studentsText: studentNames.join("\n") });
-    } else {
-      setFormData({ ...formData, studentsText: value });
-    }
-  };
-  
-  const handleStudentsSelected = (selected: Student[]) => {
-    const studentNames = selected.map(s => s.name).join('\n');
-    setFormData(prev => ({ ...prev, studentsText: studentNames }));
-  };
-  
-  const availableStudentsForCourse = useMemo(() => {
-    if (!formData.courseName) return [];
-    return allStudents.filter(s => s.registeredCourses.includes(formData.courseName as 'ICT' | 'Mathematics'));
-  }, [formData.courseName, allStudents]);
-
-  const currentSelectedStudentNames = useMemo(() => {
-    return formData.studentsText.split(/[\n]/).map(s => s.trim()).filter(Boolean);
-  }, [formData.studentsText]);
-
   const handleSave = () => {
     if (!validate()) return;
     setIsSaving(true);
 
-    const studentNames = formData.studentsText.split(/[,;\n]/).map(s => s.trim()).filter(Boolean);
-    const students: Student[] = studentNames.map(name => {
-      const existingStudent = allStudents.find(s => s.name.toLowerCase() === name.toLowerCase());
-      return existingStudent || { id: `new-stu-${Date.now()}-${Math.random()}`, name, registeredCourses: [] };
-    });
-
     const groupData: TaGroup = {
-      id: group?.id || "", 
+      id: group?.id || "",
       groupName: formData.groupName,
       courseName: formData.courseName,
       courseId: formData.courseName.toLowerCase().replace(/\s+/g, '-'),
       instructorName: formData.instructorName,
-      students,
-      studentCount: students.length,
+      students: formData.students,
+      studentCount: formData.students.length,
       isActive: formData.isActive,
     };
     
@@ -8050,117 +8009,157 @@ export default function GroupFormModal({
         setIsSaving(false);
     }, 1000);
   };
+  
+  const availableStudentsForCourse = useMemo(() => {
+    if (!formData.courseName) return [];
+    return allStudents.filter(s => s.registeredCourses.includes(formData.courseName as 'ICT' | 'Mathematics'));
+  }, [formData.courseName, allStudents]);
 
   return (
-    <>
-      <Dialog open={isOpen && !isStudentSelectorOpen} onOpenChange={setIsOpen}>
-        <DialogContent className="sm:max-w-[525px]">
-          <DialogHeader>
-            <DialogTitle>{group ? "Edit Group" : "Add Group"}</DialogTitle>
-            <DialogDescription>
-              {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <Label htmlFor="courseName">Course Name</Label>
-              <Select
-                value={formData.courseName}
-                onValueChange={(value) => setFormData({ ...formData, courseName: value })}
-              >
-                <SelectTrigger id="courseName">
-                  <SelectValue placeholder="Select a course" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Mathematics">Mathematics</SelectItem>
-                  <SelectItem value="ICT">ICT</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
-            </div>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-[525px]">
+        <DialogHeader>
+          <DialogTitle>{group ? "Edit Group" : "Create New Group"}</DialogTitle>
+          <DialogDescription>
+            {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="courseName">Course Name</Label>
+            <Select
+              value={formData.courseName}
+              onValueChange={(value) => setFormData({ ...formData, courseName: value, students: [] })} // Reset students on course change
+            >
+              <SelectTrigger id="courseName">
+                <SelectValue placeholder="Select a course" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Mathematics">Mathematics</SelectItem>
+                <SelectItem value="ICT">ICT</SelectItem>
+              </SelectContent>
+            </Select>
+            {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
+          </div>
 
-            <div className="grid gap-2">
-              <Label htmlFor="groupName">Group Number</Label>
-              <Input
-                id="groupName"
-                value={formData.groupName}
-                disabled
-                placeholder="Select a course to generate number"
-              />
-              {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
-            </div>
-            
-            <div className="grid gap-2">
-              <Label htmlFor="instructorName">Instructor Name</Label>
-              <Select
-                value={formData.instructorName}
-                onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
-              >
-                <SelectTrigger id="instructorName">
-                  <SelectValue placeholder="Select an instructor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {allInstructors.map((inst) => (
-                    <SelectItem key={inst.id} value={inst.name}>
-                      {inst.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
-            </div>
-            
-            <div className="grid gap-2">
-                <div className="flex justify-between items-center">
-                    <Label htmlFor="students">Student List</Label>
+          <div className="grid gap-2">
+            <Label htmlFor="groupName">Group Number</Label>
+            <Input
+              id="groupName"
+              value={formData.groupName}
+              disabled
+              placeholder="Select a course to generate number"
+            />
+            {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+          </div>
+          
+          <div className="grid gap-2">
+            <Label htmlFor="instructorName">Instructor Name</Label>
+            <Select
+              value={formData.instructorName}
+              onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
+            >
+              <SelectTrigger id="instructorName">
+                <SelectValue placeholder="Select an instructor" />
+              </SelectTrigger>
+              <SelectContent>
+                {allInstructors.map((inst) => (
+                  <SelectItem key={inst.id} value={inst.name}>
+                    {inst.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
+          </div>
+
+          <div className="grid gap-2">
+            <Label>Students</Label>
+            <Popover open={isStudentSelectorOpen} onOpenChange={setIsStudentSelectorOpen}>
+                <PopoverTrigger asChild>
                     <Button
-                        type="button"
-                        variant="link"
-                        className="p-0 h-auto"
-                        onClick={() => setIsStudentSelectorOpen(true)}
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={isStudentSelectorOpen}
+                        className="w-full justify-between"
                         disabled={!formData.courseName}
                     >
-                        Select from List...
+                        {formData.students.length > 0 ? `${formData.students.length} student(s) selected` : "Select students..."}
+                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                     </Button>
-                </div>
-                <Textarea
-                    id="students"
-                    placeholder="Enter student names: one per line, comma/semicolon separated, or select from list."
-                    value={formData.studentsText}
-                    onChange={handleStudentListChange}
-                    rows={5}
-                />
-            </div>
-            
-            <div className="flex items-center space-x-2 pt-2">
-              <Switch
-                id="isActive"
-                checked={formData.isActive}
-                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-              />
-              <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
-            </div>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                    <Command>
+                        <CommandInput placeholder="Search students..." />
+                        <CommandList>
+                            <CommandEmpty>No students found for this course.</CommandEmpty>
+                            <CommandGroup>
+                                <ScrollArea className="h-48">
+                                    {availableStudentsForCourse.map((student) => (
+                                        <CommandItem
+                                            key={student.id}
+                                            value={student.name}
+                                            onSelect={() => {
+                                                const isSelected = formData.students.some(s => s.id === student.id);
+                                                if (isSelected) {
+                                                    setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }));
+                                                } else {
+                                                    setFormData(prev => ({ ...prev, students: [...prev.students, student] }));
+                                                }
+                                            }}
+                                        >
+                                            <Check
+                                                className={cn(
+                                                    "mr-2 h-4 w-4",
+                                                    formData.students.some(s => s.id === student.id) ? "opacity-100" : "opacity-0"
+                                                )}
+                                            />
+                                            {student.name}
+                                        </CommandItem>
+                                    ))}
+                                </ScrollArea>
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            {errors.students && <p className="text-xs text-red-500">{errors.students}</p>}
+            {formData.students.length > 0 && (
+                <ScrollArea className="max-h-24 w-full rounded-md border p-2">
+                    <div className="flex flex-wrap gap-1">
+                        {formData.students.map(student => (
+                            <Badge key={student.id} variant="secondary">
+                                {student.name}
+                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }))} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                </button>
+                            </Badge>
+                        ))}
+                    </div>
+                </ScrollArea>
+            )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {group ? "Save Changes" : "Add Group"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <SelectStudentsModal
-        isOpen={isStudentSelectorOpen}
-        setIsOpen={setIsStudentSelectorOpen}
-        allStudents={availableStudentsForCourse}
-        initiallySelectedNames={currentSelectedStudentNames}
-        onSelect={handleStudentsSelected}
-      />
-    </>
+          
+          <div className="flex items-center space-x-2 pt-2">
+            <Switch
+              id="isActive"
+              checked={formData.isActive}
+              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+            />
+            <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {group ? "Save Changes" : "Create Group"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 //END OF app\ta\groups\components\group-form-modal.tsx
@@ -8743,7 +8742,7 @@ function GroupsLandingView({ onSelectGroup, onGoToManage }: { onSelectGroup: (gr
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8"
       >
         <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900 dark:text-gray-100">Your Groups</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100">Your Groups</h1>
             <p className="text-gray-500 dark:text-gray-400 mt-1">Select a group to manage its details.</p>
         </div>
         <Button onClick={onGoToManage} variant="outline" className="w-full sm:w-auto flex-shrink-0">
@@ -8948,7 +8947,7 @@ export default function TADashboard() {
         {/* Added 'gap-y-4' to provide vertical spacing when items wrap. */}
         <div className="flex flex-wrap items-center justify-between gap-y-4">
           <div>
-            <h1 className="text-3xl font-poppins font-bold text-gray-900">
+            <h1 className="text-3xl font-bold text-gray-900">
               Welcome back, {user?.name?.split(" ")[0]}!
             </h1>
             <p className="text-gray-600 mt-1">Here's what's happening with your student groups today.</p>
@@ -10546,7 +10545,7 @@ export default function UnauthorizedPage() {
             >
               <Shield className="h-8 w-8 text-white" />
             </motion.div>
-            <CardTitle className="font-poppins text-2xl">Access Denied</CardTitle>
+            <CardTitle className="text-2xl">Access Denied</CardTitle>
             <CardDescription className="text-lg">You don't have permission to access this page</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">
@@ -10622,7 +10621,7 @@ export default function UnderConstructionPage() {
             >
               <HardHat className="h-8 w-8 text-white" />
             </motion.div>
-            <CardTitle className="font-poppins text-2xl">Under Construction</CardTitle>
+            <CardTitle className="text-2xl">Under Construction</CardTitle>
             <CardDescription className="text-lg">This page is currently being built.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6 text-center">
@@ -10828,7 +10827,7 @@ export function Footer() {
               <div className="h-8 w-8 text-[var(--color-gossamer-400)]">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <span className="font-poppins font-bold text-xl">EduTech Academy</span>
+              <span className="font-bold text-xl">EduTech Academy</span>
             </div>
             <motion.p className="text-gray-300 mb-6 max-w-md leading-relaxed" variants={itemVariants}>
               Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Join
@@ -10851,7 +10850,7 @@ export function Footer() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h3 className="font-poppins font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Quick Links</h3>
+            <h3 className="font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Quick Links</h3>
             <ul className="space-y-3">
               {[
                 { name: "About Program", href: "/about" },
@@ -10878,7 +10877,7 @@ export function Footer() {
           </motion.div>
 
           <motion.div variants={itemVariants}>
-            <h3 className="font-poppins font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Contact Info</h3>
+            <h3 className="font-semibold text-lg mb-4 text-[var(--color-gossamer-400)]">Contact Info</h3>
             <ul className="space-y-4">
               {[
                 { icon: Phone, text: "(+20) 122 5223 840" },
@@ -10975,7 +10974,7 @@ export function Header() {
               <div className="h-8 w-8 text-[var(--color-gossamer-600)]">
                 <GraduationCap className="h-8 w-8" />
               </div>
-              <span className="font-poppins font-bold text-xl text-gray-900">EduTech Academy</span>
+              <span className="font-bold text-xl text-gray-900">EduTech Academy</span>
             </Link>
           </motion.div>
 
@@ -13262,7 +13261,10 @@ const config: Config = {
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
   			'accordion-up': 'accordion-up 0.2s ease-out'
-  		}
+  		},
+		fontFamily: {
+        sans: ["var(--font-sans)"],
+      },
   	}
   },
   plugins: [require("tailwindcss-animate")],

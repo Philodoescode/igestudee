@@ -1,4 +1,3 @@
-// NEW FILE: components/add-attendance-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -108,17 +107,19 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
   )
 
   const step2Content = (
-    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
-        <Alert className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription>
-                <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()}
-            </AlertDescription>
-        </Alert>
-        <div className="flex justify-end mb-2">
-            <Button variant="link" size="sm" onClick={markAllAsPresent}>
-                <Check className="mr-2 h-4 w-4"/> Mark all as Present
-            </Button>
+    <motion.div key="step2" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }} className="flex flex-col">
+        <div className="flex-shrink-0">
+            <Alert className="mb-4 sticky top-0 bg-background z-20">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                    <span className="font-semibold">Date:</span> {new Date(date + 'T00:00:00').toLocaleDateString()}
+                </AlertDescription>
+            </Alert>
+            <div className="flex justify-end mb-2">
+                <Button variant="link" size="sm" onClick={markAllAsPresent}>
+                    <Check className="mr-2 h-4 w-4"/> Mark all as Present
+                </Button>
+            </div>
         </div>
         <div className="max-h-[40vh] overflow-y-auto border rounded-md">
             <Table>
@@ -154,7 +155,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
       <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl">
         <DialogHeader>
           <DialogTitle>{editingSession ? 'Edit Attendance' : 'New Attendance Entry'}</DialogTitle>
-          <DialogDescription>
+           <DialogDescription>
             {step === 1 ? "Step 1 of 2: Enter attendance details." : "Step 2 of 2: Mark student attendance."}
           </DialogDescription>
         </DialogHeader>
