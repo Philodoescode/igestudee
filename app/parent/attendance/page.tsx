@@ -129,7 +129,7 @@ export default function AttendancePage() {
       {/* Main Content */}
       <motion.div variants={itemVariants}>
         <Tabs defaultValue="list" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList>
             <TabsTrigger value="list">List View</TabsTrigger>
             <TabsTrigger value="calendar">Calendar View</TabsTrigger>
           </TabsList>

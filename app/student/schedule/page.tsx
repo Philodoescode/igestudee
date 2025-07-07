@@ -98,7 +98,7 @@ END:VCALENDAR`
         transition={{ duration: 0.6, delay: 0.2 }}
       >
         <Tabs value={selectedView} onValueChange={setSelectedView}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList>
             <TabsTrigger value="today">Today</TabsTrigger>
             <TabsTrigger value="week">This Week</TabsTrigger>
             <TabsTrigger value="all">All Upcoming</TabsTrigger>

@@ -67,7 +67,7 @@ export default function ChildProgressPage() {
       </motion.div>
 
       <Tabs defaultValue="ict" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList>
           {parentProgressData.courses.map((course) => (
             <TabsTrigger key={course.id} value={course.id}>
               {course.name}

@@ -398,37 +398,6 @@ export default function LoginPage() {
             </Link>
           </p>
         </motion.div>
-
-        {/* Role-specific Information */}
-        <AnimatePresence>
-          {selectedUserType && (
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              transition={{ duration: 0.3 }}
-            >
-              <Card className="bg-white/80 backdrop-blur-sm border-[var(--color-gossamer-200)] relative overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${selectedUserType.color} opacity-5`} />
-                <CardContent className="pt-6 relative z-10">
-                  <div className="flex items-start space-x-4">
-                    <motion.div
-                      className={`p-3 rounded-xl bg-gradient-to-br ${selectedUserType.color} shadow-lg`}
-                      whileHover={{ scale: 1.1, rotate: 5 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                    >
-                      <selectedUserType.icon className="h-6 w-6 text-white" />
-                    </motion.div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">{selectedUserType.label} Access</h3>
-                      <p className="text-sm text-gray-600">{selectedUserType.description}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </motion.div>
     </div>
   )
