@@ -3,14 +3,8 @@
 import type React from "react"
 import {
   LayoutDashboard,
-  MessageSquare,
   Users,
   Calendar,
-  Settings,
-  User,
-  BookOpen,
-  ClipboardEdit,
-  UserCheck,
   Video,
   Megaphone,
 } from "lucide-react"
@@ -72,11 +66,7 @@ export default function TALayout({
 
   return (
     <div className="flex h-screen bg-white">
-      <PortalSidebar
-        title="TA Portal"
-        icon={UserCheck}
-        navigation={navigation}
-      />
+      <PortalSidebar navigation={navigation} />
       <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>

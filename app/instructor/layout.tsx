@@ -13,7 +13,6 @@ import {
   DollarSign,
   BarChart3,
   Settings,
-  Shield,
 } from "lucide-react"
 
 const navigation = [
@@ -90,11 +89,7 @@ export default function InstructorLayout({
 
   return (
     <div className="flex h-screen bg-white">
-      <PortalSidebar
-        title="Instructor Portal"
-        icon={Shield}
-        navigation={navigation}
-      />
+      <PortalSidebar navigation={navigation} />
       <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>

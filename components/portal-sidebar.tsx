@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -22,7 +23,6 @@ import {
   User,
   LogOut,
   type LucideIcon,
-  LayoutDashboard,
 } from "lucide-react"
 import { useAuth } from "@/hooks/use-auth"
 import { motion, AnimatePresence } from "framer-motion"
@@ -39,12 +39,10 @@ interface NavigationGroup {
 }
 
 interface PortalSidebarProps {
-  title: string
-  icon: LucideIcon
   navigation: NavigationGroup[]
 }
 
-export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSidebarProps) {
+export function PortalSidebar({ navigation }: PortalSidebarProps) {
   const [isMobileOpen, setIsMobileOpen] = useState(false)
   const pathname = usePathname()
   const { user, logout } = useAuth()
@@ -72,16 +70,6 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-[#F7F8FA]">
-      {/* Sidebar Header */}
-      <div className="flex h-20 items-center gap-3 px-6">
-        <Link href={`/${user?.role}`} className="flex items-center gap-3">
-          <div className="rounded-lg bg-emerald-500 p-2 text-white shadow-md shadow-emerald-500/30">
-            <PortalIcon className="h-6 w-6" />
-          </div>
-          <span className="text-xl font-bold text-gray-800">{title}</span>
-        </Link>
-      </div>
-
       {/* Navigation */}
       <nav className="flex-1 space-y-6 px-4 py-4">
         {navigation.map((group) => (
@@ -126,27 +114,29 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
       </nav>
 
       {/* User Dropdown */}
-      <div className="mt-auto border-t border-gray-200/80 p-4">
+      <div className="mt-auto border-t border-gray-200/80 p-3">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="h-auto w-full justify-start gap-3 p-2 text-left hover:bg-white"
+              className="h-auto w-full flex justify-between items-center p-2 text-left hover:bg-white"
             >
-              <Avatar className="h-10 w-10">
-                <AvatarFallback className="bg-emerald-100 text-emerald-700">
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-gray-800">
-                  {user?.name}
-                </p>
-                <p className="truncate text-xs text-gray-500">
-                  {user?.role
-                    ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
-                    : "User"}
-                </p>
+              <div className="flex items-center gap-3">
+                <Avatar className="h-9 w-9">
+                  <AvatarFallback className="bg-emerald-100 text-emerald-700">
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-semibold text-gray-800">
+                    {user?.name}
+                  </p>
+                  <p className="truncate text-xs text-gray-500">
+                    {user?.role
+                      ? user.role.charAt(0).toUpperCase() + user.role.slice(1)
+                      : "User"}
+                  </p>
+                </div>
               </div>
               <ChevronDown className="h-4 w-4 shrink-0 text-gray-500" />
             </Button>
@@ -158,7 +148,7 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
-              <Link href={`/${user?.role}/profile`}>  
+              <Link href={`/${user?.role}/profile`}>
                 <User className="mr-2 h-4 w-4" />
                 <span>Profile</span>
               </Link>
@@ -189,10 +179,19 @@ export function PortalSidebar({ title, icon: PortalIcon, navigation }: PortalSid
           size="icon"
           onClick={() => setIsMobileOpen((prev) => !prev)}
         >
-          {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}  
+          {isMobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </Button>
-        <span className="text-lg font-semibold">{title}</span>
-        <div />
+        <Link href={`/${user?.role}`}>
+            <Image
+                src="/igestudee-logo.png"
+                alt="Igestudee Logo"
+                width={120}
+                height={30}
+                priority
+                className="object-contain"
+            />
+        </Link>
+        <div className="w-8" /> {/* Placeholder to balance the button on the left */}
       </header>
 
       <AnimatePresence>

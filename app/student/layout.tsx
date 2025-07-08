@@ -4,7 +4,7 @@ import type React from "react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { BookOpen, Calendar, GraduationCap, Settings, User , LayoutDashboard} from "lucide-react"
+import { BookOpen, Calendar, LayoutDashboard } from "lucide-react"
 
 const navigation = [
   {
@@ -50,11 +50,7 @@ export default function StudentLayout({
 
   return (
     <div className="flex h-screen bg-white">
-      <PortalSidebar
-        title="Student Portal"
-        icon={GraduationCap}
-        navigation={navigation}
-      />
+      <PortalSidebar navigation={navigation} />
       <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>

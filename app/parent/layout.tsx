@@ -4,7 +4,7 @@ import type React from "react"
 
 import { PortalSidebar } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import { LayoutDashboard, TrendingUp, Megaphone, CreditCard, Heart, Calendar } from "lucide-react"
+import { LayoutDashboard, TrendingUp, Megaphone, CreditCard, Calendar } from "lucide-react"
 
 const navigation = [
   {
@@ -65,11 +65,7 @@ export default function ParentLayout({
 
   return (
     <div className="flex h-screen bg-white">
-      <PortalSidebar
-        title="Parent Portal"
-        icon={Heart}
-        navigation={navigation}
-      />
+      <PortalSidebar navigation={navigation} />
       <main className="flex-1 bg-gray-50 overflow-y-auto">
         <div className="p-8">{children}</div>
       </main>
