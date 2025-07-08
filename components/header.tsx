@@ -3,8 +3,9 @@
 import Link from "next/link"
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, GraduationCap } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -44,10 +45,13 @@ export function Header() {
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
             <Link href="/" className="flex items-center space-x-2">
-              <div className="h-8 w-8 text-[var(--color-gossamer-600)]">
-                <GraduationCap className="h-8 w-8" />
-              </div>
-              <span className="font-bold text-xl text-gray-900">EduTech Academy</span>
+              <Image
+                src="/igestudee-logo.png"
+                alt="Estudee Logo"
+                width={120}
+                height={32}
+                priority
+              />
             </Link>
           </motion.div>
 

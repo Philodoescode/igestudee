@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { GraduationCap, Mail, Phone, MapPin, ArrowUp } from "lucide-react"
+import { Mail, Phone, MapPin, ArrowUp } from "lucide-react"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 
@@ -51,30 +51,18 @@ export function Footer() {
       >
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <motion.div className="col-span-1 md:col-span-2" variants={itemVariants}>
-            <div className="flex items-center space-x-2 mb-4">
-              <div className="h-8 w-8 text-[var(--color-gossamer-400)]">
-                <GraduationCap className="h-8 w-8" />
-              </div>
-              <span className="font-bold text-xl">EduTech Academy</span>
+            <div className="flex items-center mb-4">
+              <img
+                src="/igestudee-logo.png"
+                alt="Estudee Logo"
+                className="h-10 w-auto object-contain"
+                style={{ filter: 'brightness(0) invert(1)' }}
+              />
             </div>
             <motion.p className="text-gray-300 mb-6 max-w-md leading-relaxed" variants={itemVariants}>
               Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Join
               our digital campus and excel in your studies with personalized support and expert guidance.
             </motion.p>
-            {/* <motion.div className="flex space-x-4" variants={itemVariants}>
-              {["facebook", "twitter", "linkedin", "youtube"].map((social, index) => (
-                <motion.a
-                  key={social}
-                  href="#"
-                  className="w-10 h-10 bg-[var(--color-gossamer-600)]/20 rounded-full flex items-center justify-center hover:bg-[var(--color-gossamer-600)] transition-colors"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <span className="sr-only">{social}</span>
-                  <div className="w-5 h-5 bg-current rounded" />
-                </motion.a>
-              ))}
-            </motion.div> */}
           </motion.div>
 
           <motion.div variants={itemVariants}>
@@ -132,7 +120,7 @@ export function Footer() {
           className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center"
           variants={itemVariants}
         >
-          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 EduTech Academy. All rights reserved.</p>
+          <p className="text-gray-400 text-sm mb-4 md:mb-0">© 2025 Igestudee. All rights reserved.</p>
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
             <Button
               onClick={scrollToTop}
