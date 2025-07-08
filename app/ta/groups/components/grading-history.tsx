@@ -1,7 +1,6 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -58,99 +57,97 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
+      className="space-y-4"
     >
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <History className="h-5 w-5 text-gray-700" />
-            Grading History
-          </CardTitle>
-          <CardDescription>Review and manage past grading entries.</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <Input
-                placeholder="Search by title..."
-                value={searchTerm}
-                onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setCurrentPage(1); // Reset to first page on search
-                }}
-                className="pl-10"
-              />
-          </div>
-          
-          <div className="border rounded-lg">
-            {paginatedHistory.length > 0 ? (
-              <Accordion type="single" collapsible>
-                {paginatedHistory.map(entry => (
-                  <AccordionItem value={entry.id} key={entry.id}>
-                    <AccordionTrigger className="px-4 hover:bg-slate-50">
-                      <div className="flex flex-1 items-center justify-between gap-4">
-                          <div className="text-left">
-                            <p className="font-semibold">{entry.title}</p>
-                            <p className="text-sm text-gray-500">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
-                          </div>
-                          <p className="text-sm font-medium text-gray-600 pr-4">Out of {entry.maxScore}</p>
+      <div>
+        <h3 className="text-lg font-medium flex items-center gap-2">
+          <History className="h-5 w-5 text-gray-700" />
+          Grading History
+        </h3>
+        <p className="text-sm text-muted-foreground">Review and manage past grading entries.</p>
+      </div>
+
+      <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input
+            placeholder="Search by title..."
+            value={searchTerm}
+            onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setCurrentPage(1); // Reset to first page on search
+            }}
+            className="pl-10"
+          />
+      </div>
+      
+      <div className="border rounded-lg">
+        {paginatedHistory.length > 0 ? (
+          <Accordion type="single" collapsible>
+            {paginatedHistory.map(entry => (
+              <AccordionItem value={entry.id} key={entry.id}>
+                <AccordionTrigger className="px-4 hover:bg-slate-50 text-left">
+                  <div className="flex flex-1 items-center justify-between gap-4 w-full">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold truncate">{entry.title}</p>
+                        <p className="text-sm text-gray-500">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
                       </div>
-                    </AccordionTrigger>
-                    <AccordionContent className="p-4 bg-white">
-                      <div className="max-h-60 overflow-y-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead className="text-right">Grade</TableHead>
+                      <p className="text-sm font-medium text-gray-600 pr-4 flex-shrink-0">Out of {entry.maxScore}</p>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="p-4 bg-white">
+                  <div className="overflow-x-auto">
+                    <Table className="min-w-[300px]">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Student</TableHead>
+                                <TableHead className="text-right">Grade</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {entry.studentGrades.map(sg => (
+                                <TableRow key={sg.studentId}>
+                                    <TableCell>{sg.name}</TableCell>
+                                    <TableCell className="text-right font-mono">{sg.grade ?? "N/A"}</TableCell>
                                 </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {entry.studentGrades.map(sg => (
-                                    <TableRow key={sg.studentId}>
-                                        <TableCell>{sg.name}</TableCell>
-                                        <TableCell className="text-right font-mono">{sg.grade ?? "N/A"}</TableCell>
-                                    </TableRow>
-                                ))}
-                            </TableBody>
-                        </Table>
-                      </div>
-                      <div className="mt-4 flex justify-end">
-                        <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
-                            <Download className="mr-2 h-4 w-4" />Export CSV
-                        </Button>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                ))}
-              </Accordion>
-            ) : (
-              <div className="p-10 text-center text-gray-500">
-                <p>No grading history found.</p>
-                <p className="text-sm">Try adjusting your search or adding a new grade entry.</p>
-              </div>
-            )}
+                            ))}
+                        </TableBody>
+                    </Table>
+                  </div>
+                  <div className="mt-4 flex justify-end">
+                    <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
+                        <Download className="mr-2 h-4 w-4" />Export CSV
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <div className="p-10 text-center text-gray-500">
+            <p>No grading history found.</p>
+            <p className="text-sm">Try adjusting your search or adding a new grade entry.</p>
           </div>
-           {totalPages > 1 && (
-                <Pagination>
-                    <PaginationContent>
-                        <PaginationItem>
-                            <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
+        )}
+      </div>
+        {totalPages > 1 && (
+            <Pagination>
+                <PaginationContent>
+                    <PaginationItem>
+                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
+                    </PaginationItem>
+                    {[...Array(totalPages)].map((_, i) => (
+                        <PaginationItem key={i}>
+                            <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
+                                {i+1}
+                            </PaginationLink>
                         </PaginationItem>
-                        {[...Array(totalPages)].map((_, i) => (
-                            <PaginationItem key={i}>
-                                <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
-                                    {i+1}
-                                </PaginationLink>
-                            </PaginationItem>
-                        ))}
-                        <PaginationItem>
-                            <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
-                        </PaginationItem>
-                    </PaginationContent>
-                </Pagination>
-            )}
-        </CardContent>
-      </Card>
+                    ))}
+                    <PaginationItem>
+                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
+                    </PaginationItem>
+                </PaginationContent>
+            </Pagination>
+        )}
     </motion.div>
   )
 }

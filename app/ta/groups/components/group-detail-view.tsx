@@ -1,9 +1,9 @@
+//START OF components\group-detail-view.tsx
 // app/ta/groups/components/group-detail-view.tsx
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft } from "lucide-react"
-import { type TaGroup } from "@/lib/database" // Assuming TaGroup is globally accessible or imported via types
+import { type TaGroup } from "@/lib/database"
 
 import GradingTabContent from "./grading-tab"
 import AttendanceTabContent from "./attendance-tab"
@@ -11,30 +11,31 @@ import AttendanceTabContent from "./attendance-tab"
 export default function GroupDetailView({ group, onBack }: { group: TaGroup; onBack: () => void }) {
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={onBack} className="text-gray-600 hover:text-emerald-600">
+      <Button variant="ghost" onClick={onBack} className="text-gray-600 hover:text-emerald-600 -ml-4">
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to All Groups
       </Button>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-2xl">{group.groupName}</CardTitle>
-          <CardDescription>{group.courseName}</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="grading">
-            <TabsList>
-              <TabsTrigger value="grading">Grading</TabsTrigger>
-              <TabsTrigger value="attendance">Attendance</TabsTrigger>
-            </TabsList>
-            <TabsContent value="grading" className="mt-4">
-              <GradingTabContent courseId={group.courseId} />
-            </TabsContent>
-            <TabsContent value="attendance" className="mt-4">
-              <AttendanceTabContent groupId={group.id} />
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
+
+      {/* Page Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">{group.groupName}</h1>
+        <p className="text-gray-600 mt-1">{group.courseName}</p>
+      </div>
+
+      {/* Tabs and Content */}
+      <Tabs defaultValue="grading" className="w-full">
+        <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:inline-flex">
+          <TabsTrigger value="grading">Grading</TabsTrigger>
+          <TabsTrigger value="attendance">Attendance</TabsTrigger>
+        </TabsList>
+        <TabsContent value="grading" className="mt-6">
+          <GradingTabContent courseId={group.courseId} />
+        </TabsContent>
+        <TabsContent value="attendance" className="mt-6">
+          <AttendanceTabContent groupId={group.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
+//END OF components\group-detail-view.tsx
