@@ -1,4 +1,3 @@
-// app/ta/groups/components/group-form-modal.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
@@ -23,6 +22,17 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +46,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Check, ChevronsUpDown, X } from "lucide-react";
+import { Loader2, Check, ChevronsUpDown, X, Trash2 } from "lucide-react";
 import { taGroupsData, type TaGroup, type Student, type Instructor } from "@/lib/database";
 import { cn } from "@/lib/utils";
 
@@ -45,16 +55,17 @@ interface GroupFormModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   onSave: (group: TaGroup) => void;
+  onDelete: (groupId: string) => void;
   group: TaGroup | null;
   allStudents: Student[];
   allInstructors: Instructor[];
-  totalGroups: number;
 }
 
 export default function GroupFormModal({
   isOpen,
   setIsOpen,
   onSave,
+  onDelete,
   group,
   allStudents,
   allInstructors,
@@ -133,7 +144,7 @@ export default function GroupFormModal({
     setIsSaving(true);
 
     const groupData: TaGroup = {
-      id: group?.id || "",
+      id: group?.id || `group-${Date.now()}`,
       groupName: formData.groupName,
       courseName: formData.courseName,
       courseId: formData.courseName.toLowerCase().replace(/\s+/g, '-'),
@@ -149,6 +160,12 @@ export default function GroupFormModal({
     }, 1000);
   };
   
+  const handleDelete = () => {
+    if (group) {
+      onDelete(group.id);
+    }
+  }
+
   const availableStudentsForCourse = useMemo(() => {
     if (!formData.courseName) return [];
     return allStudents.filter(s => s.registeredCourses.includes(formData.courseName as 'ICT' | 'Mathematics'));
@@ -156,146 +173,176 @@ export default function GroupFormModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-[525px]">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>{group ? "Edit Group" : "Create New Group"}</DialogTitle>
+          <DialogTitle>{group ? "Modify Group" : "Create New Group"}</DialogTitle>
           <DialogDescription>
             {group ? `Editing group: ${group.groupName}` : "Fill out the details for the new group."}
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="courseName">Course Name</Label>
-            <Select
-              value={formData.courseName}
-              onValueChange={(value) => setFormData({ ...formData, courseName: value, students: [] })} // Reset students on course change
-            >
-              <SelectTrigger id="courseName">
-                <SelectValue placeholder="Select a course" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Mathematics">Mathematics</SelectItem>
-                <SelectItem value="ICT">ICT</SelectItem>
-              </SelectContent>
-            </Select>
-            {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
-          </div>
+        
+        <ScrollArea className="max-h-[60vh] w-full pr-4">
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="courseName">Course Name</Label>
+              <Select
+                value={formData.courseName}
+                onValueChange={(value) => setFormData({ ...formData, courseName: value, students: [] })} // Reset students on course change
+              >
+                <SelectTrigger id="courseName">
+                  <SelectValue placeholder="Select a course" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Mathematics">Mathematics</SelectItem>
+                  <SelectItem value="ICT">ICT</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.courseName && <p className="text-xs text-red-500">{errors.courseName}</p>}
+            </div>
 
-          <div className="grid gap-2">
-            <Label htmlFor="groupName">Group Number</Label>
-            <Input
-              id="groupName"
-              value={formData.groupName}
-              disabled
-              placeholder="Select a course to generate number"
-            />
-            {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
-          </div>
-          
-          <div className="grid gap-2">
-            <Label htmlFor="instructorName">Instructor Name</Label>
-            <Select
-              value={formData.instructorName}
-              onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
-            >
-              <SelectTrigger id="instructorName">
-                <SelectValue placeholder="Select an instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {allInstructors.map((inst) => (
-                  <SelectItem key={inst.id} value={inst.name}>
-                    {inst.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
-          </div>
+            <div className="grid gap-2">
+              <Label htmlFor="groupName">Group Number</Label>
+              <Input
+                id="groupName"
+                value={formData.groupName}
+                disabled
+                placeholder="Select a course to generate number"
+              />
+              {errors.groupName && <p className="text-xs text-red-500">{errors.groupName}</p>}
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="instructorName">Instructor Name</Label>
+              <Select
+                value={formData.instructorName}
+                onValueChange={(value) => setFormData({ ...formData, instructorName: value })}
+              >
+                <SelectTrigger id="instructorName">
+                  <SelectValue placeholder="Select an instructor" />
+                </SelectTrigger>
+                <SelectContent>
+                  {allInstructors.map((inst) => (
+                    <SelectItem key={inst.id} value={inst.name}>
+                      {inst.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
+            </div>
 
-          <div className="grid gap-2">
-            <Label>Students</Label>
-            <Popover open={isStudentSelectorOpen} onOpenChange={setIsStudentSelectorOpen}>
-                <PopoverTrigger asChild>
-                    <Button
-                        variant="outline"
-                        role="combobox"
-                        aria-expanded={isStudentSelectorOpen}
-                        className="w-full justify-between"
-                        disabled={!formData.courseName}
-                    >
-                        {formData.students.length > 0 ? `${formData.students.length} student(s) selected` : "Select students..."}
-                        <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            <div className="grid gap-2">
+              <Label>Students</Label>
+              <Popover open={isStudentSelectorOpen} onOpenChange={setIsStudentSelectorOpen}>
+                  <PopoverTrigger asChild>
+                      <Button
+                          variant="outline"
+                          role="combobox"
+                          aria-expanded={isStudentSelectorOpen}
+                          className="w-full justify-between"
+                          disabled={!formData.courseName}
+                      >
+                          {formData.students.length > 0 ? `${formData.students.length} student(s) selected` : "Select students..."}
+                          <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
+                      <Command>
+                          <CommandInput placeholder="Search students..." />
+                          <CommandList>
+                              <CommandEmpty>No students found for this course.</CommandEmpty>
+                              <CommandGroup>
+                                  <ScrollArea className="h-48">
+                                      {availableStudentsForCourse.map((student) => (
+                                          <CommandItem
+                                              key={student.id}
+                                              value={student.name}
+                                              onSelect={() => {
+                                                  const isSelected = formData.students.some(s => s.id === student.id);
+                                                  if (isSelected) {
+                                                      setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }));
+                                                  } else {
+                                                      setFormData(prev => ({ ...prev, students: [...prev.students, student] }));
+                                                  }
+                                              }}
+                                          >
+                                              <Check
+                                                  className={cn(
+                                                      "mr-2 h-4 w-4",
+                                                      formData.students.some(s => s.id === student.id) ? "opacity-100" : "opacity-0"
+                                                  )}
+                                              />
+                                              {student.name}
+                                          </CommandItem>
+                                      ))}
+                                  </ScrollArea>
+                              </CommandGroup>
+                          </CommandList>
+                      </Command>
+                  </PopoverContent>
+              </Popover>
+              {errors.students && <p className="text-xs text-red-500">{errors.students}</p>}
+              {formData.students.length > 0 && (
+                  <ScrollArea className="max-h-24 w-full rounded-md border p-2">
+                      <div className="flex flex-wrap gap-1">
+                          {formData.students.map(student => (
+                              <Badge key={student.id} variant="secondary">
+                                  {student.name}
+                                  <button type="button" onClick={() => setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }))} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
+                                      <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
+                                  </button>
+                              </Badge>
+                          ))}
+                      </div>
+                  </ScrollArea>
+              )}
+            </div>
+            
+            <div className="flex items-center space-x-2 pt-2">
+              <Switch
+                id="isActive"
+                checked={formData.isActive}
+                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+              />
+              <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+            </div>
+          </div>
+        </ScrollArea>
+        
+        <DialogFooter className="flex-col-reverse gap-y-2 sm:flex-row sm:justify-between sm:space-x-2 pt-4 border-t">
+          <div>
+          {group && (
+            <AlertDialog>
+                <AlertDialogTrigger asChild>
+                    <Button variant="destructive" type="button" className="w-full sm:w-auto">
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete Group
                     </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-[--radix-popover-trigger-width] p-0">
-                    <Command>
-                        <CommandInput placeholder="Search students..." />
-                        <CommandList>
-                            <CommandEmpty>No students found for this course.</CommandEmpty>
-                            <CommandGroup>
-                                <ScrollArea className="h-48">
-                                    {availableStudentsForCourse.map((student) => (
-                                        <CommandItem
-                                            key={student.id}
-                                            value={student.name}
-                                            onSelect={() => {
-                                                const isSelected = formData.students.some(s => s.id === student.id);
-                                                if (isSelected) {
-                                                    setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }));
-                                                } else {
-                                                    setFormData(prev => ({ ...prev, students: [...prev.students, student] }));
-                                                }
-                                            }}
-                                        >
-                                            <Check
-                                                className={cn(
-                                                    "mr-2 h-4 w-4",
-                                                    formData.students.some(s => s.id === student.id) ? "opacity-100" : "opacity-0"
-                                                )}
-                                            />
-                                            {student.name}
-                                        </CommandItem>
-                                    ))}
-                                </ScrollArea>
-                            </CommandGroup>
-                        </CommandList>
-                    </Command>
-                </PopoverContent>
-            </Popover>
-            {errors.students && <p className="text-xs text-red-500">{errors.students}</p>}
-            {formData.students.length > 0 && (
-                <ScrollArea className="max-h-24 w-full rounded-md border p-2">
-                    <div className="flex flex-wrap gap-1">
-                        {formData.students.map(student => (
-                            <Badge key={student.id} variant="secondary">
-                                {student.name}
-                                <button type="button" onClick={() => setFormData(prev => ({ ...prev, students: prev.students.filter(s => s.id !== student.id) }))} className="ml-1 rounded-full outline-none ring-offset-background focus:ring-2 focus:ring-ring focus:ring-offset-2">
-                                    <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                                </button>
-                            </Badge>
-                        ))}
-                    </div>
-                </ScrollArea>
-            )}
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          This action cannot be undone. This will permanently delete the group <span className="font-semibold">'{group.groupName}'</span> and all of its associated data.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+           )}
           </div>
-          
-          <div className="flex items-center space-x-2 pt-2">
-            <Switch
-              id="isActive"
-              checked={formData.isActive}
-              onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
-            />
-            <Label htmlFor="isActive" className="cursor-pointer">Active</Label>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsOpen(false)}>
+                Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {group ? "Save Changes" : "Create Group"}
+            </Button>
           </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => setIsOpen(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} disabled={isSaving}>
-            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {group ? "Save Changes" : "Create Group"}
-          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
