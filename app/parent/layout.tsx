@@ -1,9 +1,8 @@
+// app/parent/layout.tsx
 "use client"
 
 import type React from "react"
-
-import { PortalSidebar } from "@/components/portal-sidebar"
-import { useRequireAuth } from "@/hooks/use-auth"
+import { PortalLayout } from "@/components/portal-layout"
 import { LayoutDashboard, TrendingUp, Megaphone, CreditCard, Calendar } from "lucide-react"
 
 const navigation = [
@@ -49,26 +48,9 @@ export default function ParentLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { user, isLoading } = useRequireAuth(["parent"])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return null
-  }
-
   return (
-    <div className="flex h-screen bg-white">
-      <PortalSidebar navigation={navigation} />
-      <main className="flex-1 bg-gray-50 overflow-y-auto">
-        <div className="p-8">{children}</div>
-      </main>
-    </div>
+    <PortalLayout navigation={navigation} allowedRoles={["parent"]}>
+      {children}
+    </PortalLayout>
   )
 }
