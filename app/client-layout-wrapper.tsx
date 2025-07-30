@@ -13,7 +13,8 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
     pathname?.startsWith("/student") ||
     pathname?.startsWith("/parent") ||
     pathname?.startsWith("/ta") ||
-    pathname?.startsWith("/instructor")
+    pathname?.startsWith("/instructor") ||
+    pathname?.startsWith("/profile")
 
   return (
     <div className="min-h-screen flex flex-col">

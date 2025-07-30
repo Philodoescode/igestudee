@@ -3,30 +3,7 @@
 
 import type React from "react"
 import { PortalLayout } from "@/components/portal-layout"
-import { BookOpen, Calendar, LayoutDashboard } from "lucide-react"
-
-const navigation = [
-  {
-    title: "MENU",
-    items: [
-      {
-        title: "Dashboard",
-        href: "/student",
-        icon: LayoutDashboard,
-      },
-      {
-        title: "My Courses",
-        href: "/student/courses",
-        icon: BookOpen,
-      },
-      {
-        title: "Schedule",
-        href: "/student/schedule",
-        icon: Calendar,
-      },
-    ],
-  },
-]
+import { studentNavigation } from "@/lib/navigation"
 
 export default function StudentLayout({
   children,
@@ -34,7 +11,7 @@ export default function StudentLayout({
   children: React.ReactNode
 }) {
   return (
-    <PortalLayout navigation={navigation} allowedRoles={["student"]}>
+    <PortalLayout navigation={studentNavigation} allowedRoles={["student"]}>
       {children}
     </PortalLayout>
   )

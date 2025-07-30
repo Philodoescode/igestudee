@@ -20,7 +20,6 @@ import {
   Menu,
   X,
   ChevronDown,
-  Settings,
   User,
   LogOut,
   PanelLeftClose,
@@ -189,8 +188,7 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link href={`/${user?.role}/profile`}><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
-            <DropdownMenuItem asChild><Link href={`/${user?.role}/settings`}><Settings className="mr-2 h-4 w-4" /> Settings</Link></DropdownMenuItem>
+            <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/50 dark:focus:text-red-400">
               <LogOut className="mr-2 h-4 w-4" /> Log Out

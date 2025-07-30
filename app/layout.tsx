@@ -13,7 +13,7 @@ const lexend = Lexend({
 })
 
 export const metadata: Metadata = {
-  title: "EduTech Academy - ICT & Mathematics Tutoring Program",
+  title: "Igestudee",
   description:
     "Transform your understanding of ICT and Mathematics with our comprehensive online tutoring program. Expert instruction, interactive learning, and personalized support.",
   keywords: "ICT tutoring, Mathematics tutoring, online education, IG courses, programming, web development",

@@ -3,13 +3,14 @@
 import type React from "react"
 import { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, GraduationCap, User, Users, UserCheck, Shield, AlertCircle, CheckCircle } from "lucide-react"
+import { Eye, EyeOff, User, Users, UserCheck, Shield, AlertCircle, CheckCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
 import { useAuth } from "@/hooks/use-auth"
@@ -132,8 +133,14 @@ export default function LoginPage() {
             whileHover={{ scale: 1.05 }}
             transition={{ type: "spring", stiffness: 400, damping: 10 }}
           >
-            <div className="p-4 bg-gradient-to-br from-[var(--color-gossamer-500)] to-[var(--color-gossamer-600)] rounded-2xl shadow-xl">
-              <GraduationCap className="h-12 w-12 text-white" />
+            <div className="p-4 rounded-2xl flex items-center justify-center h-[80px] w-[80px]">
+              <Image
+                src="/igestudee-initial-logo.png"
+                alt="Igestudee Logo"
+                width={48}
+                height={48}
+                priority
+              />
             </div>
           </motion.div>
           <h2 className="text-3xl font-bold text-gray-900">Welcome Back</h2>

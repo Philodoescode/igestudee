@@ -5,10 +5,11 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Progress } from "@/components/ui/progress"
 import { Input } from "@/components/ui/input"
-import { studentDetailedCourses } from "@/lib/database"
-import { ArrowRight, ListFilter, Search } from "lucide-react"
+import { studentDetailedCourses, courseDetailsData } from "@/lib/database"
+import { Search, Calendar, Info } from "lucide-react"
+import InstructorProfileModal from "@/components/modals/instructor-profile-modal"
+import type { InstructorProfile } from "@/components/modals/instructor-profile-modal"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,9 +19,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
+// Mock instructor profiles as needed
+const MOCK_INSTRUCTOR_PROFILES: { [key: string]: InstructorProfile } = {
+  "Dr. Sarah Johnson": {
+    name: "Dr. Sarah Johnson",
+    title: "Lead ICT Instructor",
+    bio: "With over 10 years of experience in computer science education, Dr. Johnson specializes in web development and database management. She is passionate about making complex topics accessible and engaging for all students.",
+    avatar: "/placeholder.svg",
+    courses: ["ICT Fundamentals", "Web Development Basics", "Introduction to Python"],
+  },
+  "Prof. Michael Chen": {
+    name: "Prof. Michael Chen",
+    title: "Lead Mathematics Instructor",
+    bio: "Prof. Chen holds a Ph.D. in Applied Mathematics and has been teaching for over 15 years. His research focuses on statistical modeling and he enjoys helping students build strong analytical skills.",
+    avatar: "/placeholder.svg",
+    courses: ["Advanced Mathematics", "Statistics and Probability"],
+  },
+}
+
 export default function StudentCoursesPage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filter, setFilter] = useState("All")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [selectedInstructor, setSelectedInstructor] = useState<InstructorProfile | null>(null)
+
+  const handleViewInstructor = (instructorName: string) => {
+    const profile = MOCK_INSTRUCTOR_PROFILES[instructorName]
+    if (profile) {
+      setSelectedInstructor(profile)
+      setIsModalOpen(true)
+    }
+  }
 
   const filteredCourses = studentDetailedCourses.filter((course) => {
     const matchesSearch =
@@ -59,7 +88,6 @@ export default function StudentCoursesPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" className="w-full sm:w-auto">
-              <ListFilter className="mr-2 h-4 w-4" />
               Filter by Instructor
             </Button>
           </DropdownMenuTrigger>
@@ -91,44 +119,35 @@ export default function StudentCoursesPage() {
                   <p className="text-xs uppercase font-semibold text-gossamer-300 tracking-wider">Course</p>
                   <h2 className="text-2xl font-bold mt-2 leading-tight">{course.name}</h2>
                 </div>
-                <Link
-                  href="#"
-                  className="text-sm text-gossamer-300 hover:text-white transition-colors flex items-center group mt-4"
-                >
-                  View all chapters
-                  <ArrowRight className="h-4 w-4 ml-1.5 transform transition-transform group-hover:translate-x-1" />
-                </Link>
               </div>
 
               {/* Right Panel */}
               <div className="md:w-2/3 p-6 flex flex-col justify-between">
-                {/* Chapter Title and Progress aligned */}
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex-1">
-                    <p className="text-xs uppercase font-semibold text-gray-400 tracking-wider">
-                      Chapter {course.currentChapter}
-                    </p>
-                    <h3 className="text-xl md:text-2xl font-semibold text-gray-800 mt-2">
-                      {course.currentChapterTitle}
-                    </h3>
+                <div className="mb-4">
+                  <div className="flex items-center mb-2">
+                    <Info className="h-4 w-4 mr-2 text-gossamer-500" />
+                    <span className="text-xs uppercase font-semibold text-gray-400 tracking-wider">{course.group}</span>
                   </div>
-                  <div className="flex flex-col items-end ml-4">
-                    <Progress
-                      value={(course.completedChallenges / course.totalChallenges) * 100}
-                      className="w-24 sm:w-32 h-1.5 bg-gray-200 [&>div]:bg-gossamer-600"
-                    />
-                    <p className="text-xs text-gray-500 mt-1.5">
-                      {course.completedChallenges}/{course.totalChallenges} Challenges
-                    </p>
-                  </div>
+                  {courseDetailsData[course.id] && (
+                    <div className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-2 text-gossamer-500" />
+                      <span className="text-sm text-gray-600">{courseDetailsData[course.id].endMonth} session</span>
+                    </div>
+                  )}
                 </div>
 
-                <div className="flex justify-end mt-4">
+                <div className="flex justify-between mt-4 items-center">
+                  <button
+                    onClick={() => handleViewInstructor(course.instructor)}
+                    className="bg-transparent p-0 text-sm font-semibold text-gossamer-600 hover:text-gossamer-700 transition-colors duration-200"
+                  >
+                    {course.instructor}
+                  </button>
                   <Button
                     asChild
                     className="bg-gossamer-800 hover:bg-gossamer-900 rounded-full px-8 text-base font-semibold"
                   >
-                    <Link href={`/student/courses/${course.id}`}>Continue</Link>
+                    <Link href={`/student/courses/${course.id}`}>Enter</Link>
                   </Button>
                 </div>
               </div>
@@ -136,6 +155,14 @@ export default function StudentCoursesPage() {
           </motion.div>
         ))}
       </div>
+
+      {selectedInstructor && (
+        <InstructorProfileModal
+          isOpen={isModalOpen}
+          setIsOpen={setIsModalOpen}
+          instructor={selectedInstructor}
+        />
+      )}
     </div>
   )
 }
