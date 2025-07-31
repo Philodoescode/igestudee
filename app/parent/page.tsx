@@ -23,7 +23,7 @@ import { parentDashboardChildren, parentDashboardData } from "@/lib/database"
 import { redirect } from 'next/navigation'
 
 export default function ParentDashboard() {
-  redirect('/under-construction');
+  // redirect('/under-construction');
   const [currentChild, setCurrentChild] = useState("Emma Johnson")
 
   const selectedChildData = parentDashboardData[currentChild as keyof typeof parentDashboardData]
