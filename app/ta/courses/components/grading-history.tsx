@@ -1,10 +1,11 @@
+// app/ta/courses/components/grading-history.tsx
 "use client"
 
 import { useState, useMemo } from "react"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Pagination, PaginationContent, PaginationEllipsis, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button"
 import { Search, History, Download } from "lucide-react"
 import { motion } from "framer-motion"
@@ -22,7 +23,8 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
 
   const filteredHistory = useMemo(() => {
     return history.filter(entry => 
-      entry.title.toLowerCase().includes(searchTerm.toLowerCase())
+      entry.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      new Date(entry.date + 'T00:00:00').toLocaleDateString().toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [history, searchTerm])
 
@@ -61,16 +63,16 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
     >
       <div>
         <h3 className="text-lg font-medium flex items-center gap-2">
-          <History className="h-5 w-5 text-gray-700" />
+          <History className="h-5 w-5 text-gray-700 dark:text-gray-300" />
           Grading History
         </h3>
         <p className="text-sm text-muted-foreground">Review and manage past grading entries.</p>
       </div>
 
       <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by title..."
+            placeholder="Search by title or date..."
             value={searchTerm}
             onChange={(e) => {
                 setSearchTerm(e.target.value);
@@ -80,40 +82,40 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
           />
       </div>
       
-      <div className="border rounded-lg">
+      <div className="border rounded-lg overflow-hidden">
         {paginatedHistory.length > 0 ? (
           <Accordion type="single" collapsible>
             {paginatedHistory.map(entry => (
-              <AccordionItem value={entry.id} key={entry.id}>
-                <AccordionTrigger className="px-4 hover:bg-slate-50 text-left">
-                  <div className="flex flex-1 items-center justify-between gap-4 w-full">
+              <AccordionItem value={entry.id} key={entry.id} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 text-left">
+                  <div className="flex flex-1 items-center justify-between gap-4 w-full pr-2">
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold truncate">{entry.title}</p>
-                        <p className="text-sm text-gray-500">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
+                        <p className="text-sm text-muted-foreground">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
                       </div>
-                      <p className="text-sm font-medium text-gray-600 pr-4 flex-shrink-0">Out of {entry.maxScore}</p>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300 pr-2 flex-shrink-0">Out of {entry.maxScore}</p>
                   </div>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white">
+                <AccordionContent className="p-0">
                   <div className="overflow-x-auto">
-                    <Table className="min-w-[300px]">
+                    <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Student</TableHead>
-                                <TableHead className="text-right">Grade</TableHead>
+                                <TableHead className="pl-4">Student</TableHead>
+                                <TableHead className="text-right pr-4">Grade</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {entry.studentGrades.map(sg => (
                                 <TableRow key={sg.studentId}>
-                                    <TableCell>{sg.name}</TableCell>
-                                    <TableCell className="text-right font-mono">{sg.grade ?? "N/A"}</TableCell>
+                                    <TableCell className="pl-4">{sg.name}</TableCell>
+                                    <TableCell className="text-right pr-4 font-mono">{sg.grade ?? "N/A"}</TableCell>
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                   </div>
-                  <div className="mt-4 flex justify-end">
+                  <div className="mt-2 p-4 flex justify-end border-t bg-slate-50 dark:bg-slate-800/50">
                     <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
                         <Download className="mr-2 h-4 w-4" />Export CSV
                     </Button>
@@ -123,7 +125,7 @@ export default function GradingHistory({ history }: GradingHistoryProps) {
             ))}
           </Accordion>
         ) : (
-          <div className="p-10 text-center text-gray-500">
+          <div className="p-10 text-center text-muted-foreground">
             <p>No grading history found.</p>
             <p className="text-sm">Try adjusting your search or adding a new grade entry.</p>
           </div>

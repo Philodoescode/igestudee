@@ -1,4 +1,5 @@
 // lib/database.ts
+// lib/database.ts
 // NOTE: In a real application, these types would likely be defined in separate, shared type definition files.
 // For this mock database, they are included here for simplicity and context.
 
@@ -689,7 +690,8 @@ export const taScheduleData: TASession[] = [
     { id: "session-4", title: "Math Concepts", dateTime: "2024-05-15T13:00:00Z", durationMinutes: 90, meetingLink: "https://zoom.us/j/5544332211" },
 ];
 
-// --- NEW DATA STRUCTURES for Group Management ---
+// --- NEW/MODIFIED DATA STRUCTURES for Group & Course Management ---
+
 export type Student = {
   id: string;
   name: string;
@@ -701,19 +703,30 @@ export type Instructor = {
   name: string;
 };
 
-// Updated TaGroup type
-export type TaGroup = {
+export type Course = {
   id: string;
-  courseName: string;
-  courseId: string;
-  groupName: string;
-  studentCount: number;
-  instructorName: string;
-  students: Student[];
-  isActive: boolean;
+  title: string;
+  instructorId: string;
 };
 
-// --- NEW DUMMY DATA for Group Management ---
+export type CourseSession = {
+  id: string;
+  courseId: string;
+  month: string; // 'Jan', 'Feb', etc.
+  year: number;
+  status: 'active' | 'inactive';
+};
+
+export type TaGroup = {
+  id: string;
+  sessionId: string;
+  groupName: string; // "Group 1", "Group 2", etc.
+  students: Student[];
+};
+
+
+// --- NEW/MODIFIED DUMMY DATA ---
+
 export const allStudents: Student[] = [
   { id: "stu-01", name: "Emma Johnson", registeredCourses: ['ICT', 'Mathematics'] },
   { id: "stu-02", name: "Michael Chen", registeredCourses: ['ICT'] },
@@ -738,57 +751,54 @@ export const allInstructors: Instructor[] = [
   { id: "inst-03", name: "Dr. Evelyn Reed" },
 ];
 
-// --- TA GROUPS DATA (Updated with new structure) ---
+export const allTAs: Instructor[] = [
+    { id: 'ta-001', name: 'Alex Smith' },
+    { id: 'ta-002', name: 'Brenda Lee' },
+    { id: 'ta-003', name: 'Chris Garcia' },
+];
+
+export let allCourses: Course[] = [
+  { id: 'ict', title: 'ICT', instructorId: 'inst-01' },
+  { id: 'mathematics', title: 'Mathematics', instructorId: 'inst-02' },
+];
+
+export let allCourseSessions: CourseSession[] = [
+  { id: 'ict-sep-24', courseId: 'ict', month: 'Sep', year: 2024, status: 'active' },
+  { id: 'ict-jan-25', courseId: 'ict', month: 'Jan', year: 2025, status: 'inactive' },
+  { id: 'math-sep-24', courseId: 'mathematics', month: 'Sep', year: 2024, status: 'active' },
+  { id: 'math-jan-25', courseId: 'mathematics', month: 'Jan', year: 2025, status: 'active' },
+];
+
 export let taGroupsData: TaGroup[] = [
   {
     id: "group-ict-a",
-    courseName: "ICT",
-    courseId: "ict",
+    sessionId: "ict-sep-24", // Link to session
     groupName: "Group 1",
-    instructorName: "Dr. Sarah Johnson",
     students: allStudents.slice(0, 8),
-    studentCount: 8,
-    isActive: true,
-  },
-  {
-    id: "group-math-b",
-    courseName: "Mathematics",
-    courseId: "mathematics",
-    groupName: "Group 2",
-    instructorName: "Prof. Michael Chen",
-    students: allStudents.slice(4, 12),
-    studentCount: 8,
-    isActive: true,
   },
   {
     id: "group-ict-c",
-    courseName: "ICT",
-    courseId: "ict-practical",
-    groupName: "Group 3",
-    instructorName: "Dr. Sarah Johnson",
+    sessionId: "ict-sep-24", // Link to session
+    groupName: "Group 2",
     students: allStudents.slice(8, 12),
-    studentCount: 4,
-    isActive: true,
+  },
+  {
+    id: "group-math-b",
+    sessionId: "math-sep-24", // Link to session
+    groupName: "Group 1",
+    students: allStudents.slice(4, 12),
   },
   {
     id: "group-web-d",
-    courseName: "ICT",
-    courseId: "ict",
-    groupName: "Group 4",
-    instructorName: "Dr. Evelyn Reed",
+    sessionId: "ict-jan-25", // Link to session
+    groupName: "Group 1",
     students: allStudents.slice(2, 7),
-    studentCount: 5,
-    isActive: false,
   },
   {
     id: "group-python-e",
-    courseName: "ICT",
-    courseId: "ict",
-    groupName: "Group 5",
-    instructorName: "Dr. Evelyn Reed",
+    sessionId: "math-jan-25", // Link to session
+    groupName: "Group 1",
     students: allStudents.slice(10, 15),
-    studentCount: 5,
-    isActive: true,
   },
 ];
 
@@ -797,25 +807,76 @@ export let taGroupsData: TaGroup[] = [
 // Note: These mutate the in-memory array for simulation purposes.
 // In a real app, these would be API calls.
 
-export const addGroup = (newGroupData: Omit<TaGroup, 'id' | 'studentCount'>): TaGroup => {
-  const newGroup: TaGroup = {
-    ...newGroupData,
-    id: `group-${Date.now()}`,
-    studentCount: newGroupData.students.length,
-  };
-  taGroupsData.unshift(newGroup); // Add to the beginning of the array
-  return newGroup;
+// --- COURSE CRUD ---
+export const addCourse = (newCourseData: Omit<Course, 'id'>): Course => {
+    const newCourse: Course = { ...newCourseData, id: `course-${Date.now()}` };
+    allCourses.unshift(newCourse);
+    return newCourse;
+};
+export const updateCourse = (updatedCourse: Course): Course | undefined => {
+    const index = allCourses.findIndex(c => c.id === updatedCourse.id);
+    if (index !== -1) {
+        allCourses[index] = updatedCourse;
+        return allCourses[index];
+    }
+    return undefined;
+};
+export const deleteCourse = (courseId: string): boolean => {
+    const initialLength = allCourses.length;
+    // Cascade delete: find all sessions for this course
+    const sessionsToDelete = allCourseSessions.filter(s => s.courseId === courseId).map(s => s.id);
+    sessionsToDelete.forEach(sessionId => {
+        // Cascade delete groups for each session
+        taGroupsData = taGroupsData.filter(g => g.sessionId !== sessionId);
+    });
+    // Delete sessions
+    allCourseSessions = allCourseSessions.filter(s => s.courseId !== courseId);
+    // Delete course
+    allCourses = allCourses.filter(c => c.id !== courseId);
+    return allCourses.length < initialLength;
 };
 
+// --- SESSION CRUD ---
+export const addSession = (newSessionData: Omit<CourseSession, 'id'>): CourseSession => {
+    const newSession: CourseSession = { ...newSessionData, id: `session-${Date.now()}` };
+    allCourseSessions.unshift(newSession);
+    return newSession;
+};
+export const updateSession = (updatedSession: CourseSession): CourseSession | undefined => {
+    const index = allCourseSessions.findIndex(s => s.id === updatedSession.id);
+    if (index !== -1) {
+        allCourseSessions[index] = updatedSession;
+        return allCourseSessions[index];
+    }
+    return undefined;
+};
+export const deleteSession = (sessionId: string): boolean => {
+    const initialLength = allCourseSessions.length;
+    // Cascade delete groups
+    taGroupsData = taGroupsData.filter(g => g.sessionId !== sessionId);
+    // Delete session
+    allCourseSessions = allCourseSessions.filter(s => s.id !== sessionId);
+    return allCourseSessions.length < initialLength;
+};
+
+// --- GROUP CRUD ---
+export const addGroup = (newGroupData: Omit<TaGroup, 'id' | 'groupName'>): TaGroup => {
+    // Auto-generate group name
+    const groupsInSession = taGroupsData.filter(g => g.sessionId === newGroupData.sessionId);
+    const newGroupName = `Group ${groupsInSession.length + 1}`;
+    
+    const newGroup: TaGroup = { ...newGroupData, id: `group-${Date.now()}`, groupName: newGroupName };
+    taGroupsData.unshift(newGroup);
+    return newGroup;
+};
 export const updateGroup = (updatedGroup: TaGroup): TaGroup | undefined => {
   const index = taGroupsData.findIndex(g => g.id === updatedGroup.id);
   if (index !== -1) {
-    taGroupsData[index] = { ...updatedGroup, studentCount: updatedGroup.students.length };
+    taGroupsData[index] = updatedGroup;
     return taGroupsData[index];
   }
   return undefined;
 };
-
 export const deleteGroup = (groupId: string): boolean => {
   const initialLength = taGroupsData.length;
   taGroupsData = taGroupsData.filter(g => g.id !== groupId);

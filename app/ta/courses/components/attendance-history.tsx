@@ -1,3 +1,4 @@
+// app/ta/courses/components/attendance-history.tsx
 "use client"
 
 import { useState, useMemo } from "react"
@@ -11,6 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Search, History, Edit, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+import { cn } from "@/lib/utils"
 
 interface AttendanceHistoryProps {
   history: TAttendanceSession[]
@@ -29,12 +31,12 @@ const getSessionSummary = (records: TAttendanceRecord[]) => {
     return `Absent: ${summary.absent}, Tardy: ${summary.tardy}`;
 };
 
-const getStatusBadgeVariant = (status: 'Present' | 'Absent' | 'Tardy') => {
+const getStatusBadgeClass = (status: 'Present' | 'Absent' | 'Tardy') => {
     switch(status) {
-        case 'Present': return 'default';
-        case 'Absent': return 'destructive';
-        case 'Tardy': return 'secondary';
-        default: return 'outline';
+        case 'Present': return 'bg-green-100 text-green-800 border-green-200';
+        case 'Absent': return 'bg-red-100 text-red-800 border-red-200';
+        case 'Tardy': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        default: return 'bg-gray-100 text-gray-800';
     }
 };
 
@@ -63,14 +65,14 @@ export default function AttendanceHistory({ history, onEdit, onDelete }: Attenda
     >
         <div>
             <h3 className="text-lg font-medium flex items-center gap-2">
-                <History className="h-5 w-5 text-gray-700" />
+                <History className="h-5 w-5 text-gray-700 dark:text-gray-300" />
                 Attendance History
             </h3>
             <p className="text-sm text-muted-foreground">Review and manage past attendance entries.</p>
         </div>
 
         <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
             placeholder="Search by date..."
             value={searchTerm}
@@ -82,47 +84,47 @@ export default function AttendanceHistory({ history, onEdit, onDelete }: Attenda
             />
         </div>
         
-        <div className="border rounded-lg">
+        <div className="border rounded-lg overflow-hidden">
         {paginatedHistory.length > 0 ? (
             <Accordion type="single" collapsible>
             {paginatedHistory.map(entry => (
-                <AccordionItem value={entry.id} key={entry.id}>
-                <AccordionTrigger className="px-4 hover:bg-slate-50">
-                    <div className="flex flex-1 items-center justify-between gap-4 w-full">
+                <AccordionItem value={entry.id} key={entry.id} className="border-b last:border-b-0">
+                <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <div className="flex flex-1 items-center justify-between gap-4 w-full pr-2">
                         <div className="text-left flex-1 min-w-0">
                         <p className="font-semibold">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
-                        <p className="text-sm text-gray-500 truncate">{getSessionSummary(entry.records)}</p>
+                        <p className="text-sm text-muted-foreground truncate">{getSessionSummary(entry.records)}</p>
                         </div>
                     </div>
                 </AccordionTrigger>
-                <AccordionContent className="p-4 bg-white">
+                <AccordionContent className="p-0">
                     <div className="overflow-x-auto">
-                        <Table className="min-w-[300px]">
+                        <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Student</TableHead>
-                                    <TableHead className="text-right">Status</TableHead>
+                                    <TableHead className="pl-4">Student</TableHead>
+                                    <TableHead className="text-right pr-4">Status</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {entry.records.map(sg => (
                                     <TableRow key={sg.studentId}>
-                                        <TableCell>{sg.name}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Badge variant={getStatusBadgeVariant(sg.status)}>{sg.status}</Badge>
+                                        <TableCell className="pl-4">{sg.name}</TableCell>
+                                        <TableCell className="text-right pr-4">
+                                            <Badge variant="outline" className={cn(getStatusBadgeClass(sg.status))}>{sg.status}</Badge>
                                         </TableCell>
                                     </TableRow>
                                 ))}
                             </TableBody>
                         </Table>
                     </div>
-                    <div className="mt-4 flex justify-end space-x-2">
+                    <div className="mt-2 p-4 flex justify-end space-x-2 border-t bg-slate-50 dark:bg-slate-800/50">
                     <Button variant="ghost" size="sm" onClick={() => onEdit(entry)}>
                         <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600">
+                            <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400">
                                 <Trash2 className="h-4 w-4 mr-1" /> Delete
                             </Button>
                         </AlertDialogTrigger>
@@ -143,7 +145,7 @@ export default function AttendanceHistory({ history, onEdit, onDelete }: Attenda
             ))}
             </Accordion>
         ) : (
-            <div className="p-10 text-center text-gray-500">
+            <div className="p-10 text-center text-muted-foreground">
             <p>No attendance history found.</p>
             <p className="text-sm">Try adjusting your search or adding a new attendance entry.</p>
             </div>

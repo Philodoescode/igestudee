@@ -6,8 +6,7 @@ import { useRequireAuth } from "@/hooks/use-auth"
 import { Toaster, toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 
-import GroupsLandingView from "./components/groups-landing-view"
-import GroupDetailView from "./components/group-detail-view"
+import GroupDetailView from "../courses/components/group-detail-view"
 import GroupFormModal from "./components/group-form-modal"
 
 import { 

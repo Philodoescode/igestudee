@@ -1,3 +1,4 @@
+// lib/navigation.ts
 import {
   LayoutDashboard,
   BookOpen,
@@ -83,9 +84,9 @@ export const taNavigation = [
         icon: LayoutDashboard,
       },
       {
-        title: "Groups",
-        href: "/ta/groups",
-        icon: Users,
+        title: "Courses & Groups",
+        href: "/ta/courses",
+        icon: BookOpen,
       },
       {
         title: "Announcements",

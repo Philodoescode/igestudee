@@ -1,3 +1,4 @@
+// app/ta/courses/components/add-attendance-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -14,6 +15,7 @@ import { Loader2, AlertCircle, Check } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/hooks/use-auth"
 import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+import { cn } from "@/lib/utils"
 
 type Student = { id: string; name: string };
 
@@ -89,6 +91,15 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
     }
   };
 
+  const getStatusBadgeClass = (status: 'Present' | 'Absent' | 'Tardy') => {
+    switch(status) {
+        case 'Present': return 'bg-green-100 text-green-800 border-green-200';
+        case 'Absent': return 'bg-red-100 text-red-800 border-red-200';
+        case 'Tardy': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        default: return 'bg-gray-100 text-gray-800';
+    }
+  }
+
   const step1Content = (
     <motion.div key="step1" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.3 }}>
       <div className="grid gap-6 py-4">
@@ -123,7 +134,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
         </div>
         <div className="max-h-[40vh] overflow-y-auto border rounded-md">
             <Table>
-                <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                <TableHeader className="sticky top-0 bg-slate-50 dark:bg-slate-800 z-10">
                     <TableRow>
                         <TableHead>Student Name</TableHead>
                         <TableHead className="w-1/3 text-center">Status</TableHead>
@@ -136,7 +147,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
                             <TableCell className="text-center">
                                 <Badge 
                                   variant={getStatusBadgeVariant(record.status)} 
-                                  className="cursor-pointer select-none"
+                                  className={cn("cursor-pointer select-none", getStatusBadgeClass(record.status))}
                                   onClick={() => toggleStatus(record.studentId)}
                                 >
                                     {record.status}
@@ -162,7 +173,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
 
         <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
 
-        <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+        <DialogFooter className="pt-4 border-t">
           {step === 1 && (
             <>
               <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
@@ -174,7 +185,7 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
               <Button variant="outline" onClick={() => { if (!editingSession) setStep(1) }} disabled={!!editingSession}>Back</Button>
               <Button onClick={handleSave} disabled={isSaving}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {isSaving ? "Saving..." : "Save Attendance"}
+                {isSaving ? "Saving..." : editingSession ? "Save Changes" : "Save Attendance"}
               </Button>
             </>
           )}

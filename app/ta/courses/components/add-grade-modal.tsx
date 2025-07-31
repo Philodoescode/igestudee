@@ -1,4 +1,4 @@
-// app/ta/groups/components/add-grade-modal.tsx
+// app/ta/courses/components/add-grade-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -140,7 +140,7 @@ export default function AddGradeModal({ isOpen, setIsOpen, onSave }: AddGradeMod
         </div>
         <div className="max-h-[40vh] overflow-y-auto border rounded-md">
             <Table>
-                <TableHeader className="sticky top-0 bg-slate-50 z-10">
+                <TableHeader className="sticky top-0 bg-slate-50 dark:bg-slate-800 z-10">
                     <TableRow><TableHead>Student Name</TableHead><TableHead className="w-1/3">Grade</TableHead></TableRow>
                 </TableHeader>
                 <TableBody>
@@ -177,7 +177,7 @@ export default function AddGradeModal({ isOpen, setIsOpen, onSave }: AddGradeMod
 
         <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
 
-        <DialogFooter className="sticky bottom-0 bg-background pt-4 border-t">
+        <DialogFooter className="pt-4 border-t">
           {step === 1 && (
             <>
               <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
