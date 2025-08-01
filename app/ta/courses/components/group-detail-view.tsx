@@ -1,5 +1,4 @@
-//START OF components\group-detail-view.tsx
-// app/ta/groups/components/group-detail-view.tsx
+// app/ta/courses/components/group-detail-view.tsx
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft } from "lucide-react"
@@ -8,7 +7,7 @@ import { type TaGroup } from "@/lib/database"
 import GradingTabContent from "./grading-tab"
 import AttendanceTabContent from "./attendance-tab"
 
-export default function GroupDetailView({ group, onBack }: { group: TaGroup; onBack: () => void }) {
+export default function GroupDetailView({ group, onBack }: { group: TaGroup & { courseName: string, courseId: string }; onBack: () => void }) {
   return (
     <div className="space-y-6">
       <Button variant="ghost" onClick={onBack} className="text-gray-600 hover:text-emerald-600 -ml-4">
@@ -32,10 +31,9 @@ export default function GroupDetailView({ group, onBack }: { group: TaGroup; onB
           <GradingTabContent courseId={group.courseId} />
         </TabsContent>
         <TabsContent value="attendance" className="mt-6">
-          <AttendanceTabContent groupId={group.id} />
+          <AttendanceTabContent group={group} />
         </TabsContent>
       </Tabs>
     </div>
   )
 }
-//END OF components\group-detail-view.tsx

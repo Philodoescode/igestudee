@@ -16,7 +16,7 @@ import { redirect } from "next/navigation"
 const INITIAL_SESSIONS_DISPLAY = 5; // Define a constant for initial display count
 
 export default function TASchedulePage() {
-  redirect('/under-construction');
+  // redirect('/under-construction');
   const { user, isLoading } = useRequireAuth(["ta"])
   const [sessions, setSessions] = useState<TASession[]>(taScheduleData)
   const [isModalOpen, setIsModalOpen] = useState(false)
