@@ -1,27 +1,7 @@
 import { cookies } from "next/headers"
 import { redirect } from "next/navigation"
 import bcrypt from "bcryptjs"
-
-// User types
-export type UserRole = "parent" | "student" | "ta" | "instructor"
-
-export interface User {
-  id: string
-  email: string
-  password: string
-  role: UserRole
-  name: string
-  isActive: boolean
-  lastLogin?: Date
-  profile?: {
-    firstName: string
-    lastName: string
-    phone?: string
-    address?: string
-    emergencyContact?: string
-    childId?: string // For parents
-  }
-}
+import type { User, UserRole, LoginCredentials } from "@/types/user"
 
 // Mock user database - In production, this would be a real database
 const MOCK_USERS: User[] = [
@@ -85,12 +65,6 @@ export interface AuthResult {
   user?: Omit<User, "password">
   error?: string
   redirectUrl?: string
-}
-
-export interface LoginCredentials {
-  email: string
-  password: string
-  userType: UserRole
 }
 
 // Authentication functions

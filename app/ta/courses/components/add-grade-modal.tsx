@@ -13,7 +13,8 @@ import { format } from "date-fns"
 import { Loader2, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/hooks/use-auth"
-import { taStudentList, type GradingEntry, type StudentGrade } from "@/lib/database"
+import { taStudentList } from "@/lib/database"
+import type { GradingEntry, StudentGrade } from "@/types/grading"
 import { cn } from "@/lib/utils"
 
 interface AddGradeModalProps {

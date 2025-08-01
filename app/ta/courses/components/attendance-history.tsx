@@ -11,7 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge"
 import { Search, History, Edit, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
-import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+import type { TAttendanceSession, TAttendanceRecord } from "@/types/attendance"
 import { cn } from "@/lib/utils"
 
 interface AttendanceHistoryProps {

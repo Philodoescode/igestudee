@@ -15,9 +15,9 @@ import {
   allInstructors,
   addGroup,
   updateGroup,
-  deleteGroup as dbDeleteGroup,
-  type TaGroup,
+  deleteGroup as dbDeleteGroup
 } from "@/lib/database"
+import type { TaGroup } from "@/types/course"
 
 // --- Main Page Component ---
 export default function GroupsPage() {

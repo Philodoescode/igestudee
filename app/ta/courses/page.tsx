@@ -27,10 +27,8 @@ import {
   addGroup,
   updateGroup,
   deleteGroup as dbDeleteGroup,
-  type Course,
-  type CourseSession,
-  type TaGroup,
 } from "@/lib/database"
+import type { Course, CourseSession, TaGroup } from "@/types/course"
 import Loading from "./loading"
 
 export default function CoursesPage() {

@@ -40,7 +40,8 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, ChevronsUpDown, X, Trash2 } from "lucide-react";
-import { type TaGroup, type Student, type Course, type CourseSession } from "@/lib/database";
+import type { TaGroup, Course, CourseSession } from "@/types/course";
+import type { Student } from "@/types/user";
 import { cn } from "@/lib/utils";
 
 interface GroupFormModalProps {

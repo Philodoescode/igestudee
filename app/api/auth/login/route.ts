@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { authenticateUser, createSession, type LoginCredentials } from "@/lib/auth"
+import { authenticateUser, createSession } from "@/lib/auth"
+import type { LoginCredentials } from "@/types/user"
 
 export async function POST(request: NextRequest) {
   try {

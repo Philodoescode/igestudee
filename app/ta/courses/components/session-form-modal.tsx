@@ -32,7 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Loader2, Trash2 } from "lucide-react";
-import { type CourseSession } from "@/lib/database";
+import type { CourseSession } from "@/types/course";
 
 interface SessionFormModalProps {
   isOpen: boolean;

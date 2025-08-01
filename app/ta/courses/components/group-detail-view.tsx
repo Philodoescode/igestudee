@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ArrowLeft } from "lucide-react"
-import { type TaGroup } from "@/lib/database"
+import { type TaGroup } from "@/types/course"
 
 import GradingTabContent from "./grading-tab"
 import AttendanceTabContent from "./attendance-tab"

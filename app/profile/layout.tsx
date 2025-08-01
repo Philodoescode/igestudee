@@ -4,7 +4,7 @@ import type React from "react"
 import { PortalLayout } from "@/components/portal-layout"
 import { useRequireAuth } from "@/hooks/use-auth"
 import { PORTAL_NAVIGATION } from "@/lib/navigation"
-import type { UserRole } from "@/lib/auth"
+import type { UserRole } from "@/types/user"
 
 export default function ProfileLayout({ children }: { children: React.ReactNode }) {
   // Require authentication and get user info

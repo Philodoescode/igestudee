@@ -4,7 +4,7 @@
 import React, { useState } from "react"
 import { PortalSidebar, type NavigationGroup } from "@/components/portal-sidebar"
 import { useRequireAuth } from "@/hooks/use-auth"
-import type { UserRole } from "@/lib/auth"
+import type { UserRole } from "@/types/user"
 import { cn } from "@/lib/utils"
 
 interface PortalLayoutProps {

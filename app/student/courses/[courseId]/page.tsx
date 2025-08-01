@@ -4,12 +4,9 @@ import { useState, useEffect } from "react"
 import Link from "next/link"
 import { ArrowLeft, Percent, CalendarCheck } from "lucide-react"
 import { motion } from "framer-motion"
-import {
-  courseDetailsData,
-  type CourseDetail,
-  type AssignmentDetail,
-  type QuizDetail,
-} from "@/lib/database"
+import { courseDetailsData } from "@/lib/database"
+import type { CourseDetail } from "@/types/course"
+import type { AssignmentDetail, QuizDetail } from "@/types/grading"
 
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"

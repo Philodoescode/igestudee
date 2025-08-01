@@ -2,7 +2,7 @@
 import { motion } from "framer-motion";
 import { Users, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { TaGroup } from "@/lib/database";
+import type { TaGroup } from "@/types/course";
 
 interface GroupCardProps {
   group: TaGroup;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
 import { useRouter } from "next/navigation"
-import type { User, UserRole, LoginCredentials } from "@/lib/auth"
+import type { User, UserRole, LoginCredentials } from "@/types/user"
 
 interface AuthContextType {
   user: Omit<User, "password"> | null

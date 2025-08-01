@@ -88,21 +88,6 @@ export const taNavigation = [
         href: "/ta/courses",
         icon: BookOpen,
       },
-      {
-        title: "Announcements",
-        href: "/ta/announcements",
-        icon: Megaphone,
-      },
-      {
-        title: "Schedule & Meetings",
-        href: "/ta/schedule",
-        icon: Calendar,
-      },
-      {
-        title: "Video Resources",
-        href: "/ta/resources",
-        icon: Video,
-      },
     ],
   },
 ]

@@ -47,7 +47,9 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, ChevronsUpDown, X, Trash2 } from "lucide-react";
-import { taGroupsData, type TaGroup, type Student, type Instructor } from "@/lib/database";
+import { taGroupsData } from "@/lib/database";
+import type { TaGroup } from "@/types/course";
+import type { Student, Instructor } from "@/types/user";
 import { cn } from "@/lib/utils";
 
 

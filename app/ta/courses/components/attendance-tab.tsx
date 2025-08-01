@@ -6,12 +6,9 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { Toaster, toast } from "sonner"
-import {
-  taAttendancePageData,
-  type TAttendanceSession,
-  type TAttendanceGroup,
-  type TaGroup,
-} from "@/lib/database"
+import { taAttendancePageData } from "@/lib/database"
+import type { TAttendanceSession, TAttendanceGroup } from "@/types/attendance"
+import type { TaGroup } from "@/types/course"
 import AddAttendanceModal from "./add-attendance-modal"
 import AttendanceHistory from "./attendance-history"
 

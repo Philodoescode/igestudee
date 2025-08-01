@@ -12,7 +12,7 @@ export default function TADashboard() {
         Welcome back, {firstName}!
       </h1>
       <h2 className="mt-4 text-lg text-gray-600">
-        Please head to the <a href="/ta/groups" className="text-green-600 hover:underline">Groups</a> section to manage your students.
+        Please head to the <a href="/ta/courses" className="text-green-600 hover:underline">Courses & Groups</a> section to manage your students.
       </h2>
     </div>
   )

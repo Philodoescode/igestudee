@@ -14,7 +14,7 @@ import { Eye, EyeOff, User, Users, UserCheck, Shield, AlertCircle, CheckCircle }
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
 import { useAuth } from "@/hooks/use-auth"
-import type { UserRole } from "@/lib/auth"
+import type { UserRole } from "@/types/user"
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth()

@@ -14,7 +14,7 @@ import { format } from "date-fns"
 import { Loader2, AlertCircle, Check } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/hooks/use-auth"
-import { type TAttendanceSession, type TAttendanceRecord } from "@/lib/database"
+import { type TAttendanceSession, type TAttendanceRecord } from "@/types/attendance"
 import { cn } from "@/lib/utils"
 
 type Student = { id: string; name: string };

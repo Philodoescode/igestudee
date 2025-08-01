@@ -3,12 +3,8 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from "framer-motion";
-import {
-  allInstructors,
-  type Course,
-  type CourseSession,
-  type TaGroup,
-} from '@/lib/database';
+import { allInstructors } from '@/lib/database';
+import type { Course, CourseSession, TaGroup } from '@/types/course';
 import {
   Accordion,
   AccordionContent,

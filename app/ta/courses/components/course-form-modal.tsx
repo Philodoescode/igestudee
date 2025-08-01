@@ -32,7 +32,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Loader2, Trash2 } from "lucide-react";
-import { type Course, type Instructor } from "@/lib/database";
+import type { Course } from "@/types/course";
+import type { Instructor } from "@/types/user";
 
 interface CourseFormModalProps {
   isOpen: boolean;
