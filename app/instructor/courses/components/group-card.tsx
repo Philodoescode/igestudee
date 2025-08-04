@@ -1,11 +1,11 @@
-// app/ta/courses/components/group-card.tsx
+// app/instructor/courses/components/group-card.tsx
 import { motion } from "framer-motion";
 import { Users, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import type { TaGroup } from "@/types/course";
+import type { Group } from "@/types/course";
 
 interface GroupCardProps {
-  group: TaGroup;
+  group: Group;
   onSelect: () => void;
   onModify: (e: React.MouseEvent) => void;
 }

@@ -7,10 +7,10 @@ export type StudentGrade = {
   grade: number | null // Grade is a number or null if not graded
 }
 
-// Represents a single grading event or assignment entry created by a TA
+// Represents a single grading event or assignment entry created by an instructor
 export type GradingEntry = {
   id: string
-  taName: string
+  instructorName: string
   date: string // YYYY-MM-DD
   title: string
   maxScore: number // Max possible score for this entry

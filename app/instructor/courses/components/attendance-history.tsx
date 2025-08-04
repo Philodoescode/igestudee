@@ -1,4 +1,4 @@
-// app/ta/courses/components/attendance-history.tsx
+// app/instructor/courses/components/attendance-history.tsx
 "use client"
 
 import { useState, useMemo } from "react"

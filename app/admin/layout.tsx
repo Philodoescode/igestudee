@@ -1,17 +1,17 @@
-// app/ta/layout.tsx
+// app/admin/layout.tsx
 "use client"
 
 import type React from "react"
 import { PortalLayout } from "@/components/portal-layout"
-import { taNavigation } from "@/lib/navigation"
+import { adminNavigation } from "@/lib/navigation"
 
-export default function TALayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
   return (
-    <PortalLayout navigation={taNavigation} allowedRoles={["ta"]}>
+    <PortalLayout navigation={adminNavigation} allowedRoles={["admin"]}>
       {children}
     </PortalLayout>
   )

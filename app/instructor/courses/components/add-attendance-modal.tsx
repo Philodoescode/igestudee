@@ -1,4 +1,3 @@
-// app/ta/courses/components/add-attendance-modal.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -104,9 +103,9 @@ export default function AddAttendanceModal({ isOpen, setIsOpen, onSave, students
     <motion.div key="step1" initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} transition={{ duration: 0.3 }}>
       <div className="grid gap-6 py-4">
         <div className="grid gap-2">
-          <Label htmlFor="ta-name">TA Name</Label>
+          <Label htmlFor="instructor-name">Instructor Name</Label>
           <TooltipProvider><Tooltip><TooltipTrigger asChild>
-            <Input id="ta-name" value={user?.name || ""} disabled className="cursor-not-allowed" />
+            <Input id="instructor-name" value={user?.name || ""} disabled className="cursor-not-allowed" />
           </TooltipTrigger><TooltipContent><p>Your name is pre-filled and cannot be edited.</p></TooltipContent></Tooltip></TooltipProvider>
         </div>
         <div className="grid gap-2">

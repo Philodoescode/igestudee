@@ -1,4 +1,3 @@
-// types/course.ts
 import type { AttendanceDetail } from "./attendance"
 import type { AssignmentDetail, QuizDetail } from "./grading"
 import type { Student } from "./user"
@@ -21,8 +20,8 @@ export type CourseProgress = {
 // Detailed information about a course's staff
 export type CourseDetailsInfo = {
   instructor: string
-  ta: string
-  contact: string // TA Contact Email
+  ta: string // This can be deprecated or used for a secondary instructor
+  contact: string // Main contact email
 }
 
 // A comprehensive view of a course for a student, including all materials
@@ -55,10 +54,15 @@ export type CourseSession = {
   status: "active" | "inactive"
 }
 
-// A group of students within a specific course session, managed by a TA
-export type TaGroup = {
+// A group of students within a specific course session, managed by an instructor
+export type Group = {
   id: string
   sessionId: string
   groupName: string // "Group 1", "Group 2", etc.
   students: Student[]
+  // The following are added for the old /groups page, can be merged later
+  courseName?: any
+  instructorName?: any
+  studentCount?: any
+  isActive?: any
 }

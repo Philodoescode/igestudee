@@ -12,8 +12,8 @@ export function ClientLayoutWrapper({ children }: { children: React.ReactNode })
   const isPortalPage =
     pathname?.startsWith("/student") ||
     pathname?.startsWith("/parent") ||
-    pathname?.startsWith("/ta") ||
     pathname?.startsWith("/instructor") ||
+    pathname?.startsWith("/admin") ||
     pathname?.startsWith("/profile")
 
   return (

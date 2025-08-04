@@ -1,4 +1,3 @@
-// lib/navigation.ts
 import {
   LayoutDashboard,
   BookOpen,
@@ -10,7 +9,7 @@ import {
   TrendingUp,
   CreditCard,
   Calendar,
-  Video,
+  UserPlus, // Added for admin
 } from "lucide-react"
 
 export const studentNavigation = [
@@ -74,75 +73,48 @@ export const parentNavigation = [
   },
 ]
 
-export const taNavigation = [
-  {
-    title: "MENU",
-    items: [
-      {
-        title: "Dashboard",
-        href: "/ta",
-        icon: LayoutDashboard,
-      },
-      {
-        title: "Courses & Groups",
-        href: "/ta/courses",
-        icon: BookOpen,
-      },
-    ],
-  },
-]
-
 export const instructorNavigation = [
   {
     title: "MENU",
     items: [
       {
-        title: "Admin Dashboard",
+        title: "Dashboard",
         href: "/instructor",
         icon: LayoutDashboard,
       },
       {
-        title: "Course Management",
+        title: "Courses & Groups",
         href: "/instructor/courses",
         icon: BookOpen,
-      },
-      {
-        title: "User Management",
-        href: "/instructor/users",
-        icon: Users,
-      },
-      {
-        title: "TA Management",
-        href: "/instructor/tas",
-        icon: UserCheck,
-      },
-      {
-        title: "Announcements",
-        href: "/instructor/announcements",
-        icon: Megaphone,
-      },
-    ],
-  },
-  {
-    title: "GENERAL",
-    items: [
-      {
-        title: "Financials",
-        href: "/instructor/financial",
-        icon: DollarSign,
-      },
-      {
-        title: "Analytics",
-        href: "/instructor/analytics",
-        icon: BarChart3,
       },
     ],
   },
 ]
 
+// NEW: Navigation for the Admin role
+export const adminNavigation = [
+    {
+        title: "ADMINISTRATION",
+        items: [
+            {
+                title: "Dashboard",
+                href: "/admin",
+                icon: LayoutDashboard,
+            },
+            {
+                title: "Register Staff",
+                href: "/admin/register",
+                icon: UserPlus,
+            },
+        ],
+    },
+]
+
+
+// MODIFIED: Add 'admin' to the main navigation object
 export const PORTAL_NAVIGATION = {
   student: studentNavigation,
   parent: parentNavigation,
-  ta: taNavigation,
   instructor: instructorNavigation,
+  admin: adminNavigation,
 }

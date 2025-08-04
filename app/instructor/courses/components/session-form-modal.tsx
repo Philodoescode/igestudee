@@ -1,4 +1,3 @@
-// app/ta/courses/components/session-form-modal.tsx
 "use client";
 
 import { useState, useEffect } from "react";

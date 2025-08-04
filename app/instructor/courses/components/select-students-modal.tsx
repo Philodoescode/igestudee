@@ -1,4 +1,3 @@
-// app/ta/groups/components/select-students-modal.tsx
 "use client";
 
 import { useState, useEffect, useMemo } from "react";

@@ -1,4 +1,3 @@
-// app/ta/groups/page.tsx
 "use client"
 
 import { useState } from "react"
@@ -10,25 +9,25 @@ import GroupDetailView from "../courses/components/group-detail-view"
 import GroupFormModal from "./components/group-form-modal"
 
 import { 
-  taGroupsData as initialGroups,
+  groupsData as initialGroups,
   allStudents,
   allInstructors,
   addGroup,
   updateGroup,
   deleteGroup as dbDeleteGroup
 } from "@/lib/database"
-import type { TaGroup } from "@/types/course"
+import type { Group } from "@/types/course"
 
 // --- Main Page Component ---
 export default function GroupsPage() {
-  const { user, isLoading } = useRequireAuth(["ta"])
+  const { user, isLoading } = useRequireAuth(["instructor"])
   
   const [view, setView] = useState<"landing" | "detail">("landing");
-  const [groups, setGroups] = useState<TaGroup[]>(initialGroups);
-  const [selectedGroup, setSelectedGroup] = useState<TaGroup | null>(null);
+  const [groups, setGroups] = useState<Group[]>(initialGroups);
+  const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
-  const [editingGroup, setEditingGroup] = useState<TaGroup | null>(null);
+  const [editingGroup, setEditingGroup] = useState<Group | null>(null);
 
   if (isLoading) {
     return (
@@ -39,7 +38,7 @@ export default function GroupsPage() {
   }
 
   // --- View Navigation Handlers ---
-  const handleSelectGroup = (group: TaGroup) => {
+  const handleSelectGroup = (group: Group) => {
     setSelectedGroup(group);
     setView("detail");
   }
@@ -55,12 +54,12 @@ export default function GroupsPage() {
     setIsFormModalOpen(true);
   };
 
-  const handleModifyGroup = (group: TaGroup) => {
+  const handleModifyGroup = (group: Group) => {
     setEditingGroup(group);
     setIsFormModalOpen(true);
   };
 
-  const handleSaveGroup = (groupData: TaGroup) => {
+  const handleSaveGroup = (groupData: Group) => {
     if (editingGroup) { // Update existing group
       const updated = updateGroup(groupData);
       if (updated) {

@@ -1,106 +1,76 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { authenticateUser, createSession } from "@/lib/auth"
+import { createClient } from '@/lib/supabase/server'
 import type { LoginCredentials } from "@/types/user"
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { email, password, userType } = body as LoginCredentials
+    // The client sends userType, but Supabase auth doesn't use it.
+    // We only need email and password for authentication.
+    const { email, password } = body as Omit<LoginCredentials, 'userType'>
 
-    // Debug logging
-    console.log("📝 Login attempt:", {
+    if (!email || !password) {
+      return NextResponse.json(
+        { success: false, error: "Email and password are required." },
+        { status: 400 }
+      )
+    }
+
+    const supabase = createClient()
+
+    const { data: { user }, error: authError } = await supabase.auth.signInWithPassword({
       email,
-      userType,
-      passwordLength: password?.length || 0,
+      password,
     })
 
-    // Validate input
-    if (!email || !password || !userType) {
+    if (authError || !user) {
       return NextResponse.json(
-        {
-          success: false,
-          error: "Email, password, and user type are required.",
-        },
-        { status: 400 },
+        { success: false, error: authError?.message || 'Invalid credentials' },
+        { status: 401 }
       )
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, role')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      await supabase.auth.signOut()
       return NextResponse.json(
-        {
-          success: false,
-          error: "Please enter a valid email address.",
-        },
-        { status: 400 },
+        { success: false, error: 'User profile not found. Please contact support.' },
+        { status: 500 }
       )
     }
-
-    // For debugging purposes, log if this is a test user
-    const testUsers = [
-      "parent.test@example.com",
-      "emma.johnson@example.com",
-      "ta.test@example.com",
-      "instructor.test@example.com",
-    ]
-
-    if (testUsers.includes(email.toLowerCase())) {
-      console.log(`🧪 Test user login attempt detected: ${email} (${userType})`)
-
-      // If this is a test user, we can debug the password hash
-      if (password === "P@sswOrd123") {
-        console.log("✅ Test user credentials match expected values")
-      } else {
-        console.log("❌ Test user credentials do not match expected values")
-        console.log(
-          `   Expected: "P@sswOrd123", Received: "${password.substring(0, 3)}${"*".repeat(password.length - 3)}"`,
-        )
-      }
+    
+    const clientUser = {
+      id: user.id,
+      email: user.email,
+      name: `${profile.first_name} ${profile.last_name}`,
+      role: profile.role,
     }
 
-    // Validate password strength
-    if (password.length < 8) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Password must be at least 8 characters long.",
-        },
-        { status: 400 },
-      )
-    }
-
-    // Authenticate user
-    const authResult = await authenticateUser({ email, password, userType })
-
-    if (!authResult.success) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: authResult.error,
-        },
-        { status: 401 },
-      )
-    }
-
-    // Create session
-    if (authResult.user) {
-      await createSession(authResult.user)
+    const getRedirectUrl = (role: string | null) => {
+        switch (role) {
+            case "student": return "/student";
+            case "parent": return "/parent";
+            case "instructor": return "/instructor";
+            case "admin": return "/admin";
+            default: return "/login";
+        }
     }
 
     return NextResponse.json({
       success: true,
-      user: authResult.user,
-      redirectUrl: authResult.redirectUrl,
+      user: clientUser,
+      redirectUrl: getRedirectUrl(profile.role),
     })
   } catch (error) {
     console.error("Login API error:", error)
     return NextResponse.json(
-      {
-        success: false,
-        error: "An unexpected error occurred. Please try again later.",
-      },
-      { status: 500 },
+      { success: false, error: "An unexpected error occurred." },
+      { status: 500 }
     )
   }
 }

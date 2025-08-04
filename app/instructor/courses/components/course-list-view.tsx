@@ -1,10 +1,9 @@
-// app/ta/courses/components/course-list-view.tsx
 "use client";
 
 import { useState, useMemo } from 'react';
 import { motion } from "framer-motion";
 import { allInstructors } from '@/lib/database';
-import type { Course, CourseSession, TaGroup } from '@/types/course';
+import type { Course, CourseSession, Group } from '@/types/course';
 import {
   Accordion,
   AccordionContent,
@@ -27,11 +26,11 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 interface CourseListViewProps {
     courses: Course[];
     sessions: CourseSession[];
-    groups: TaGroup[];
-    onSelectGroup: (group: TaGroup) => void;
+    groups: Group[];
+    onSelectGroup: (group: Group) => void;
     onOpenCourseModal: (course: Course | null) => void;
     onOpenSessionModal: (session: CourseSession | null, courseId: string) => void;
-    onOpenGroupModal: (group: TaGroup | null, sessionId: string) => void;
+    onOpenGroupModal: (group: Group | null, sessionId: string) => void;
 }
 
 export default function CourseListView({ courses, sessions, groups, onSelectGroup, onOpenCourseModal, onOpenSessionModal, onOpenGroupModal }: CourseListViewProps) {
@@ -76,7 +75,7 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
         if (!acc[group.sessionId]) acc[group.sessionId] = [];
         acc[group.sessionId].push(group);
         return acc;
-    }, {} as Record<string, TaGroup[]>);
+    }, {} as Record<string, Group[]>);
     
     const sessionsByCourse = filteredSessions.reduce((acc, session) => {
         if (!visibleSessionIds.has(session.id)) return acc;

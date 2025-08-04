@@ -47,8 +47,8 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, Check, ChevronsUpDown, X, Trash2 } from "lucide-react";
-import { taGroupsData } from "@/lib/database";
-import type { TaGroup } from "@/types/course";
+import { groupsData } from "@/lib/database";
+import type { Group } from "@/types/course";
 import type { Student, Instructor } from "@/types/user";
 import { cn } from "@/lib/utils";
 
@@ -56,9 +56,9 @@ import { cn } from "@/lib/utils";
 interface GroupFormModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onSave: (group: TaGroup) => void;
+  onSave: (group: Group) => void;
   onDelete: (groupId: string) => void;
-  group: TaGroup | null;
+  group: Group | null;
   allStudents: Student[];
   allInstructors: Instructor[];
 }
@@ -106,7 +106,7 @@ export default function GroupFormModal({
 
   useEffect(() => {
     if (!group && formData.courseName) {
-      const groupsInCourse = taGroupsData.filter(g => g.courseName === formData.courseName);
+      const groupsInCourse = groupsData.filter(g => g.courseName === formData.courseName);
       const existingNumbers = new Set(
         groupsInCourse.map(g => {
           const match = g.groupName.match(/Group (\d+)/);
@@ -131,7 +131,7 @@ export default function GroupFormModal({
     if (formData.students.length === 0) newErrors.students = "At least one student is required.";
     
     if (!group) {
-        const groupExists = taGroupsData.some(g => g.courseName === formData.courseName && g.groupName === formData.groupName);
+        const groupExists = groupsData.some(g => g.courseName === formData.courseName && g.groupName === formData.groupName);
         if (groupExists) {
             newErrors.groupName = `Group number ${formData.groupName} already exists for ${formData.courseName}. The number should auto-increment.`;
         }
@@ -145,7 +145,7 @@ export default function GroupFormModal({
     if (!validate()) return;
     setIsSaving(true);
 
-    const groupData: TaGroup = {
+    const groupData: Group = {
       id: group?.id || `group-${Date.now()}`,
       groupName: formData.groupName,
       courseName: formData.courseName,
@@ -223,12 +223,13 @@ export default function GroupFormModal({
                   <SelectValue placeholder="Select an instructor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allInstructors.map((inst) => (
+                  {(allInstructors || []).map((inst) => (
                     <SelectItem key={inst.id} value={inst.name}>
                       {inst.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
+
               </Select>
               {errors.instructorName && <p className="text-xs text-red-500">{errors.instructorName}</p>}
             </div>

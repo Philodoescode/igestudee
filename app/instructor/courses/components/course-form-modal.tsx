@@ -24,13 +24,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Loader2, Trash2 } from "lucide-react";
 import type { Course } from "@/types/course";
 import type { Instructor } from "@/types/user";
@@ -38,18 +31,19 @@ import type { Instructor } from "@/types/user";
 interface CourseFormModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
-  onSave: (course: Omit<Course, 'id'> | Course) => void;
+  // FIX: onSave now passes a simpler object
+  onSave: (courseData: { title: string }) => void;
   onDelete: (courseId: string) => void;
   courseToEdit: Course | null;
+  // allInstructors is no longer needed but kept in props for consistency if you need it for editing
   allInstructors: Instructor[];
 }
 
 const getInitialFormData = () => ({
   title: "",
-  instructorId: "",
 });
 
-export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, courseToEdit, allInstructors }: CourseFormModalProps) {
+export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, courseToEdit }: CourseFormModalProps) {
   const [formData, setFormData] = useState(getInitialFormData());
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -58,7 +52,6 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
     if (courseToEdit) {
       setFormData({
         title: courseToEdit.title,
-        instructorId: courseToEdit.instructorId,
       });
     } else {
       setFormData(getInitialFormData());
@@ -69,7 +62,6 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
     if (!formData.title.trim()) newErrors.title = "Course Title is required.";
-    if (!formData.instructorId) newErrors.instructorId = "Instructor is required.";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -77,11 +69,11 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
   const handleSave = () => {
     if (!validate()) return;
     setIsSaving(true);
-    const dataToSave = courseToEdit
-      ? { ...courseToEdit, ...formData }
-      : formData;
     
-    // Simulate API call
+    // In a real app, you would handle editing differently,
+    // but for creation, we just pass the title.
+    const dataToSave = { title: formData.title };
+    
     setTimeout(() => {
       onSave(dataToSave);
       setIsSaving(false);
@@ -100,7 +92,7 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
         <DialogHeader>
           <DialogTitle>{courseToEdit ? "Modify Course" : "Create New Course"}</DialogTitle>
           <DialogDescription>
-            {courseToEdit ? "Edit the details of the course." : "Fill out the details for the new course."}
+            {courseToEdit ? "Edit the details of the course." : "Enter the title for the new course. You will be assigned as the instructor."}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -114,23 +106,7 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
             />
             {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
           </div>
-          <div className="grid gap-2">
-            <Label htmlFor="instructor">Course Instructor</Label>
-            <Select
-              value={formData.instructorId}
-              onValueChange={(value) => setFormData({ ...formData, instructorId: value })}
-            >
-              <SelectTrigger id="instructor">
-                <SelectValue placeholder="Select an instructor" />
-              </SelectTrigger>
-              <SelectContent>
-                {allInstructors.map((inst) => (
-                  <SelectItem key={inst.id} value={inst.id}>{inst.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {errors.instructorId && <p className="text-xs text-red-500">{errors.instructorId}</p>}
-          </div>
+          {/* FIX: Instructor dropdown is completely removed */}
         </div>
         <DialogFooter className="flex-col-reverse gap-y-2 sm:flex-row sm:justify-between sm:space-x-2">
           <div>

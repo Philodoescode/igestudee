@@ -1,4 +1,3 @@
-// app/ta/courses/components/attendance-tab.tsx
 "use client"
 
 import { useState } from "react"
@@ -6,14 +5,14 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { motion } from "framer-motion"
 import { Toaster, toast } from "sonner"
-import { taAttendancePageData } from "@/lib/database"
+import { instructorAttendancePageData } from "@/lib/database"
 import type { TAttendanceSession, TAttendanceGroup } from "@/types/attendance"
-import type { TaGroup } from "@/types/course"
+import type { Group } from "@/types/course"
 import AddAttendanceModal from "./add-attendance-modal"
 import AttendanceHistory from "./attendance-history"
 
 // The group object passed from the parent. We assume it has `courseName` based on its usage in the parent.
-interface ParentGroup extends TaGroup {
+interface ParentGroup extends Group {
   courseName: string
 }
 
@@ -21,7 +20,7 @@ export default function AttendanceTabContent({ group }: { group: ParentGroup }) 
   // The state is now initialized with a function to handle new groups.
   // It is guaranteed to be a TAttendanceGroup object, not undefined.
   const [groupData, setGroupData] = useState<TAttendanceGroup>(() => {
-    const existingData = taAttendancePageData.groups.find((g) => g.id === group.id)
+    const existingData = instructorAttendancePageData.groups.find((g) => g.id === group.id)
     if (existingData) {
       return existingData
     }

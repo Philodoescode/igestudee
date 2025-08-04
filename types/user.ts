@@ -1,7 +1,5 @@
-// types/user.ts
-
 // Basic user role definition
-export type UserRole = "parent" | "student" | "ta" | "instructor"
+export type UserRole = "parent" | "student" | "instructor" | "admin"
 
 // Comprehensive user model, often used for authentication and session management
 export interface User {
