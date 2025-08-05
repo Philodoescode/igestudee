@@ -1,3 +1,4 @@
+// FILE: courses/components/grading-tab.tsx
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
@@ -20,6 +21,7 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [history, setHistory] = useState<GradingEntry[] | undefined>(undefined)
   const [isLoading, setIsLoading] = useState(true)
+  const [editingEntry, setEditingEntry] = useState<GradingEntry | null>(null)
   const supabase = createClient()
 
   const fetchGrades = useCallback(async () => {
@@ -35,14 +37,11 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
       console.error(error)
       setHistory([])
     } else if (data) {
-      // Normalize payload shape: RPC might return [{ grades: [...] }] or { grades: [...] }
       const payload: any = Array.isArray(data) ? data[0] : data
       const raw: any[] = Array.isArray(payload.grades) ? payload.grades : []
 
-      // Determine if already nested under `scores`
       let transformedHistory: GradingEntry[]
       if (raw.length > 0 && Array.isArray(raw[0].scores)) {
-        // Already nested
         transformedHistory = raw.map((assignment: any) => ({
           id: String(assignment.assignment_id),
           title: assignment.title,
@@ -51,13 +50,12 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
             : new Date().toISOString().split("T")[0],
           maxScore: assignment.max_score,
           studentGrades: assignment.scores.map((s: any) => ({
-            studentId: String(s.student_id ?? s.studentId),
+            studentId: String(s.studentId ?? s.student_id),
             name: s.name,
             grade: s.score ?? s.grade,
           })),
         }))
       } else {
-        // Flat rows: group by assignment_id
         const map: Record<string, { info: any; scores: any[] }> = {}
         raw.forEach(row => {
           const key = String(row.assignment_id)
@@ -72,11 +70,13 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
               scores: [],
             }
           }
-          map[key].scores.push({
-            studentId: String(row.student_id),
-            name: row.name,
-            grade: row.score,
-          })
+          if (row.student_id) {
+            map[key].scores.push({
+              studentId: String(row.student_id),
+              name: row.name,
+              grade: row.score,
+            })
+          }
         })
         transformedHistory = Object.values(map).map(({ info, scores }) => ({
           id: String(info.assignment_id),
@@ -100,7 +100,29 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
 
   const handleSaveSuccess = () => {
     setIsModalOpen(false)
+    setEditingEntry(null)
     fetchGrades()
+  }
+
+  const handleOpenAddModal = () => {
+    setEditingEntry(null)
+    setIsModalOpen(true)
+  }
+
+  const handleOpenEditModal = (entry: GradingEntry) => {
+    setEditingEntry(entry)
+    setIsModalOpen(true)
+  }
+
+  const handleDeleteEntry = async (assignmentId: string) => {
+    const { error } = await supabase.rpc("delete_assignment", { p_assignment_id: Number(assignmentId) })
+
+    if (error) {
+      toast.error(`Failed to delete entry: ${error.message}`)
+    } else {
+      toast.success("Grading entry has been deleted.")
+      fetchGrades()
+    }
   }
 
   if (isLoading) {
@@ -126,18 +148,23 @@ export default function GradingTabContent({ group }: GradingTabContentProps) {
             Click here to add a new set of grades for your students.
           </p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex-shrink-0">
+        <Button onClick={handleOpenAddModal} className="w-full sm:w-auto flex-shrink-0">
           <Plus className="mr-2 h-4 w-4" />
           Add New Grade
         </Button>
       </motion.div>
 
-      <GradingHistory history={history} />
+      <GradingHistory 
+        history={history} 
+        onEdit={handleOpenEditModal} 
+        onDelete={handleDeleteEntry}
+      />
 
       <AddGradeModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         group={group}
+        editingEntry={editingEntry}
         onSaveSuccess={handleSaveSuccess}
       />
     </div>

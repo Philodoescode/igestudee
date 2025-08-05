@@ -1,3 +1,4 @@
+// FILE: courses/components/grading-history.tsx
 "use client"
 
 import { useState, useMemo } from "react"
@@ -6,18 +7,21 @@ import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination"
 import { Button } from "@/components/ui/button"
-import { Search, History, Download } from "lucide-react"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
+import { Search, History, Download, Edit, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { format } from "date-fns"
 import { type GradingEntry } from "@/lib/database"
 
 interface GradingHistoryProps {
   history: GradingEntry[] | undefined
+  onEdit: (entry: GradingEntry) => void
+  onDelete: (assignmentId: string) => void
 }
 
 const ITEMS_PER_PAGE = 5;
 
-export default function GradingHistory({ history = [] }: GradingHistoryProps) {
+export default function GradingHistory({ history = [], onEdit, onDelete }: GradingHistoryProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
   const [openAccordionId, setOpenAccordionId] = useState<string | undefined>(undefined)
@@ -121,10 +125,32 @@ export default function GradingHistory({ history = [] }: GradingHistoryProps) {
                         </TableBody>
                     </Table>
                   </div>
-                  <div className="mt-2 p-4 flex justify-end border-t bg-slate-50 dark:bg-slate-800/50">
+                  <div className="mt-2 p-4 flex justify-end space-x-2 border-t bg-slate-50 dark:bg-slate-800/50">
                     <Button variant="outline" size="sm" onClick={() => handleExportToCSV(entry)}>
                         <Download className="mr-2 h-4 w-4" />Export CSV
                     </Button>
+                     <Button variant="ghost" size="sm" onClick={() => onEdit(entry)}>
+                        <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                    <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                            <Button variant="ghost" size="sm" className="text-red-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400">
+                                <Trash2 className="h-4 w-4 mr-1" /> Delete
+                            </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                            <AlertDialogHeader>
+                                <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete the grading entry for "{entry.title}" and all associated student scores.
+                                </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => onDelete(entry.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                            </AlertDialogFooter>
+                        </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </AccordionContent>
               </AccordionItem>

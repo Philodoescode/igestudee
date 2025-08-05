@@ -13,6 +13,7 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { toast } from "sonner"
 import { type Group } from "@/types/course"
+import { type GradingEntry } from "@/lib/database"
 import { cn } from "@/lib/utils"
 
 type StudentScore = {
@@ -26,33 +27,49 @@ interface AddGradeModalProps {
   setIsOpen: (isOpen: boolean) => void
   group: Group
   onSaveSuccess: () => void
+  editingEntry: GradingEntry | null
 }
 
-export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess }: AddGradeModalProps) {
+export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess, editingEntry }: AddGradeModalProps) {
   const supabase = createClient()
+  const isEditing = !!editingEntry;
+
   const [step, setStep] = useState(1)
   
-  // Step 1 State
+  // State for both create and edit
   const [title, setTitle] = useState("")
   const [maxScore, setMaxScore] = useState<number | ''>(100)
   const [errors, setErrors] = useState<{ title?: string; maxScore?: string }>({})
-
-  // Step 2 State
   const [studentScores, setStudentScores] = useState<StudentScore[]>([])
   const [assignmentId, setAssignmentId] = useState<number | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
-    if (isOpen && group) { // Ensure group is available
-      setStep(1)
-      setTitle("")
-      setMaxScore(100)
-      setErrors({})
-      setAssignmentId(null)
-      // FIX: Use the students from the passed `group` prop, not mock data
-      setStudentScores(group.students.map(s => ({ student_id: s.id, name: s.name, score: null })))
+    if (isOpen) {
+      if (isEditing) {
+        setTitle(editingEntry.title)
+        setMaxScore(editingEntry.maxScore)
+        setAssignmentId(Number(editingEntry.id))
+        setErrors({})
+        
+        const scoresMap = new Map(editingEntry.studentGrades.map(sg => [sg.studentId, sg.grade]));
+        setStudentScores(group.students.map(s => ({
+            student_id: s.id,
+            name: s.name,
+            score: scoresMap.has(s.id) ? scoresMap.get(s.id) : null,
+        })));
+
+      } else {
+        // Reset for create mode
+        setStep(1)
+        setTitle("")
+        setMaxScore(100)
+        setErrors({})
+        setAssignmentId(null)
+        setStudentScores(group.students.map(s => ({ student_id: s.id, name: s.name, score: null })))
+      }
     }
-  }, [isOpen, group])
+  }, [isOpen, group, editingEntry, isEditing])
 
   const validateStep1 = () => {
     const newErrors: { title?: string; maxScore?: string } = {}
@@ -62,59 +79,86 @@ export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess 
     return Object.keys(newErrors).length === 0
   }
 
+  // --- CREATE FLOW ---
   const handleNext = async () => {
     if (!validateStep1()) return;
 
     setIsSaving(true)
-    // Step 1: Create the assignment to get an ID
-    const { data, error: rpcError } = await supabase.rpc('create_grading_assignment', {
+    const { data, error } = await supabase.rpc('create_grading_assignment', {
       p_group_id: Number(group.id),
       p_title: title,
       p_max_score: Number(maxScore),
     })
     setIsSaving(false)
 
-    if (rpcError) {
-      toast.error(`Failed to create assignment: ${rpcError.message}`)
+    if (error) {
+      toast.error(`Failed to create assignment: ${error.message}`)
     } else {
       setAssignmentId(data)
       setStep(2)
     }
   }
 
-  const handleSave = async () => {
+  const handleCreate = async () => {
     if (!assignmentId) {
         toast.error("Cannot save grades without a valid assignment.");
         return;
     }
 
-    const gradesToSubmit = studentScores
-        .filter(s => s.score !== null && s.score !== undefined)
-        .map(s => ({ student_id: s.student_id, score: s.score }));
+    const gradesToSubmit = studentScores.map(s => ({ student_id: s.student_id, score: s.score }));
     
-    // Check for invalid grades before submitting
-    const invalidGrade = studentScores.some(s => s.score !== null && s.score > Number(maxScore));
-    if (invalidGrade) {
+    if (studentScores.some(s => s.score !== null && s.score > Number(maxScore))) {
         toast.error("One or more grades are higher than the max score.");
         return;
     }
 
     setIsSaving(true);
-    // Step 2: Submit the grades for the created assignment
-    const { error: rpcError } = await supabase.rpc('submit_bulk_grades', {
+    const { error } = await supabase.rpc('submit_bulk_grades', {
       p_assignment_id: assignmentId,
       p_grades: gradesToSubmit,
     });
     setIsSaving(false);
 
-    if (rpcError) {
-        toast.error(`Failed to save grades: ${rpcError.message}`);
+    if (error) {
+        toast.error(`Failed to save grades: ${error.message}`);
     } else {
         toast.success("Grades have been saved successfully!");
-        onSaveSuccess(); // Refresh the parent component's data
-        setIsOpen(false);
+        onSaveSuccess();
     }
   }
+  // --- END CREATE FLOW ---
+
+  // --- EDIT FLOW ---
+  const handleUpdate = async () => {
+    if (!validateStep1()) return;
+    if (!assignmentId) {
+      toast.error("Assignment ID is missing. Cannot update.");
+      return;
+    }
+    if (studentScores.some(s => s.score !== null && s.score > Number(maxScore))) {
+        toast.error("One or more grades are higher than the max score.");
+        return;
+    }
+
+    const gradesToSubmit = studentScores.map(s => ({ student_id: s.student_id, score: s.score }));
+    
+    setIsSaving(true);
+    const { error } = await supabase.rpc('update_assignment_and_grades', {
+      p_assignment_id: assignmentId,
+      p_title: title,
+      p_max_score: Number(maxScore),
+      p_grades: gradesToSubmit,
+    });
+    setIsSaving(false);
+
+    if (error) {
+        toast.error(`Failed to update grades: ${error.message}`);
+    } else {
+        toast.success("Grades have been updated successfully!");
+        onSaveSuccess();
+    }
+  }
+  // --- END EDIT FLOW ---
 
   const handleGradeChange = (studentId: string, value: string) => {
     const grade = value === '' ? null : parseFloat(value);
@@ -135,15 +179,15 @@ export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess 
         </div>
         <div className="grid gap-2">
             <Label htmlFor="maxScore">Max Score (Out of)</Label>
-            <Input id="maxScore" type="number" min="1" value={maxScore} onChange={(e) => setMaxScore(e.target.value)} placeholder="e.g., 100" />
+            <Input id="maxScore" type="number" min="1" value={maxScore} onChange={(e) => setMaxScore(e.target.value === '' ? '' : Number(e.target.value))} placeholder="e.g., 100" />
             {errors.maxScore && <p className="text-xs text-red-500">{errors.maxScore}</p>}
         </div>
       </div>
     </motion.div>
   )
 
-  const step2Content = (
-    <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+  const studentGradesTable = (
+    <>
       <Alert className="mb-4">
         <AlertCircle className="h-4 w-4" />
         <AlertDescription>
@@ -174,23 +218,50 @@ export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess 
           </TableBody>
         </Table>
       </div>
-    </motion.div>
-  )
+    </>
+  );
+
+  const createContent = (
+      <AnimatePresence mode="wait">
+        {step === 1 ? step1Content : (
+            <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                {studentGradesTable}
+            </motion.div>
+        )}
+      </AnimatePresence>
+  );
+
+  const editContent = (
+      <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+        {step1Content}
+        {studentGradesTable}
+      </motion.div>
+  );
   
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="sm:max-w-md md:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Grading Entry</DialogTitle>
+          <DialogTitle>{isEditing ? "Modify Grading Entry" : "New Grading Entry"}</DialogTitle>
           <DialogDescription>
-            {step === 1 ? "Step 1 of 2: Define the assignment." : "Step 2 of 2: Enter student scores."}
+            {isEditing 
+              ? "Edit the assignment details and student scores." 
+              : step === 1 ? "Step 1 of 2: Define the assignment." : "Step 2 of 2: Enter student scores."}
           </DialogDescription>
         </DialogHeader>
 
-        <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
+        {isEditing ? editContent : createContent}
 
         <DialogFooter className="pt-4 border-t">
-          {step === 1 && (
+          {isEditing ? (
+            <>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button onClick={handleUpdate} disabled={isSaving || studentScores.some(s => s.score !== null && s.score > Number(maxScore))}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? "Saving..." : "Save Changes"}
+              </Button>
+            </>
+          ) : step === 1 ? (
             <>
               <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
               <Button onClick={handleNext} disabled={isSaving}>
@@ -198,11 +269,10 @@ export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess 
                 Next: Enter Grades
               </Button>
             </>
-          )}
-          {step === 2 && (
+          ) : (
             <>
               <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
-              <Button onClick={handleSave} disabled={isSaving || studentScores.some(s => s.score !== null && s.score > Number(maxScore))}>
+              <Button onClick={handleCreate} disabled={isSaving || studentScores.some(s => s.score !== null && s.score > Number(maxScore))}>
                 {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSaving ? "Saving..." : "Save Grades"}
               </Button>
