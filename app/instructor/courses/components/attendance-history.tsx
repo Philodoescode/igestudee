@@ -1,4 +1,3 @@
-// app/instructor/courses/components/attendance-history.tsx
 "use client"
 
 import { useState, useMemo } from "react"
@@ -11,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Badge } from "@/components/ui/badge"
 import { Search, History, Edit, Trash2 } from "lucide-react"
 import { motion } from "framer-motion"
+import { format } from "date-fns"
 import type { TAttendanceSession, TAttendanceRecord } from "@/types/attendance"
 import { cn } from "@/lib/utils"
 
@@ -43,10 +43,11 @@ const getStatusBadgeClass = (status: 'Present' | 'Absent' | 'Tardy') => {
 export default function AttendanceHistory({ history, onEdit, onDelete }: AttendanceHistoryProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
+  const [openAccordionId, setOpenAccordionId] = useState<string | undefined>(undefined)
 
   const filteredHistory = useMemo(() => {
     return history.filter(entry => 
-      new Date(entry.date + 'T00:00:00').toLocaleDateString().toLowerCase().includes(searchTerm.toLowerCase())
+      format(new Date(entry.date + 'T00:00:00'), 'MMMM d, yyyy').toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [history, searchTerm])
 
@@ -86,13 +87,18 @@ export default function AttendanceHistory({ history, onEdit, onDelete }: Attenda
         
         <div className="border rounded-lg overflow-hidden">
         {paginatedHistory.length > 0 ? (
-            <Accordion type="single" collapsible>
+            <Accordion 
+              type="single" 
+              collapsible 
+              value={openAccordionId} 
+              onValueChange={setOpenAccordionId}
+            >
             {paginatedHistory.map(entry => (
                 <AccordionItem value={entry.id} key={entry.id} className="border-b last:border-b-0">
                 <AccordionTrigger className="px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50">
                     <div className="flex flex-1 items-center justify-between gap-4 w-full pr-2">
                         <div className="text-left flex-1 min-w-0">
-                        <p className="font-semibold">{new Date(entry.date + 'T00:00:00').toLocaleDateString()}</p>
+                        <p className="font-semibold">{format(new Date(entry.date + 'T00:00:00'), 'MMMM d, yyyy')}</p>
                         <p className="text-sm text-muted-foreground truncate">{getSessionSummary(entry.records)}</p>
                         </div>
                     </div>

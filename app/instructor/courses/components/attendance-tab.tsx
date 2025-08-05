@@ -1,71 +1,112 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Toaster, toast } from "sonner"
-import { instructorAttendancePageData } from "@/lib/database"
-import type { TAttendanceSession, TAttendanceGroup } from "@/types/attendance"
+import { createClient } from "@/lib/supabase/client"
+import type { TAttendanceSession, TAttendanceRecord } from "@/types/attendance"
 import type { Group } from "@/types/course"
 import AddAttendanceModal from "./add-attendance-modal"
 import AttendanceHistory from "./attendance-history"
 
-// The group object passed from the parent. We assume it has `courseName` based on its usage in the parent.
 interface ParentGroup extends Group {
   courseName: string
 }
 
 export default function AttendanceTabContent({ group }: { group: ParentGroup }) {
-  // The state is now initialized with a function to handle new groups.
-  // It is guaranteed to be a TAttendanceGroup object, not undefined.
-  const [groupData, setGroupData] = useState<TAttendanceGroup>(() => {
-    const existingData = instructorAttendancePageData.groups.find((g) => g.id === group.id)
-    if (existingData) {
-      return existingData
-    }
-    // For new groups, create a default structure. This is the fix.
-    return {
-      id: group.id,
-      name: group.groupName,
-      course: group.courseName,
-      studentCount: group.students.length,
-      students: group.students,
-      sessions: [],
-    }
-  })
-
+  const [sessions, setSessions] = useState<TAttendanceSession[] | undefined>(undefined)
+  const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSession, setEditingSession] = useState<TAttendanceSession | null>(null)
+  const supabase = createClient()
 
-  const handleSaveSession = (session: TAttendanceSession) => {
-    setGroupData((prevGroup) => {
-      // This logic now works because prevGroup is never undefined.
-      const sessionExists = prevGroup.sessions.some((s) => s.id === session.id)
-      let updatedSessions
+  const fetchAttendance = useCallback(async () => {
+    if (!group?.id) return
+    setIsLoading(true)
 
-      if (sessionExists) {
-        updatedSessions = prevGroup.sessions.map((s) => (s.id === session.id ? session : s))
-        toast.success(`Attendance for ${new Date(session.date + "T00:00:00").toLocaleDateString()} updated successfully!`)
+    const { data, error } = await supabase.rpc("get_group_attendance_and_grades", { p_group_id: Number(group.id) })
+
+    if (error) {
+      toast.error("Failed to load attendance data.")
+      console.error(error)
+      setSessions([])
+    } else if (data) {
+      // Determine whether the RPC returned nested sessions or flat rows
+      const raw: any[] = Array.isArray(data.attendance) ? data.attendance : Array.isArray(data) ? data : []
+      let transformedData: TAttendanceSession[]
+
+      if (raw.length > 0 && raw[0].records !== undefined) {
+        // Already nested
+        transformedData = raw.map((att: any, idx: number) => ({
+          id: `${att.date}-${idx}`,
+          date: att.date,
+          records: att.records as TAttendanceRecord[],
+        }))
       } else {
-        updatedSessions = [session, ...prevGroup.sessions]
-        toast.success(`Attendance for ${new Date(session.date + "T00:00:00").toLocaleDateString()} saved successfully!`)
+        // Flat rows: group by date
+        const sessionsMap = raw.reduce<Record<string, TAttendanceRecord[]>>((acc, row: any) => {
+          const date = row.date
+          if (!acc[date]) acc[date] = []
+          acc[date].push({
+            studentId: String(row.student_id),
+            name:
+              group.students.find(s => s.id === String(row.student_id))?.name ??
+              "Unknown",
+            status: row.status as "Present" | "Absent" | "Tardy",
+          })
+          return acc
+        }, {})
+
+        transformedData = Object.entries(sessionsMap).map(([date, records], idx) => ({
+          id: `${date}-${idx}`,
+          date,
+          records,
+        }))
       }
 
-      updatedSessions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      // Sort descending by date
+      setSessions(
+        transformedData.sort(
+          (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+        )
+      )
+    }
+    setIsLoading(false)
+  }, [group?.id, group.students, supabase])
 
-      return { ...prevGroup, sessions: updatedSessions }
+  useEffect(() => {
+    fetchAttendance()
+  }, [fetchAttendance])
+
+  const handleSaveSession = async (session: TAttendanceSession) => {
+    const isEditing = sessions?.some(s => s.id === session.id)
+
+    const { error } = await supabase.rpc("add_bulk_attendance", {
+      p_group_id: Number(group.id),
+      p_date: session.date,
+      p_records: session.records.map(r => ({ student_id: r.studentId, status: r.status })),
     })
+
+    if (error) {
+      toast.error(`Failed to save attendance: ${error.message}`)
+    } else {
+      toast.success(
+        `Attendance for ${new Date(
+          session.date + "T00:00:00"
+        ).toLocaleDateString()} ${isEditing ? "updated" : "saved"} successfully!`
+      )
+      await fetchAttendance()
+    }
+
     setEditingSession(null)
     setIsModalOpen(false)
   }
 
   const handleDeleteSession = (sessionId: string) => {
-    setGroupData((prevGroup) => {
-      const updatedSessions = prevGroup.sessions.filter((s) => s.id !== sessionId)
-      toast.error("Attendance record has been deleted.")
-      return { ...prevGroup, sessions: updatedSessions }
-    })
+    setSessions(prev => (prev || []).filter(s => s.id !== sessionId))
+    toast.error("Attendance record has been deleted.")
   }
 
   const handleEditSession = (session: TAttendanceSession) => {
@@ -78,7 +119,14 @@ export default function AttendanceTabContent({ group }: { group: ParentGroup }) 
     setIsModalOpen(true)
   }
 
-  // The `if (!groupData)` check is now removed because groupData is never undefined.
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Toaster position="top-center" richColors />
@@ -100,13 +148,13 @@ export default function AttendanceTabContent({ group }: { group: ParentGroup }) 
         </Button>
       </motion.div>
 
-      <AttendanceHistory history={groupData.sessions} onEdit={handleEditSession} onDelete={handleDeleteSession} />
+      <AttendanceHistory history={sessions || []} onEdit={handleEditSession} onDelete={handleDeleteSession} />
 
       <AddAttendanceModal
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         onSave={handleSaveSession}
-        students={groupData.students}
+        students={group.students}
         editingSession={editingSession}
       />
     </div>
