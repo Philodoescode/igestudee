@@ -1,4 +1,3 @@
-// START OF courses/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -49,8 +48,6 @@ export default function CoursesPage() {
   const fetchData = async () => {
     setIsDataLoading(true)
 
-    // FIX: Changed the direct table query to the 'get_all_students_and_instructors' RPC call.
-    // This function is designed to securely bypass RLS for authorized roles.
     const [portalData, usersData] = await Promise.all([
         supabase.rpc('get_instructor_portal_data'),
         supabase.rpc('get_all_students_and_instructors')
@@ -63,11 +60,9 @@ export default function CoursesPage() {
         toast.error("Failed to load user list.");
         console.error("Users Error:", usersData.error)
     } else {
-        // The data from the RPC call is already filtered for students and instructors.
-        // We just need to pick out the students for the student list.
         const students = (usersData.data || [])
             .filter((u: UserFromRPC) => u.role === 'student')
-            .map((u: UserFromRPC) => ({ id: u.id, name: u.name, registeredCourses: [] })); // `name` is already formatted by the RPC
+            .map((u: UserFromRPC) => ({ id: u.id, name: u.name, registeredCourses: [] }));
         setAllStudents(students);
     }
 
@@ -76,7 +71,7 @@ export default function CoursesPage() {
 
   useEffect(() => { if (user) fetchData() }, [user])
 
-  // CRUD Handlers (Correct)
+  // CRUD Handlers
   const handleSave = async (operation: string, data: any) => {
     let error;
     toast.info(`Saving ${operation}...`);
@@ -86,7 +81,7 @@ export default function CoursesPage() {
       session: () => supabase.rpc('create_new_session', { p_course_id: targetCourseId, p_month: data.month, p_year: data.year, p_status: data.status }),
       group: () => supabase.rpc('create_new_group', { p_session_id: targetSessionId, p_students: data.students.map((s: Student) => ({ student_id: s.id })) }),
       updateCourse: () => supabase.rpc('update_course_details', { p_course_id: editingCourse!.id, p_title: data.title }),
-      updateSession: () => supabase.rpc('update_session_details', { p_session_id: editingSession!.id, p_status: data.status }),
+      updateSession: () => supabase.rpc('update_session_details', { p_session_id: editingSession!.id, p_month: data.month, p_year: data.year, p_status: data.status }),
       updateGroup: () => supabase.rpc('update_group_members', { p_group_id: editingGroup!.id, p_student_ids: data.students.map((s: Student) => s.id) }),
     };
 
@@ -128,7 +123,7 @@ export default function CoursesPage() {
         toast.error(`Failed to delete ${operation}: ${error.message}`);
     } else {
         toast.error(`${operation.charAt(0).toUpperCase() + operation.slice(1)} deleted. Refreshing data.`);
-        await fetchData();
+        await fetchData(); // This refresh is key to updating the UI
     }
     setIsCourseModalOpen(false);
     setIsSessionModalOpen(false);
@@ -166,10 +161,12 @@ export default function CoursesPage() {
     setIsGroupStudentsModalOpen(true);
   }
   
-  // Data Transformation (Correct)
   const mappedCourses: Course[] = courses.map(c => ({ id: String(c.id), title: c.title, instructorId: c.instructorId, instructorName: c.instructorName }));
   const allSessions: CourseSession[] = courses.flatMap(c => c.sessions || []).map(s => ({ id: String(s.id), courseId: String(s.courseId), month: s.month, year: s.year, status: s.status }));
   const allGroups: Group[] = courses.flatMap(c => c.sessions || []).flatMap(s => s.groups || []).map(g => ({ id: String(g.id), sessionId: String(g.sessionId), groupName: g.groupName, students: g.students || [] }));
+
+  const groupsForSelectedSession = targetSessionId ? allGroups.filter(g => g.sessionId === targetSessionId) : [];
+
 
   return (
     <div>
@@ -212,8 +209,13 @@ export default function CoursesPage() {
         onSelect={(selectedStudents) => handleSave("group", { students: selectedStudents })}
         allStudents={allStudents}
         initiallySelectedNames={editingGroup ? editingGroup.students.map(s => s.name) : []}
+        groupsInSession={groupsForSelectedSession}
+        currentGroupId={editingGroup ? editingGroup.id : null}
+        // --- PASSING THE NEW PROPS HERE ---
+        isEditing={!!editingGroup}
+        groupName={editingGroup?.groupName}
+        onDelete={editingGroup ? () => handleDelete("group", editingGroup.id) : undefined}
       />
     </div>
   )
 }
-//END OF courses/page.tsx
