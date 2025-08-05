@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion } from "framer-motion";
-import { allInstructors } from '@/lib/database';
+// allInstructors is no longer needed here
 import type { Course, CourseSession, Group } from '@/types/course';
 import {
   Accordion,
@@ -39,8 +39,6 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
   const [showInactive, setShowInactive] = useState(true);
 
   const processedData = useMemo(() => {
-    const instructorsMap = new Map(allInstructors.map(i => [i.id, i.name]));
-
     const filteredSessions = showInactive ? sessions : sessions.filter(s => s.status === 'active');
 
     let visibleGroupIds = new Set(groups.map(g => g.id));
@@ -50,14 +48,15 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
     if (searchTerm) {
         const lowerSearch = searchTerm.toLowerCase();
         visibleGroupIds = new Set();
+        const coursesMap = new Map(courses.map(c => [c.id, c]));
+        
         groups.forEach(group => {
             const session = filteredSessions.find(s => s.id === group.sessionId);
-            const course = courses.find(c => c.id === session?.courseId);
-            const instructor = allInstructors.find(i => i.id === course?.instructorId);
+            const course = coursesMap.get(session?.courseId ?? '');
             if (
                 group.groupName.toLowerCase().includes(lowerSearch) ||
                 course?.title.toLowerCase().includes(lowerSearch) ||
-                instructor?.name.toLowerCase().includes(lowerSearch) ||
+                course?.instructorName?.toLowerCase().includes(lowerSearch) ||
                 session?.month.toLowerCase().includes(lowerSearch) ||
                 session?.year.toString().includes(lowerSearch)
             ) {
@@ -96,7 +95,6 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
 
         return {
             ...course,
-            instructorName: instructorsMap.get(course.instructorId) || 'Unknown',
             sessions: courseSessions.map(session => {
                 const sessionGroups = (groupsBySession[session.id] || []).sort((a,b) => a.groupName.localeCompare(b.groupName));
                 const totalStudents = sessionGroups.reduce((sum, group) => sum + group.students.length, 0);
@@ -141,7 +139,6 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
         </div>
       </div>
 
-
       {paginatedCourses.length > 0 ? (
         <>
         <Accordion type="multiple" className="w-full space-y-4">
@@ -158,7 +155,9 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
                     </div>
                     <div className='flex items-center gap-2 sm:gap-4 flex-shrink-0'>
                       <div className='hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400'>
-                          <User className='h-4 w-4'/> <span>{course.instructorName}</span>
+                          <User className='h-4 w-4'/> 
+                          {/* FIX: Use instructorName directly from the course object */}
+                          <span>{course.instructorName || 'Unknown'}</span>
                       </div>
                       <div className='flex items-center opacity-0 group-hover:opacity-100 transition-opacity'>
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenCourseModal(course); }}><Edit className="h-4 w-4 mr-1"/> Modify</Button>
@@ -209,19 +208,11 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
         {totalPages > 1 && (
             <Pagination className="mt-8">
                 <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} />
-                    </PaginationItem>
+                    <PaginationItem><PaginationPrevious href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.max(1, p-1)); }} /></PaginationItem>
                     {[...Array(totalPages)].map((_, i) => (
-                        <PaginationItem key={i}>
-                            <PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>
-                                {i+1}
-                            </PaginationLink>
-                        </PaginationItem>
+                        <PaginationItem key={i}><PaginationLink href="#" isActive={currentPage === i+1} onClick={(e) => { e.preventDefault(); setCurrentPage(i+1); }}>{i+1}</PaginationLink></PaginationItem>
                     ))}
-                    <PaginationItem>
-                        <PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} />
-                    </PaginationItem>
+                    <PaginationItem><PaginationNext href="#" onClick={(e) => { e.preventDefault(); setCurrentPage(p => Math.min(totalPages, p+1)); }} /></PaginationItem>
                 </PaginationContent>
             </Pagination>
         )}

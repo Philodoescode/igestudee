@@ -28,7 +28,8 @@ export default function GroupDetailView({ group, onBack }: { group: Group & { co
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
         </TabsList>
         <TabsContent value="grading" className="mt-6">
-          <GradingTabContent courseId={group.courseId} />
+          {/* FIX: Pass the entire group object, not just the courseId. */}
+          <GradingTabContent group={group} />
         </TabsContent>
         <TabsContent value="attendance" className="mt-6">
           <AttendanceTabContent group={group} />

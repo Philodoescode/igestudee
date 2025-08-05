@@ -1,25 +1,79 @@
 // app/ta/courses/components/grading-tab.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
 import { Toaster, toast } from "sonner"
-import { taGradingHistory, type GradingEntry } from "@/lib/database"
+import { createClient } from "@/lib/supabase/client"
+import type { GradingEntry } from "@/lib/database"
+import type { Group } from "@/types/course"
 
 import AddGradeModal from "./add-grade-modal"
 import GradingHistory from "./grading-history"
 
-export default function GradingTabContent({ courseId }: { courseId: string }) {
+// FIX: The component needs the full group object to get its ID for fetching data.
+interface GradingTabContentProps {
+  group: Group & { courseId: string };
+}
+
+export default function GradingTabContent({ group }: GradingTabContentProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [history, setHistory] = useState<GradingEntry[]>(taGradingHistory)
+  // FIX: History state starts as undefined to indicate a loading state.
+  const [history, setHistory] = useState<GradingEntry[] | undefined>(undefined)
+  const [isLoading, setIsLoading] = useState(true)
+  const supabase = createClient()
+
+  // FIX: Fetch data when the component mounts or the group ID changes.
+  useEffect(() => {
+    const fetchGrades = async () => {
+      if (!group?.id) return
+
+      setIsLoading(true)
+      const { data, error } = await supabase
+        .rpc('get_group_attendance_and_grades', { p_group_id: Number(group.id) })
+      
+      if (error) {
+        toast.error("Failed to load grades.")
+        console.error(error)
+        setHistory([]) // Set to empty array on error to avoid crashes
+      } else if (data) {
+        // Transform the RPC response to the GradingEntry[] format the UI expects.
+        const transformedHistory: GradingEntry[] = (data.grades || []).map((assignment: any) => ({
+          id: String(assignment.assignment_id),
+          title: assignment.title,
+          // NOTE: The RPC doesn't have a date for the assignment. Using a placeholder.
+          // You might want to add `created_at` to your `assignments` table and RPC response.
+          date: new Date().toISOString().split('T')[0],
+          maxScore: assignment.max_score,
+          studentGrades: (assignment.scores || []).map((score: any) => ({
+            studentId: score.studentId,
+            name: score.name,
+            grade: score.score,
+          })),
+        }))
+        setHistory(transformedHistory)
+      }
+      setIsLoading(false)
+    }
+
+    fetchGrades()
+  }, [group?.id, supabase])
 
   const handleSaveNewGrade = (newEntry: GradingEntry) => {
-    // Add new entry to the top of the history list
-    setHistory(prev => [newEntry, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
+    setHistory(prev => [newEntry, ...(prev || [])].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
     setIsModalOpen(false)
     toast.success(`Grades for "${newEntry.title}" saved successfully!`)
+  }
+
+  // FIX: Add a loading indicator while fetching data.
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   return (
@@ -47,7 +101,7 @@ export default function GradingTabContent({ courseId }: { courseId: string }) {
         isOpen={isModalOpen}
         setIsOpen={setIsModalOpen}
         onSave={handleSaveNewGrade}
-        courseId={courseId}
+        courseId={group.courseId}
       />
     </div>
   )

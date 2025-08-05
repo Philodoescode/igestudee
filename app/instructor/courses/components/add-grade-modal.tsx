@@ -1,53 +1,215 @@
+// FILE: courses/components/add-grade-modal.tsx
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
-import { motion } from "framer-motion"
-import { Toaster, toast } from "sonner"
-import { instructorGradingHistory, type GradingEntry } from "@/lib/database"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, AlertCircle } from "lucide-react"
+import { motion, AnimatePresence } from "framer-motion"
+import { toast } from "sonner"
+import { type Group } from "@/types/course"
+import { cn } from "@/lib/utils"
 
-import AddGradeModal from "./add-grade-modal"
-import GradingHistory from "./grading-history"
+type StudentScore = {
+  student_id: string;
+  name: string;
+  score: number | null;
+}
 
-export default function GradingTabContent({ courseId }: { courseId: string }) {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [history, setHistory] = useState<GradingEntry[]>(instructorGradingHistory)
+interface AddGradeModalProps {
+  isOpen: boolean
+  setIsOpen: (isOpen: boolean) => void
+  group: Group
+  onSaveSuccess: () => void
+}
 
-  const handleSaveNewGrade = (newEntry: GradingEntry) => {
-    // Add new entry to the top of the history list
-    setHistory(prev => [newEntry, ...prev].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime()))
-    setIsModalOpen(false)
-    toast.success(`Grades for "${newEntry.title}" saved successfully!`)
+export default function AddGradeModal({ isOpen, setIsOpen, group, onSaveSuccess }: AddGradeModalProps) {
+  const supabase = createClient()
+  const [step, setStep] = useState(1)
+  
+  // Step 1 State
+  const [title, setTitle] = useState("")
+  const [maxScore, setMaxScore] = useState<number | ''>(100)
+  const [errors, setErrors] = useState<{ title?: string; maxScore?: string }>({})
+
+  // Step 2 State
+  const [studentScores, setStudentScores] = useState<StudentScore[]>([])
+  const [assignmentId, setAssignmentId] = useState<number | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+
+  useEffect(() => {
+    if (isOpen && group) { // Ensure group is available
+      setStep(1)
+      setTitle("")
+      setMaxScore(100)
+      setErrors({})
+      setAssignmentId(null)
+      // FIX: Use the students from the passed `group` prop, not mock data
+      setStudentScores(group.students.map(s => ({ student_id: s.id, name: s.name, score: null })))
+    }
+  }, [isOpen, group])
+
+  const validateStep1 = () => {
+    const newErrors: { title?: string; maxScore?: string } = {}
+    if (!title.trim()) newErrors.title = "Title is required."
+    if (maxScore === "" || Number(maxScore) <= 0) newErrors.maxScore = "Max score must be a positive number."
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  return (
-    <div className="space-y-6">
-      <Toaster position="top-center" richColors />
-      <motion.div
-        className="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 border rounded-lg bg-slate-50 dark:bg-slate-800/50"
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-      >
-        <div className="text-center sm:text-left">
-          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">New Grading Entry</h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Click here to add a new set of grades for your students.</p>
+  const handleNext = async () => {
+    if (!validateStep1()) return;
+
+    setIsSaving(true)
+    // Step 1: Create the assignment to get an ID
+    const { data, error: rpcError } = await supabase.rpc('create_grading_assignment', {
+      p_group_id: Number(group.id),
+      p_title: title,
+      p_max_score: Number(maxScore),
+    })
+    setIsSaving(false)
+
+    if (rpcError) {
+      toast.error(`Failed to create assignment: ${rpcError.message}`)
+    } else {
+      setAssignmentId(data)
+      setStep(2)
+    }
+  }
+
+  const handleSave = async () => {
+    if (!assignmentId) {
+        toast.error("Cannot save grades without a valid assignment.");
+        return;
+    }
+
+    const gradesToSubmit = studentScores
+        .filter(s => s.score !== null && s.score !== undefined)
+        .map(s => ({ student_id: s.student_id, score: s.score }));
+    
+    // Check for invalid grades before submitting
+    const invalidGrade = studentScores.some(s => s.score !== null && s.score > Number(maxScore));
+    if (invalidGrade) {
+        toast.error("One or more grades are higher than the max score.");
+        return;
+    }
+
+    setIsSaving(true);
+    // Step 2: Submit the grades for the created assignment
+    const { error: rpcError } = await supabase.rpc('submit_bulk_grades', {
+      p_assignment_id: assignmentId,
+      p_grades: gradesToSubmit,
+    });
+    setIsSaving(false);
+
+    if (rpcError) {
+        toast.error(`Failed to save grades: ${rpcError.message}`);
+    } else {
+        toast.success("Grades have been saved successfully!");
+        onSaveSuccess(); // Refresh the parent component's data
+        setIsOpen(false);
+    }
+  }
+
+  const handleGradeChange = (studentId: string, value: string) => {
+    const grade = value === '' ? null : parseFloat(value);
+    setStudentScores(prev => prev.map(sg => 
+        sg.student_id === studentId 
+        ? { ...sg, score: grade } 
+        : sg
+    ));
+  };
+  
+  const step1Content = (
+    <motion.div key="step1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="grid gap-6 py-4">
+        <div className="grid gap-2">
+          <Label htmlFor="title">Assignment Title</Label>
+          <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder="e.g., Midterm 1 Exam" />
+          {errors.title && <p className="text-xs text-red-500">{errors.title}</p>}
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto flex-shrink-0">
-          <Plus className="mr-2 h-4 w-4" />
-          Add New Grade
-        </Button>
-      </motion.div>
+        <div className="grid gap-2">
+            <Label htmlFor="maxScore">Max Score (Out of)</Label>
+            <Input id="maxScore" type="number" min="1" value={maxScore} onChange={(e) => setMaxScore(e.target.value)} placeholder="e.g., 100" />
+            {errors.maxScore && <p className="text-xs text-red-500">{errors.maxScore}</p>}
+        </div>
+      </div>
+    </motion.div>
+  )
 
-      <GradingHistory history={history} />
+  const step2Content = (
+    <motion.div key="step2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <Alert className="mb-4">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Entering grades for <span className="font-semibold">{title}</span> (Out of {maxScore}).
+        </AlertDescription>
+      </Alert>
+      <div className="max-h-[40vh] overflow-y-auto border rounded-md">
+        <Table>
+          <TableHeader className="sticky top-0 bg-slate-50 dark:bg-slate-800 z-10">
+            <TableRow><TableHead>Student Name</TableHead><TableHead className="w-1/3">Grade</TableHead></TableRow>
+          </TableHeader>
+          <TableBody>
+            {studentScores.map((student) => {
+              const isInvalid = student.score !== null && student.score > Number(maxScore);
+              return (
+                <TableRow key={student.student_id}>
+                  <TableCell className="font-medium">{student.name}</TableCell>
+                  <TableCell>
+                    <Input type="number" value={student.score ?? ""} onChange={(e) => handleGradeChange(student.student_id, e.target.value)} 
+                        placeholder={`0 - ${maxScore}`} className={cn(isInvalid && "border-red-500 focus-visible:ring-red-500")}
+                        max={Number(maxScore)}
+                    />
+                    {isInvalid && <p className="text-xs text-red-500 mt-1">Grade cannot exceed max score.</p>}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
+          </TableBody>
+        </Table>
+      </div>
+    </motion.div>
+  )
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogContent className="sm:max-w-md md:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>New Grading Entry</DialogTitle>
+          <DialogDescription>
+            {step === 1 ? "Step 1 of 2: Define the assignment." : "Step 2 of 2: Enter student scores."}
+          </DialogDescription>
+        </DialogHeader>
 
-      <AddGradeModal
-        isOpen={isModalOpen}
-        setIsOpen={setIsModalOpen}
-        onSave={handleSaveNewGrade}
-        courseId={courseId}
-      />
-    </div>
+        <AnimatePresence mode="wait">{step === 1 ? step1Content : step2Content}</AnimatePresence>
+
+        <DialogFooter className="pt-4 border-t">
+          {step === 1 && (
+            <>
+              <Button variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+              <Button onClick={handleNext} disabled={isSaving}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Next: Enter Grades
+              </Button>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <Button variant="outline" onClick={() => setStep(1)}>Back</Button>
+              <Button onClick={handleSave} disabled={isSaving || studentScores.some(s => s.score !== null && s.score > Number(maxScore))}>
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSaving ? "Saving..." : "Save Grades"}
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
