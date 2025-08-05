@@ -8,13 +8,11 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Eye, EyeOff, User, Users, UserCheck, Shield, AlertCircle, CheckCircle, Crown } from "lucide-react" // NEW: Added Crown icon
+import { Eye, EyeOff, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
 import { useAuth } from "@/hooks/use-auth"
-import type { UserRole } from "@/types/user"
 
 export default function LoginPage() {
   const { login, isLoading } = useAuth()
@@ -22,7 +20,6 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: "",
     password: "",
-    userType: "" as UserRole | "",
   })
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,8 +28,8 @@ export default function LoginPage() {
     e.preventDefault()
     setError("")
 
-    if (!formData.email || !formData.password || !formData.userType) {
-      setError("Please fill in all fields.")
+    if (!formData.email || !formData.password) {
+      setError("Please fill in both email and password.")
       return
     }
 
@@ -60,47 +57,6 @@ export default function LoginPage() {
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
     if (error) setError("") // Clear error when user starts typing
-  }
-
-  const userTypes = [
-    {
-      value: "student",
-      label: "Student",
-      icon: User,
-    },
-    {
-      value: "parent",
-      label: "Parent",
-      icon: Users,
-    },
-    {
-      value: "instructor",
-      label: "Instructor",
-      icon: Shield,
-    },
-    // NEW: Add Admin to the user types array
-    {
-      value: "admin",
-      label: "Admin",
-      icon: Crown,
-    },
-  ]
-
-  // Quick login buttons for testing
-  const testAccounts = [
-    { email: "parent.test@example.com", userType: "parent", label: "Test Parent" },
-    { email: "emma.johnson@example.com", userType: "student", label: "Test Student" },
-    { email: "instructor.test@example.com", userType: "instructor", label: "Test Instructor" },
-    // NEW: Add admin test account
-    { email: "admin.test@example.com", userType: "admin", label: "Test Admin" },
-  ]
-
-  const quickLogin = (email: string, userType: UserRole) => {
-    setFormData({
-      email,
-      password: "P@sswOrd123", // Assuming a default password for all test accounts
-      userType,
-    })
   }
 
   return (
@@ -146,23 +102,6 @@ export default function LoginPage() {
                     </motion.div>
                   )}
                 </AnimatePresence>
-
-                <div className="space-y-2">
-                  <Label htmlFor="userType">I am a...</Label>
-                  <Select value={formData.userType} onValueChange={(value) => handleInputChange("userType", value)} required>
-                    <SelectTrigger className="h-12"><SelectValue placeholder="Select your role" /></SelectTrigger>
-                    <SelectContent>
-                      {userTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          <div className="flex items-center space-x-2">
-                            <type.icon className="h-4 w-4" />
-                            <span>{type.label}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
@@ -214,32 +153,6 @@ export default function LoginPage() {
                   </Button>
                 </motion.div>
               </form>
-
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.8 }} className="mt-6">
-                <div className="text-center mb-3"><span className="text-xs text-gray-500">Quick Login (Testing)</span></div>
-                <div className="grid grid-cols-2 lg:grid-cols-2 gap-2">
-                  {testAccounts.map((account) => (
-                    <Button key={account.email} variant="outline" size="sm" onClick={() => quickLogin(account.email, account.userType as UserRole)} disabled={isSubmitting} className="text-xs">
-                      {account.label}
-                    </Button>
-                  ))}
-                </div>
-              </motion.div>
-
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 1.0 }}>
-                <Alert className="mt-6 border-[var(--color-gossamer-200)] bg-[var(--color-gossamer-50)]">
-                  <CheckCircle className="h-4 w-4 text-[var(--color-gossamer-600)]" />
-                  <AlertDescription className="text-[var(--color-gossamer-800)]">
-                    <strong>Test Credentials:</strong> Use the test accounts with password "P@sswOrd123".
-                    <ul className="mt-2 list-disc pl-5 text-xs">
-                      <li><strong>Parent:</strong> parent.test@example.com</li>
-                      <li><strong>Student:</strong> emma.johnson@example.com</li>
-                      <li><strong>Instructor:</strong> instructor.test@example.com</li>
-                      <li><strong>Admin:</strong> admin.test@example.com</li>
-                    </ul>
-                  </AlertDescription>
-                </Alert>
-              </motion.div>
             </CardContent>
           </Card>
         </motion.div>

@@ -1,34 +1,63 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { useFormState, useFormStatus } from "react-dom"
+import { requestPasswordReset, type State } from "./actions"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ArrowLeft, Mail, CheckCircle, Shield, Clock, HelpCircle } from "lucide-react"
+import { ArrowLeft, Mail, CheckCircle, Shield, Clock, HelpCircle, Loader2 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { FloatingElements } from "@/components/floating-elements"
-import { redirect } from "next/navigation"
+import { Toaster, toast } from "sonner"
+
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <Button
+      type="submit"
+      className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
+      disabled={pending}
+    >
+      <AnimatePresence mode="wait">
+        {pending ? (
+          <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center">
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Sending...
+          </motion.div>
+        ) : (
+          <motion.span key="send" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center">
+            <Mail className="w-4 h-4 mr-2" />
+            Send Reset Link
+          </motion.span>
+        )}
+      </AnimatePresence>
+    </Button>
+  )
+}
 
 export default function ForgotPasswordPage() {
-  redirect('/under-construction');
   const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-
-    // Simulate password reset request
-    setTimeout(() => {
-      setIsLoading(false)
-      setIsSubmitted(true)
-    }, 1000)
-  }
+  const initialState: State = { message: null }
+  const [state, dispatch] = useFormState(requestPasswordReset, initialState)
+  
+  useEffect(() => {
+    if (state.message) {
+      if (state.error) {
+        toast.error(state.message);
+      } else {
+        // On success from the server action, show the next screen
+        setIsSubmitted(true);
+      }
+    }
+  }, [state]);
 
   if (isSubmitted) {
     return (
@@ -52,7 +81,7 @@ export default function ForgotPasswordPage() {
                 <CheckCircle className="h-8 w-8 text-white" />
               </motion.div>
               <CardTitle>Check Your Email</CardTitle>
-              <CardDescription>We've sent password reset instructions to your email address</CardDescription>
+              <CardDescription>{state.message}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <motion.div
@@ -78,8 +107,7 @@ export default function ForgotPasswordPage() {
                 <Alert className="border-emerald-200 bg-emerald-50">
                   <Mail className="h-4 w-4 text-emerald-600" />
                   <AlertDescription className="text-emerald-800">
-                    If you don't see the email in your inbox, please check your spam folder. The reset link will expire
-                    in 24 hours.
+                    If you don't see the email in your inbox, please check your spam folder.
                   </AlertDescription>
                 </Alert>
               </motion.div>
@@ -103,7 +131,6 @@ export default function ForgotPasswordPage() {
                     className="w-full border-emerald-300 hover:bg-emerald-50"
                     onClick={() => {
                       setIsSubmitted(false)
-                      setEmail("")
                     }}
                   >
                     Try Different Email
@@ -120,6 +147,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-28 relative overflow-hidden">
       <FloatingElements />
+      <Toaster position="top-center" richColors />
 
       <motion.div
         className="max-w-md w-full space-y-8 relative z-10"
@@ -127,7 +155,6 @@ export default function ForgotPasswordPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
       >
-        {/* Header */}
         <motion.div
           className="text-center"
           initial={{ opacity: 0, y: 20 }}
@@ -147,7 +174,6 @@ export default function ForgotPasswordPage() {
           </p>
         </motion.div>
 
-        {/* Reset Form */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -159,12 +185,13 @@ export default function ForgotPasswordPage() {
               <CardDescription>We'll send reset instructions to your registered email address</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form action={dispatch} className="space-y-6">
                 <div className="space-y-2">
                   <Label htmlFor="email">Email Address</Label>
                   <motion.div whileFocus={{ scale: 1.02 }} transition={{ type: "spring", stiffness: 300, damping: 10 }}>
                     <Input
                       id="email"
+                      name="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -175,43 +202,8 @@ export default function ForgotPasswordPage() {
                   </motion.div>
                   <p className="text-xs text-gray-500">Enter the email address associated with your account</p>
                 </div>
-
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    type="submit"
-                    className="w-full h-12 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-lg"
-                    disabled={isLoading}
-                  >
-                    <AnimatePresence mode="wait">
-                      {isLoading ? (
-                        <motion.div
-                          key="loading"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center"
-                        >
-                          <motion.div
-                            className="w-4 h-4 border-2 border-white border-t-transparent rounded-full mr-2"
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                          />
-                          Sending...
-                        </motion.div>
-                      ) : (
-                        <motion.span
-                          key="send"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className="flex items-center"
-                        >
-                          <Mail className="w-4 h-4 mr-2" />
-                          Send Reset Link
-                        </motion.span>
-                      )}
-                    </AnimatePresence>
-                  </Button>
+                  <SubmitButton />
                 </motion.div>
               </form>
 
@@ -231,59 +223,6 @@ export default function ForgotPasswordPage() {
                   Back to Login
                 </Link>
               </motion.div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Help Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.8 }}
-        >
-          <Card className="bg-blue-50/80 border-blue-200 backdrop-blur-sm">
-            <CardContent className="pt-6">
-              <div className="flex items-start space-x-3">
-                <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 10 }}
-                >
-                  <HelpCircle className="h-6 w-6 text-blue-600 mt-0.5" />
-                </motion.div>
-                <div>
-                  <h3 className="font-medium text-blue-900 mb-2">Need Help?</h3>
-                  <p className="text-sm text-blue-800 mb-3">
-                    If you're having trouble resetting your password or don't receive the email:
-                  </p>
-                  <ul className="text-sm text-blue-800 space-y-1">
-                    {[
-                      "Check your spam or junk folder",
-                      "Make sure you entered the correct email address",
-                      "Wait a few minutes for the email to arrive",
-                      "Contact our support team if issues persist",
-                    ].map((item, index) => (
-                      <motion.li
-                        key={index}
-                        className="flex items-center space-x-2"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.1 + 1 }}
-                      >
-                        <Clock className="h-3 w-3 text-blue-600" />
-                        <span>{item}</span>
-                      </motion.li>
-                    ))}
-                  </ul>
-                  <div className="mt-4">
-                    <Link
-                      href="/contact"
-                      className="text-sm text-blue-600 hover:text-blue-500 underline transition-colors"
-                    >
-                      Contact Support
-                    </Link>
-                  </div>
-                </div>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
