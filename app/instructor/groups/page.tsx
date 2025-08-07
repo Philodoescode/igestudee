@@ -6,7 +6,7 @@ import { Toaster, toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 
 import GroupDetailView from "../courses/components/group-detail-view"
-import GroupFormModal from "./components/group-form-modal"
+import GroupFormModal from "../courses/components/group-form-modal"
 
 import { 
   groupsData as initialGroups,
