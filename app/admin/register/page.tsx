@@ -1,9 +1,10 @@
+// FILE: app/admin/register/page.tsx
 "use client"
 
 import { useFormState, useFormStatus } from "react-dom"
 import { registerStaff, type State } from "./actions"
 import { Toaster, toast } from "sonner"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react" // Import useRef
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,6 +26,7 @@ function SubmitButton() {
 export default function RegisterStaffPage() {
   const initialState: State = { message: null, errors: {} }
   const [state, dispatch] = useFormState(registerStaff, initialState)
+  const formRef = useRef<HTMLFormElement>(null) // Create a ref for the form
 
   useEffect(() => {
     if (state.message) {
@@ -32,6 +34,7 @@ export default function RegisterStaffPage() {
         toast.error(state.message)
       } else {
         toast.success(state.message)
+        formRef.current?.reset() // Reset the form on success
       }
     }
   }, [state])
@@ -50,7 +53,7 @@ export default function RegisterStaffPage() {
           <CardDescription>Fill in the form below to create a new user profile.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={dispatch} className="space-y-6">
+          <form ref={formRef} action={dispatch} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* First Name */}
               <div className="space-y-2">
@@ -93,30 +96,8 @@ export default function RegisterStaffPage() {
                 </Select>
                 {state.errors?.role && <p className="text-sm text-red-500">{state.errors.role[0]}</p>}
               </div>
-
-              {/* Gender */}
-              <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
-                <Select name="gender" required>
-                  <SelectTrigger id="gender"><SelectValue placeholder="Select gender" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                  </SelectContent>
-                </Select>
-                {state.errors?.gender && <p className="text-sm text-red-500">{state.errors.gender[0]}</p>}
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Date of Birth */}
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input id="dateOfBirth" name="dateOfBirth" type="date" required />
-                {state.errors?.dateOfBirth && <p className="text-sm text-red-500">{state.errors.dateOfBirth[0]}</p>}
-              </div>
               
-              {/* Phone Number */}
+              {/* Phone Number (Optional) */}
               <div className="space-y-2">
                 <Label htmlFor="phoneNumber">Phone Number (Optional)</Label>
                 <Input id="phoneNumber" name="phoneNumber" type="tel" />

@@ -57,23 +57,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (_event, session) => {
         if (session) {
           supabase
-            .from('profiles')
-            .select('first_name, last_name, role')
-            .eq('id', session.user.id)
-            .single()
-            .then(({ data: profile, error: profileError }) => {
-              if (profileError || !profile || !profile.role) {
-                console.error("Critical: User has session but no profile. Signing out.", profileError);
-                supabase.auth.signOut();
-              } else {
-                setUser({
-                  id: session.user.id,
-                  email: session.user.email,
-                  name: `${profile.first_name} ${profile.last_name}`,
-                  role: profile.role as UserRole,
-                });
-              }
-            });
+              .rpc('get_my_profile') // CHANGE: Use the correct RPC function
+              .then(({ data: profile, error: profileError }) => {
+                if (profileError || !profile || !profile.role) {
+                  // Logic remains the same, but the call is different
+                  console.error("Critical: User has session but no profile. Signing out.", profileError);
+                  supabase.auth.signOut();
+                } else {
+                  setUser({
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: `${profile.first_name} ${profile.last_name}`,
+                    role: profile.role as UserRole,
+                  });
+                }
+              });
 
         } else {
           setUser(null);

@@ -1,7 +1,9 @@
+// FILE: app/admin/register/actions.ts
 'use server'
 
 import { z } from 'zod'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { redirect } from 'next/navigation' // It's good practice to invalidate or redirect on success
 
 const FormSchema = z.object({
   firstName: z.string().min(1, 'First name is required.'),
@@ -9,8 +11,6 @@ const FormSchema = z.object({
   email: z.string().email('Invalid email address.'),
   password: z.string().min(8, 'Password must be at least 8 characters long.'),
   role: z.enum(['instructor'], { required_error: 'Role is required.' }),
-  gender: z.enum(['Male', 'Female'], { required_error: 'Gender is required.' }),
-  dateOfBirth: z.string().min(1, 'Date of birth is required.'),
   phoneNumber: z.string().optional(),
 })
 
@@ -21,8 +21,7 @@ export type State = {
     email?: string[]
     password?: string[]
     role?: string[]
-    gender?: string[]
-    dateOfBirth?: string[]
+    phoneNumber?: string[]
     server?: string[]
   }
   message?: string | null
@@ -35,8 +34,6 @@ export async function registerStaff(prevState: State, formData: FormData): Promi
     email: formData.get('email'),
     password: formData.get('password'),
     role: formData.get('role'),
-    gender: formData.get('gender'),
-    dateOfBirth: formData.get('dateOfBirth'),
     phoneNumber: formData.get('phoneNumber'),
   })
 
@@ -47,45 +44,21 @@ export async function registerStaff(prevState: State, formData: FormData): Promi
     }
   }
 
-  const {
-    email,
-    password,
-    role,
-    firstName,
-    lastName,
-    gender,
-    dateOfBirth,
-    phoneNumber,
-  } = validatedFields.data
-
+  const { email, password, role, firstName, lastName, phoneNumber } = validatedFields.data
   const supabaseAdmin = createAdminClient()
-  
-  // NEW: Step 0 - Check if a profile with this email already exists
-  const { data: existingProfile, error: existingProfileError } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('email', email)
-    .single()
 
-  if (existingProfile) {
-    return {
-      errors: { email: ['A user profile with this email already exists.'] },
-      message: 'Registration failed.',
-    }
-  }
-
-  // Step 1: Create the user in auth.users
-  const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
+  // Step 1: Create the user in auth.users using the Admin API
+  const { data: { user }, error: authError } = await supabaseAdmin.auth.admin.createUser({
     email: email,
     password: password,
-    email_confirm: true,
-  })
+    email_confirm: true, // Auto-confirm the user's email
+  });
 
-  if (authError) {
+  if (authError || !user) {
     console.error('Supabase Auth Error:', authError)
-    if (authError.message.includes('User already registered')) {
+    if (authError?.message.includes('User already registered')) {
       return {
-        errors: { email: ['A user with this email already exists in the authentication system. Please clean up the user records.'] },
+        errors: { email: ['A user with this email already exists.'] },
         message: 'Registration failed.',
       }
     }
@@ -95,33 +68,37 @@ export async function registerStaff(prevState: State, formData: FormData): Promi
     }
   }
 
-  if (!authData.user) {
+  // Step 2: Now insert into your public tables.
+  try {
+    // Insert into the primary public.users table
+    const { error: userError } = await supabaseAdmin.from('users').insert({
+      id: user.id,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      role: role,
+    })
+
+    if (userError) throw userError;
+
+    // If the role is instructor, insert into the details table
+    if (role === 'instructor' && phoneNumber) {
+      const { error: detailsError } = await supabaseAdmin.from('instructor_details').insert({
+        user_id: user.id,
+        phone_number: phoneNumber,
+      })
+      if (detailsError) throw detailsError;
+    }
+  } catch (error: any) {
+    console.error('Error inserting user profile:', error)
+    // CRITICAL: If profile insert fails, delete the auth user to prevent orphans.
+    await supabaseAdmin.auth.admin.deleteUser(user.id)
     return {
-      errors: { server: ['Could not retrieve user after creation.'] },
-      message: 'Registration failed.',
+      errors: { server: [`Failed to create user profile in public tables: ${error.message}`] },
+      message: 'Registration failed. The operation was rolled back.',
     }
   }
-  
-  // Step 2: Create the user's profile in public.profiles
-  const { error: profileError } = await supabaseAdmin.from('profiles').insert({
-    id: authData.user.id,
-    first_name: firstName,
-    last_name: lastName,
-    email: email,
-    role: role,
-    gender: gender,
-    date_of_birth: dateOfBirth,
-    phone_number: phoneNumber,
-  })
 
-  if (profileError) {
-    console.error('Supabase Profile Error:', profileError)
-    await supabaseAdmin.auth.admin.deleteUser(authData.user.id)
-    return {
-      errors: { server: ['Failed to create user profile.'] },
-      message: 'Registration failed. User was rolled back.',
-    }
-  }
-
+  // If everything succeeded
   return { message: `Successfully registered ${role}: ${firstName} ${lastName}` }
 }
