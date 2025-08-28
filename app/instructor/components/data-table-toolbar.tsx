@@ -1,7 +1,7 @@
 "use client"
 
 import type { Table } from "@tanstack/react-table"
-import { ChevronDown, Download, Import, Trash2 } from "lucide-react"
+import { ChevronDown, Download, Import, Trash2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -25,6 +25,9 @@ import {
 import { deleteStudents } from "../students/actions"
 import { toast } from "sonner"
 import type { StudentRoster } from "@/types/student"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
+
 
 interface DataTableToolbarProps<TData> {
   table: Table<TData>
@@ -33,6 +36,15 @@ interface DataTableToolbarProps<TData> {
 export function DataTableToolbar<TData>({
   table,
 }: DataTableToolbarProps<TData>) {
+  const router = useRouter()
+  const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const handleRefresh = () => {
+    setIsRefreshing(true)
+    router.refresh()
+    // A small timeout to give the visual feedback of the spin
+    setTimeout(() => setIsRefreshing(false), 500)
+  }
 
   const handleExport = () => {
     const selectedRows = table.getFilteredSelectedRowModel().rows
@@ -109,6 +121,16 @@ export function DataTableToolbar<TData>({
           onChange={(event) => table.setGlobalFilter(event.target.value)}
           className="h-9 w-[200px] lg:w-[300px]"
         />
+         <Button
+          variant="outline"
+          size="sm"
+          className="h-9"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
       </div>
       <div className="flex items-center space-x-2">
         <Button variant="outline" size="sm" className="h-9 hidden sm:flex">

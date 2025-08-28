@@ -3,8 +3,8 @@
 import type { ColumnDef } from "@tanstack/react-table"
 import type { StudentRoster } from "@/types/student"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
 import { DataTableColumnHeader } from "./data-table-column-header"
+import { GuardianInfoCell } from "./guardian-info-cell"
 
 const calculateAge = (dob: string | null): number | null => {
   if (!dob) return null
@@ -68,12 +68,16 @@ export const columns: ColumnDef<StudentRoster>[] = [
   {
     accessorKey: "dob",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="DOB (Age)" />
+      <DataTableColumnHeader column={column} title="Age" />
     ),
     cell: ({ row }) => {
       const dob = row.getValue("dob") as string
       const age = calculateAge(dob)
-      return <span>{dob} ({age ?? 'N/A'})</span>
+      // If age is less than 5, display 'N/A'
+      if (age === null || age < 5) {
+        return <span className="text-muted-foreground">N/A</span>
+      }
+      return <span>{age}</span>
     },
     sortingFn: (rowA, rowB, columnId) => {
         const ageA = calculateAge(rowA.getValue(columnId) as string) || 0;
@@ -91,24 +95,8 @@ export const columns: ColumnDef<StudentRoster>[] = [
     },
   },
   {
-    accessorKey: "guardianName",
+    id: "guardianInfo",
     header: "Primary Guardian",
-  },
-  {
-    accessorKey: "groups",
-    header: "My Group(s)",
-    cell: ({ row }) => {
-      const groups = row.getValue("groups") as string[]
-      if (!groups || groups.length === 0) {
-        return <span className="text-muted-foreground">No groups</span>
-      }
-      return (
-        <div className="flex flex-wrap gap-1">
-          {groups.map((group) => (
-            <Badge key={group} variant="secondary">{group}</Badge>
-          ))}
-        </div>
-      )
-    },
+    cell: ({ row }) => <GuardianInfoCell row={row} />,
   },
 ]
