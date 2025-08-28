@@ -4,6 +4,8 @@ export type StudentRoster = {
   email: string;
   phone: string | null;
   dob: string | null; // YYYY-MM-DD
+  gender: 'Male' | 'Female' | null;
+  joinedAt: string; // ISO string
   guardianName: string | null;
   groups: string[];
 };
