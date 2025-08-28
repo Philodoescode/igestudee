@@ -1,3 +1,4 @@
+// FILE: app/profile/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -7,82 +8,118 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { User, Shield, Edit, Save, X, Eye, EyeOff, Key } from "lucide-react"
+import { User, Shield, Edit, Save, X, Eye, EyeOff, Key, Loader2 } from "lucide-react"
 import { motion } from "framer-motion"
-import { useRequireAuth } from "@/hooks/use-auth"
+import { useAuth } from "@/hooks/use-auth"
 import { Toaster, toast } from "sonner"
+import { createClient } from "@/lib/supabase/client"
 
-// Mock data fetcher - in a real app, this would be an API call
-const getProfileData = (userId: string, name: string, email: string) => {
-  // In a real app, you'd fetch this from your DB based on userId
-  const profiles: { [key: string]: any } = {
-    "parent-001": { phone: "+1 (555) 123-4567", address: "123 Main Street" },
-    "student-001": { phone: "+1 (555) 987-6543", address: "456 Oak Avenue" },
-    "ta-001": { phone: "+1 (555) 876-5432", address: "789 Pine Lane" },
-    "instructor-001": { phone: "+1 (555) 765-4321", address: "101 Maple Drive" },
-  }
-  return {
-    name,
-    email,
-    ...profiles[userId],
-  }
-}
+// This type mirrors the JSON structure returned by your `get_my_profile` function
+type ProfileData = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string | null;
+  [key: string]: any; // Allows for other fields like 'gender' from student_details
+};
 
 export default function GlobalProfilePage() {
-  const { user, isLoading } = useRequireAuth()
-  const [isEditing, setIsEditing] = useState(false)
-  const [formData, setFormData] = useState({ name: "", email: "", phone: "", address: "" })
-  const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" })
-  const [showCurrent, setShowCurrent] = useState(false)
-  const [showNew, setShowNew] = useState(false)
+  const { user: authUser } = useAuth();
+  const [profileData, setProfileData] = useState<ProfileData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isEditing, setIsEditing] = useState(false);
+  
+  // A separate state for the form so edits can be cancelled
+  const [formData, setFormData] = useState({ first_name: "", last_name: "", phone_number: "" });
+  
+  const [passwordData, setPasswordData] = useState({ new: "", confirm: "" });
+  const [showNew, setShowNew] = useState(false);
+  const supabase = createClient();
 
   useEffect(() => {
-    if (user) {
-      const profile = getProfileData(user.id, user.name, user.email)
-      setFormData(profile)
+    async function fetchProfile() {
+      if (!authUser) return;
+      setIsLoading(true);
+      // Fetching data using the correct RPC function
+      const { data, error } = await supabase.rpc('get_my_profile');
+      if (error) {
+        toast.error("Failed to load profile data.");
+        console.error(error);
+      } else if (data) {
+        const fetchedData = data as unknown as ProfileData;
+        setProfileData(fetchedData);
+        // Initialize form with fetched data
+        setFormData({
+          first_name: fetchedData.first_name || '',
+          last_name: fetchedData.last_name || '',
+          phone_number: fetchedData.phone_number || "",
+        });
+      }
+      setIsLoading(false);
     }
-  }, [user])
+    fetchProfile();
+  }, [authUser, supabase]);
 
-  if (isLoading || !user) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-600"></div>
-      </div>
-    )
-  }
-
-  const handleSave = () => {
-    // API call to save formData would go here
-    setIsEditing(false)
-    toast.success("Profile updated successfully!")
-  }
+  const handleSave = async () => {
+    // Saving data using the correct RPC function
+    const { error } = await supabase.rpc('update_my_profile', {
+      p_first_name: formData.first_name,
+      p_last_name: formData.last_name,
+      p_phone_number: formData.phone_number,
+    });
+    
+    if (error) {
+      toast.error(`Update failed: ${error.message}`);
+    } else {
+      setProfileData(prev => prev ? { ...prev, ...formData } : null);
+      setIsEditing(false);
+      toast.success("Profile updated successfully!");
+      // Optionally, refresh the whole page to update the auth context if the name changed
+      window.location.reload(); 
+    }
+  };
 
   const handleCancel = () => {
-    if (user) {
-      const profile = getProfileData(user.id, user.name, user.email)
-      setFormData(profile)
+    if (profileData) {
+      setFormData({
+        first_name: profileData.first_name,
+        last_name: profileData.last_name,
+        phone_number: profileData.phone_number || "",
+      });
     }
-    setIsEditing(false)
-  }
+    setIsEditing(false);
+  };
 
-  const handlePasswordChange = () => {
+  const handlePasswordChange = async () => {
     if (passwordData.new !== passwordData.confirm) {
-      toast.error("New passwords do not match.")
-      return
+      toast.error("New passwords do not match.");
+      return;
     }
     if (passwordData.new.length < 8) {
-      toast.error("New password must be at least 8 characters long.")
-      return
+      toast.error("New password must be at least 8 characters long.");
+      return;
     }
-    // API call to change password would go here
-    toast.success("Password changed successfully!")
-    setPasswordData({ current: "", new: "", confirm: "" })
+    // Using standard Supabase method to update authenticated user's password
+    const { error } = await supabase.auth.updateUser({ password: passwordData.new });
+    
+    if (error) {
+      toast.error(`Failed to update password: ${error.message}`);
+    } else {
+      toast.success("Password changed successfully!");
+      setPasswordData({ new: "", confirm: "" });
+    }
+  };
+
+  if (isLoading || !profileData) {
+    return (
+      <div className="flex h-[calc(100vh-10rem)] w-full items-center justify-center">
+        <Loader2 className="animate-spin h-8 w-8 text-emerald-600" />
+      </div>
+    );
   }
 
-  const initials = formData.name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
+  const fullName = `${profileData.first_name} ${profileData.last_name}`;
+  const initials = ((profileData.first_name?.[0] || '') + (profileData.last_name?.[0] || '')).toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -92,11 +129,7 @@ export default function GlobalProfilePage() {
         <p className="text-gray-600 mt-1">Manage your personal information and security settings.</p>
       </motion.div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.1 }}
-      >
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
         <Card>
           <CardHeader className="border-b">
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
@@ -104,23 +137,18 @@ export default function GlobalProfilePage() {
                 <AvatarFallback className="text-3xl bg-gossamer-100 text-gossamer-700">{initials}</AvatarFallback>
               </Avatar>
               <div>
-                <CardTitle className="text-2xl">{formData.name}</CardTitle>
-                <CardDescription>{formData.email}</CardDescription>
+                <CardTitle className="text-2xl">{isEditing ? `${formData.first_name} ${formData.last_name}` : fullName}</CardTitle>
+                <CardDescription>{profileData.email}</CardDescription>
               </div>
             </div>
           </CardHeader>
           <CardContent className="pt-6">
             <Tabs defaultValue="personal" className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="personal">
-                  <User className="mr-2 h-4 w-4" /> Personal Information
-                </TabsTrigger>
-                <TabsTrigger value="security">
-                  <Shield className="mr-2 h-4 w-4" /> Security
-                </TabsTrigger>
+                <TabsTrigger value="personal"><User className="mr-2 h-4 w-4" /> Personal Information</TabsTrigger>
+                <TabsTrigger value="security"><Shield className="mr-2 h-4 w-4" /> Security</TabsTrigger>
               </TabsList>
 
-              {/* Personal Information Tab */}
               <TabsContent value="personal" className="mt-6">
                 <div className="flex flex-row items-center justify-between mb-6">
                   <div>
@@ -130,45 +158,38 @@ export default function GlobalProfilePage() {
                   <div className="flex space-x-2">
                     {isEditing ? (
                       <>
-                        <Button variant="outline" size="sm" onClick={handleCancel}>
-                          <X className="h-4 w-4 mr-2" /> Cancel
-                        </Button>
-                        <Button size="sm" onClick={handleSave}>
-                          <Save className="h-4 w-4 mr-2" /> Save
-                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleCancel}><X className="h-4 w-4 mr-2" /> Cancel</Button>
+                        <Button size="sm" onClick={handleSave}><Save className="h-4 w-4 mr-2" /> Save</Button>
                       </>
                     ) : (
-                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}>
-                        <Edit className="h-4 w-4 mr-2" /> Edit
-                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setIsEditing(true)}><Edit className="h-4 w-4 mr-2" /> Edit</Button>
                     )}
                   </div>
                 </div>
                 <div className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input id="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} disabled={!isEditing} />
+                      <Label htmlFor="first_name">First Name</Label>
+                      <Input id="first_name" value={formData.first_name} onChange={(e) => setFormData({ ...formData, first_name: e.target.value })} disabled={!isEditing} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input id="email" type="email" value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} disabled={!isEditing} />
+                      <Label htmlFor="last_name">Last Name</Label>
+                      <Input id="last_name" value={formData.last_name} onChange={(e) => setFormData({ ...formData, last_name: e.target.value })} disabled={!isEditing} />
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <Label htmlFor="phone">Phone Number</Label>
-                      <Input id="phone" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} disabled={!isEditing} />
+                      <Input id="phone" value={formData.phone_number} onChange={(e) => setFormData({ ...formData, phone_number: e.target.value })} disabled={!isEditing} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor="address">Address</Label>
-                      <Input id="address" value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} disabled={!isEditing} />
+                      <Label htmlFor="email">Email Address</Label>
+                      <Input id="email" type="email" value={profileData.email} disabled />
                     </div>
                   </div>
                 </div>
               </TabsContent>
 
-              {/* Security Tab */}
               <TabsContent value="security" className="mt-6">
                 <div>
                   <h3 className="text-lg font-medium">Change Password</h3>
@@ -176,16 +197,9 @@ export default function GlobalProfilePage() {
                 </div>
                 <div className="space-y-4 mt-6">
                   <div className="space-y-1.5 relative">
-                    <Label htmlFor="current-password">Current Password</Label>
-                    <Input id="current-password" type={showCurrent ? "text" : "password"} value={passwordData.current} onChange={(e) => setPasswordData({ ...passwordData, current: e.target.value })}/>
-                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" style={{top: 'calc(50% + 10px)'}} onClick={() => setShowCurrent(!showCurrent)}>
-                      {showCurrent ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </Button>
-                  </div>
-                  <div className="space-y-1.5 relative">
                     <Label htmlFor="new-password">New Password</Label>
                     <Input id="new-password" type={showNew ? "text" : "password"} value={passwordData.new} onChange={(e) => setPasswordData({ ...passwordData, new: e.target.value })} />
-                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" style={{top: 'calc(50% + 10px)'}} onClick={() => setShowNew(!showNew)}>
+                    <Button variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7" style={{top: 'calc(50% + 10px)'}} onClick={() => setShowNew(!showNew)}>
                       {showNew ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </Button>
                   </div>
@@ -194,8 +208,7 @@ export default function GlobalProfilePage() {
                     <Input id="confirm-password" type={showNew ? "text" : "password"} value={passwordData.confirm} onChange={(e) => setPasswordData({ ...passwordData, confirm: e.target.value })} />
                   </div>
                   <Button className="w-full sm:w-auto" onClick={handlePasswordChange}>
-                    <Key className="mr-2 h-4 w-4" />
-                    Update Password
+                    <Key className="mr-2 h-4 w-4" /> Update Password
                   </Button>
                 </div>
               </TabsContent>

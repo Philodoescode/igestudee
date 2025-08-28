@@ -87,6 +87,11 @@ export const instructorNavigation = [
         href: "/instructor/courses",
         icon: BookOpen,
       },
+      {
+        title: "My Students",
+        href: "/instructor/students",
+        icon: Users,
+      },
     ],
   },
 ]

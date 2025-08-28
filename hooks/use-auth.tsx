@@ -1,7 +1,8 @@
+// START OF hooks/use-auth.tsx
 "use client"
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { UserRole, LoginCredentials } from "@/types/user"
 
@@ -20,71 +21,73 @@ interface AuthContextType {
   logout: () => Promise<void>
 }
 
+const PUBLIC_PATHS = [
+  '/',
+  '/login',
+  '/forgot-password',
+  '/reset-password',
+  '/unauthorized',
+  '/under-construction',
+  '/about',
+  '/courses',
+  '/contact',
+];
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<ClientUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = createClient()
 
   useEffect(() => {
-    // This function runs on initial load to check for an existing session.
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession()
-      if (session) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('first_name, last_name, role')
-          .eq('id', session.user.id)
-          .single()
-        
-        if (profile && profile.role) {
-          setUser({
-            id: session.user.id,
-            email: session.user.email,
-            name: `${profile.first_name} ${profile.last_name}`,
-            role: profile.role as UserRole,
-          })
-        }
-      }
-      setIsLoading(false)
+    // --- THE DEFINITIVE FIX ---
+    // If we are on the reset-password page, we do NOT want this global listener to run.
+    // The reset-password page handles its own auth flow manually to protect the
+    // one-time-use recovery token from being cleared by this listener.
+    if (pathname === '/reset-password') {
+      console.log("DEBUG: On /reset-password page. Skipping global AuthProvider listener.");
+      setIsLoading(false); // Set loading to false so the rest of the app doesn't hang.
+      return; // Exit the effect entirely.
     }
 
-    checkSession()
-
-    // This listener handles state changes: login, logout, token refresh.
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
+      (_event, session) => {
         if (session) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('first_name, last_name, role')
-            .eq('id', session.user.id)
-            .single()
+          supabase
+              .rpc('get_my_profile') // CHANGE: Use the correct RPC function
+              .then(({ data: profile, error: profileError }) => {
+                if (profileError || !profile || !profile.role) {
+                  // Logic remains the same, but the call is different
+                  console.error("Critical: User has session but no profile. Signing out.", profileError);
+                  supabase.auth.signOut();
+                } else {
+                  setUser({
+                    id: session.user.id,
+                    email: session.user.email,
+                    name: `${profile.first_name} ${profile.last_name}`,
+                    role: profile.role as UserRole,
+                  });
+                }
+              });
 
-          if (profile && profile.role) {
-             setUser({
-                id: session.user.id,
-                email: session.user.email,
-                name: `${profile.first_name} ${profile.last_name}`,
-                role: profile.role as UserRole,
-            })
-          }
         } else {
-          // If the session is null, it means the user logged out.
-          setUser(null)
-          // Redirect to login to ensure no protected routes are accessible.
-          if (window.location.pathname !== '/login') {
+          setUser(null);
+          const isPublic = PUBLIC_PATHS.some(path => pathname === path || (path !== '/' && pathname.startsWith(path)));
+          if (!isPublic) {
             router.push('/login');
           }
         }
         setIsLoading(false);
       }
-    )
+    );
 
-    return () => subscription.unsubscribe()
-  }, [supabase, router])
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [supabase, router, pathname]);
 
   const login = async (credentials: Omit<LoginCredentials, 'userType'>): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true)
@@ -101,15 +104,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return { success: false, error: data.error || "Login failed." };
       }
       
-      // FIX: Explicitly set the user state here with the data from the API.
-      // This solves the race condition.
       setUser(data.user);
       
-      // Now that the context is updated, we can safely redirect.
       if (data.redirectUrl) {
           router.push(data.redirectUrl);
       } else {
-          router.push('/'); // Fallback redirect
+          router.push('/');
       }
 
       return { success: true };
@@ -123,7 +123,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true)
     await supabase.auth.signOut()
-    // The onAuthStateChange listener will handle setting user to null and redirecting.
   }
 
   return (
@@ -144,8 +143,14 @@ export function useAuth() {
 export function useRequireAuth(allowedRoles?: UserRole[]) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname(); // Get pathname to check if we're on the reset page
 
   useEffect(() => {
+    // Also skip this hook's logic on the reset page
+    if (pathname === '/reset-password') {
+        return;
+    }
+
     if (!isLoading) {
       if (!user) {
         router.push("/login")
@@ -157,7 +162,8 @@ export function useRequireAuth(allowedRoles?: UserRole[]) {
         return
       }
     }
-  }, [user, isLoading, allowedRoles, router])
+  }, [user, isLoading, allowedRoles, router, pathname])
 
   return { user, isLoading }
 }
+// END OF hooks/use-auth.tsx

@@ -1,3 +1,4 @@
+// app/forgot-password/actions.ts
 'use server'
 
 import { z } from 'zod'
@@ -27,32 +28,28 @@ export async function requestPasswordReset(prevState: State, formData: FormData)
   const email = validatedFields.data.email
   const supabaseAdmin = createAdminClient()
 
-  // --- SECURITY FIX: VERIFY USER EXISTS BEFORE SENDING RESET LINK ---
-  // We use the admin client to securely query our database, bypassing RLS.
-  const { data: profile, error: profileError } = await supabaseAdmin
-    .from('profiles')
-    .select('id')
-    .eq('email', email)
-    .single()
+  // Best practice: To prevent email enumeration attacks, we don't reveal if a user exists.
+  // We will attempt the reset and return a generic success message regardless.
+  // The check for the profile is removed to enhance security.
 
-  // If a profile exists, we proceed to send the password reset email.
-  if (profile && !profileError) {
-    const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`;
-    
-    const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    });
-    
-    if (resetError) {
-        console.error("Supabase Password Reset Error:", resetError.message);
-        // Do not expose detailed errors to the user
-        return { message: "Could not send reset email. Please try again later.", error: 'server' };
-    }
-  } 
-  // If the profile does NOT exist (or there was a db error), we do NOTHING.
-  // We still return a generic success message to prevent attackers from
-  // figuring out which emails are registered in our system (email enumeration).
+  // The redirectTo URL must be an absolute URL and match one of the URLs in your Supabase Auth settings.
+  const redirectTo = `${process.env.NEXT_PUBLIC_BASE_URL}/reset-password`;
+  
+  const { error: resetError } = await supabaseAdmin.auth.resetPasswordForEmail(email, {
+    redirectTo,
+  });
+  
+  if (resetError) {
+      console.error("Supabase Password Reset Error:", resetError.message);
+      // Don't expose specific errors to the client to prevent user enumeration.
+      // However, you can handle specific cases like rate-limiting if desired.
+      if (resetError.message.includes("rate limit")) {
+        return { message: "Rate limit exceeded. Please wait a minute before trying again.", error: 'server' };
+      }
+      // For any other error, we still return the generic success message.
+  }
 
+  // Always return a generic success message to prevent leaking information about which emails are registered.
   return {
     message: "If an account with that email exists, a password reset link has been sent.",
   }
