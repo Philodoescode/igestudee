@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
+  User, // Added for profile link
   UserCheck,
   Megaphone,
   DollarSign,
@@ -9,7 +10,7 @@ import {
   TrendingUp,
   CreditCard,
   Calendar,
-  UserPlus, // Added for admin
+  UserPlus,
 } from "lucide-react"
 
 export const studentNavigation = [
@@ -96,7 +97,6 @@ export const instructorNavigation = [
   },
 ]
 
-// NEW: Navigation for the Admin role
 export const adminNavigation = [
     {
         title: "ADMINISTRATION",
@@ -115,8 +115,10 @@ export const adminNavigation = [
     },
 ]
 
-
-// MODIFIED: Add 'admin' to the main navigation object
+// NOTE: This object is not directly used for the sidebar links anymore.
+// The primary navigation is defined above and passed into PortalLayout.
+// However, the dropdown profile link in `PortalSidebar` will use the user's role
+// to construct the correct URL like `/${user.role}/profile`.
 export const PORTAL_NAVIGATION = {
   student: studentNavigation,
   parent: parentNavigation,
