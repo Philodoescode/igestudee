@@ -1,6 +1,3 @@
-// lib/supabase/admin.ts
-// This client uses the SERVICE_ROLE_KEY for admin-level operations.
-// NEVER expose this client or the key to the browser.
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/supabase'
 
@@ -17,6 +14,11 @@ export const createAdminClient = () => {
         autoRefreshToken: false,
         persistSession: false,
       },
+      // THIS IS THE FIX: Explicitly specify the db schema to use.
+      // For RPC calls from the server, 'public' ensures it routes through the public API gateway.
+      db: {
+        schema: 'public',
+      }
     }
   )
 }

@@ -5,6 +5,7 @@ import type { StudentRoster } from "@/types/student"
 import { Checkbox } from "@/components/ui/checkbox"
 import { DataTableColumnHeader } from "./data-table-column-header"
 import { GuardianInfoCell } from "./guardian-info-cell"
+import { format } from "date-fns"
 
 const calculateAge = (dob: string | null): number | null => {
   if (!dob) return null
@@ -59,7 +60,6 @@ export const columns: ColumnDef<StudentRoster>[] = [
         if (lastNameA.localeCompare(lastNameB) !== 0) {
             return lastNameA.localeCompare(lastNameB);
         }
-        // If last names are the same, sort by first name
         const firstNameA = nameA.split(' ')[0] || '';
         const firstNameB = nameB.split(' ')[0] || '';
         return firstNameA.localeCompare(firstNameB);
@@ -73,7 +73,6 @@ export const columns: ColumnDef<StudentRoster>[] = [
     cell: ({ row }) => {
       const dob = row.getValue("dob") as string
       const age = calculateAge(dob)
-      // If age is less than 5, display 'N/A'
       if (age === null || age < 5) {
         return <span className="text-muted-foreground">N/A</span>
       }
@@ -84,6 +83,10 @@ export const columns: ColumnDef<StudentRoster>[] = [
         const ageB = calculateAge(rowB.getValue(columnId) as string) || 0;
         return ageA - ageB;
     }
+  },
+  {
+    accessorKey: "gender",
+    header: "Gender",
   },
   {
     accessorKey: "phone",
@@ -98,5 +101,16 @@ export const columns: ColumnDef<StudentRoster>[] = [
     id: "guardianInfo",
     header: "Primary Guardian",
     cell: ({ row }) => <GuardianInfoCell row={row} />,
+  },
+  {
+    accessorKey: "joinedAt",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Joined At" />
+    ),
+    cell: ({ row }) => {
+        const date = row.getValue("joinedAt") as string
+        if (!date) return 'N/A'
+        return <span>{format(new Date(date), "dd MMM yyyy")}</span>
+    }
   },
 ]

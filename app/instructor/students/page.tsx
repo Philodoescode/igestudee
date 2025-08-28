@@ -10,13 +10,7 @@ export default async function StudentManagementPage() {
   cookies() 
 
   const supabase = createClient()
-  // MODIFIED: Call the new, simpler RPC function
   const { data: students, error } = await supabase.rpc("get_all_students_roster")
-
-  console.log("ALL STUDENTS ROSTER DATA:", JSON.stringify(students, null, 2));
-  if (error) {
-    console.error("ALL STUDENTS ROSTER ERROR:", error);
-  }
 
   if (error) {
     console.error("Error fetching all students roster:", error)
@@ -38,6 +32,8 @@ export default async function StudentManagementPage() {
     email: s.email,
     phone: s.phone_number,
     dob: s.date_of_birth,
+    gender: s.gender as 'Male' | 'Female' | null,
+    joinedAt: s.created_at,
     guardianName: s.guardian_name,
     groups: s.groups || [],
   }));
