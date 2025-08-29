@@ -34,8 +34,25 @@ export async function getGuardiansForStudent(studentId: string): Promise<Guardia
 
   if (error) {
     console.error("Error fetching guardians:", error)
-    return [] // Return empty array on error
+    throw new Error("Failed to fetch guardian information.")
   }
 
   return data || []
+}
+
+export async function setPrimaryGuardian(studentId: string, guardianId: number): Promise<{ success: boolean, message: string }> {
+    const supabase = createClient()
+    
+    const { error } = await supabase.rpc('set_primary_guardian', {
+        p_student_id: studentId,
+        p_guardian_id: guardianId
+    })
+
+    if (error) {
+        console.error("Error setting primary guardian:", error)
+        return { success: false, message: `Failed to update primary guardian: ${error.message}` }
+    }
+
+    revalidatePath('/instructor/students')
+    return { success: true, message: "Primary guardian updated successfully." }
 }

@@ -23,6 +23,8 @@ const calculateAge = (dob: string | null): number | null => {
   }
 }
 
+const renderUnknown = () => <span className="text-muted-foreground">Unknown</span>
+
 export const columns: ColumnDef<StudentRoster>[] = [
   {
     id: "select",
@@ -74,7 +76,7 @@ export const columns: ColumnDef<StudentRoster>[] = [
       const dob = row.getValue("dob") as string
       const age = calculateAge(dob)
       if (age === null || age < 5) {
-        return <span className="text-muted-foreground">N/A</span>
+        return renderUnknown()
       }
       return <span>{age}</span>
     },
@@ -87,13 +89,40 @@ export const columns: ColumnDef<StudentRoster>[] = [
   {
     accessorKey: "gender",
     header: "Gender",
+    cell: ({ row }) => {
+        const gender = row.getValue("gender") as string
+        if (!gender) return renderUnknown()
+        return <span>{gender}</span>
+    }
+  },
+  {
+    accessorKey: "grade",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Grade" />
+    ),
+    cell: ({ row }) => {
+        const grade = row.getValue("grade") as number | null
+        if (grade === null) return renderUnknown()
+        return <span>{grade}</span>
+    }
+  },
+  {
+    accessorKey: "school",
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="School" />
+    ),
+    cell: ({ row }) => {
+        const school = row.getValue("school") as string
+        if (!school) return renderUnknown()
+        return <span>{school}</span>
+    }
   },
   {
     accessorKey: "phone",
     header: "Phone",
     cell: ({ row }) => {
       const phone = row.getValue("phone") as string
-      if (!phone) return <span className="text-muted-foreground">N/A</span>
+      if (!phone) return renderUnknown()
       return <a href={`tel:${phone}`} className="text-emerald-600 hover:underline">{phone}</a>
     },
   },
@@ -109,7 +138,7 @@ export const columns: ColumnDef<StudentRoster>[] = [
     ),
     cell: ({ row }) => {
         const date = row.getValue("joinedAt") as string
-        if (!date) return 'N/A'
+        if (!date) return renderUnknown()
         return <span>{format(new Date(date), "dd MMM yyyy")}</span>
     }
   },
