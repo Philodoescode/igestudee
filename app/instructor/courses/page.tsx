@@ -14,12 +14,16 @@ import SelectStudentsModal from "./components/select-students-modal"
 import Loading from "./loading"
 
 import type { Course, CourseSession, Group } from "@/types/course"
-import type { Student } from "@/types/user"
 
 // Type Definitions
-type UserFromRPC = { id: string; name: string; role: 'student' | 'instructor' };
 type CourseFromRPC = { id: number; title: string; instructorId: string; instructorName: string; sessions: { id: number; courseId: number; month: string; year: number; status: 'active' | 'inactive'; groups: { id: number; sessionId: number; groupName: string; students: { id: string, name: string }[] | null }[] | null }[] | null };
 type FullGroupDetail = Group & { courseName: string; courseId: string };
+// MODIFIED: Defined a local type for students that includes grade information
+type StudentWithGrade = {
+  id: string;
+  name: string;
+  grade?: number | null;
+};
 
 export default function CoursesPage() {
   const { user, isLoading: authLoading } = useRequireAuth(["instructor"])
@@ -27,7 +31,7 @@ export default function CoursesPage() {
   
   // State
   const [courses, setCourses] = useState<CourseFromRPC[]>([])
-  const [allStudents, setAllStudents] = useState<Student[]>([])
+  const [allStudents, setAllStudents] = useState<StudentWithGrade[]>([])
   const [isDataLoading, setIsDataLoading] = useState(true)
   const [view, setView] = useState<"list" | "detail">("list")
   const [selectedGroup, setSelectedGroup] = useState<FullGroupDetail | null>(null)
@@ -48,21 +52,25 @@ export default function CoursesPage() {
   const fetchData = async () => {
     setIsDataLoading(true)
 
-    const [portalData, usersData] = await Promise.all([
+    // MODIFIED: Changed the RPC call to get the full student roster with grades
+    const [portalData, studentsRosterData] = await Promise.all([
         supabase.rpc('get_instructor_portal_data'),
-        supabase.rpc('get_all_students_and_instructors')
+        supabase.rpc('get_all_students_roster')
     ]);
     
     if (portalData.error) { toast.error("Failed to load portal data."); console.error("Portal Data Error:", portalData.error) }
     else { setCourses(portalData.data || []) }
     
-    if (usersData.error) {
-        toast.error("Failed to load user list.");
-        console.error("Users Error:", usersData.error)
+    if (studentsRosterData.error) {
+        toast.error("Failed to load student list.");
+        console.error("Students Error:", studentsRosterData.error)
     } else {
-        const students = (usersData.data || [])
-            .filter((u: UserFromRPC) => u.role === 'student')
-            .map((u: UserFromRPC) => ({ id: u.id, name: u.name, registeredCourses: [] }));
+        // MODIFIED: Mapped the roster data to the StudentWithGrade type
+        const students: StudentWithGrade[] = (studentsRosterData.data || []).map((s: any) => ({
+             id: s.id,
+             name: s.full_name,
+             grade: s.grade,
+        }));
         setAllStudents(students);
     }
 
@@ -79,10 +87,10 @@ export default function CoursesPage() {
     const rpcCalls: { [key: string]: () => Promise<any> } = {
       course: () => supabase.rpc('create_new_course', { p_title: data.title }),
       session: () => supabase.rpc('create_new_session', { p_course_id: targetCourseId, p_month: data.month, p_year: data.year, p_status: data.status }),
-      group: () => supabase.rpc('create_new_group', { p_session_id: targetSessionId, p_students: data.students.map((s: Student) => ({ student_id: s.id })) }),
+      group: () => supabase.rpc('create_new_group', { p_session_id: targetSessionId, p_students: data.students.map((s: StudentWithGrade) => ({ student_id: s.id })) }),
       updateCourse: () => supabase.rpc('update_course_details', { p_course_id: editingCourse!.id, p_title: data.title }),
       updateSession: () => supabase.rpc('update_session_details', { p_session_id: editingSession!.id, p_month: data.month, p_year: data.year, p_status: data.status }),
-      updateGroup: () => supabase.rpc('update_group_members', { p_group_id: editingGroup!.id, p_student_ids: data.students.map((s: Student) => s.id) }),
+      updateGroup: () => supabase.rpc('update_group_members', { p_group_id: editingGroup!.id, p_student_ids: data.students.map((s: StudentWithGrade) => s.id) }),
     };
 
     const call = editingCourse && operation === 'course' ? rpcCalls.updateCourse
@@ -211,7 +219,6 @@ export default function CoursesPage() {
         initiallySelectedNames={editingGroup ? editingGroup.students.map(s => s.name) : []}
         groupsInSession={groupsForSelectedSession}
         currentGroupId={editingGroup ? editingGroup.id : null}
-        // --- PASSING THE NEW PROPS HERE ---
         isEditing={!!editingGroup}
         groupName={editingGroup?.groupName}
         onDelete={editingGroup ? () => handleDelete("group", editingGroup.id) : undefined}

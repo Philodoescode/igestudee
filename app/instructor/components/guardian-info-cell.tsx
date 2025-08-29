@@ -11,6 +11,21 @@ interface GuardianInfoCellProps {
   row: Row<StudentRoster>
 }
 
+const formatGuardianName = (fullName: string | null | undefined): string => {
+    if (!fullName) {
+      return "N/A";
+    }
+    const parts = fullName.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) {
+      return "N/A";
+    }
+    // Capitalize the first letter of each of the first two name parts
+    const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1).toLowerCase();
+    
+    return parts.slice(0, 2).map(capitalize).join(" ");
+};
+
+
 export function GuardianInfoCell({ row }: GuardianInfoCellProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [guardians, setGuardians] = useState<GuardianProfile[]>([])
@@ -18,6 +33,7 @@ export function GuardianInfoCell({ row }: GuardianInfoCellProps) {
   
   const student = row.original
   const primaryGuardianName = student.guardianName
+  const formattedGuardianName = formatGuardianName(primaryGuardianName)
 
   const handleOpenModal = async () => {
     if (!primaryGuardianName) return
@@ -40,7 +56,7 @@ export function GuardianInfoCell({ row }: GuardianInfoCellProps) {
         className="text-emerald-600 hover:underline hover:text-emerald-700 font-medium"
         disabled={isLoading}
       >
-        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : primaryGuardianName}
+        {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : formattedGuardianName}
       </button>
 
       <GuardianProfileModal
