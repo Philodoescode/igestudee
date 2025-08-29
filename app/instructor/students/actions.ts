@@ -10,6 +10,7 @@ export async function deleteStudents(studentIds: string[]): Promise<{ success: b
     return { success: false, message: "No students selected." }
   }
 
+  // NOTE: Using Admin Client for deletion as it requires elevated privileges
   const supabaseAdmin = createAdminClient()
 
   const { error } = await supabaseAdmin.rpc('delete_student_profiles', {
@@ -27,12 +28,9 @@ export async function deleteStudents(studentIds: string[]): Promise<{ success: b
 
 
 export async function getGuardiansForStudent(studentId: string): Promise<GuardianProfile[]> {
+  // NOTE: Using Server Client here as it runs with the user's session
   const supabase = createClient()
-  
-  // FINAL FIX: Changed the parameter key to the simplified 'student_id'
-  const { data, error } = await supabase.rpc('get_student_guardians', { 
-    student_id: studentId 
-  })
+  const { data, error } = await supabase.rpc('get_student_guardians', { p_student_id: studentId })
 
   if (error) {
     console.error("Error fetching guardians:", error)
