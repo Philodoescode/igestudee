@@ -75,12 +75,10 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
 
   const sidebarContent = (
     <div className="flex h-full flex-col bg-slate-50 dark:bg-zinc-900/95">
-      {/* MODIFIED: Header layout logic simplified */}
       <div className={cn(
         "flex h-14 shrink-0 items-center border-b px-4 lg:h-[60px] lg:px-6 dark:border-zinc-800",
         isCollapsed ? "lg:justify-center" : "lg:justify-between"
       )}>
-        {/* Full logo, hidden when collapsed */}
         <Link href={`/${user?.role}`} className={cn("flex items-center gap-2 font-semibold", isCollapsed && "lg:hidden")}>
           <Image
             src="/igestudee-logo.png"
@@ -91,7 +89,6 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
             className="object-contain dark:invert"
           />
         </Link>
-        {/* Desktop Toggle Button */}
         <Button variant="ghost" size="icon" onClick={onToggle} className="hidden lg:inline-flex">
           {isCollapsed ? <PanelRightClose className="h-5 w-5"/> : <PanelLeftClose className="h-5 w-5"/>}
         </Button>
@@ -101,7 +98,6 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
         <nav className="flex-1 space-y-4 overflow-y-auto px-3 py-4">
           {navigation.map((group) => (
             <div key={group.title}>
-              {/* MODIFIED: Group titles are now hidden when collapsed */}
               <h3 className={cn(
                 "mb-2 px-2 text-xs font-semibold uppercase text-gray-400 dark:text-gray-500",
                 isCollapsed && "lg:hidden"
@@ -117,7 +113,6 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
                           href={item.href}
                           className={cn(
                             "group flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-                             // MODIFIED: Center icon when collapsed
                             isCollapsed && "lg:justify-center",
                             isActive(item.href)
                               ? "bg-emerald-100/60 font-semibold text-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-50"
@@ -188,7 +183,14 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
               <p className="text-xs text-muted-foreground">{user?.email}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem asChild><Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link></DropdownMenuItem>
+            
+            {/* THIS IS THE FIX: The href is now dynamic */}
+            <DropdownMenuItem asChild>
+              <Link href={`/${user?.role}/profile`}>
+                <User className="mr-2 h-4 w-4" /> Profile
+              </Link>
+            </DropdownMenuItem>
+            
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:bg-red-50 focus:text-red-600 dark:focus:bg-red-900/50 dark:focus:text-red-400">
               <LogOut className="mr-2 h-4 w-4" /> Log Out
@@ -201,7 +203,6 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
 
   return (
     <TooltipProvider>
-      {/* Mobile Header & Sidebar */}
       <div className="lg:hidden">
         <header className="fixed top-0 left-0 right-0 z-30 flex h-14 items-center justify-between border-b bg-white px-4 dark:bg-zinc-950 dark:border-zinc-800">
           <Button variant="ghost" size="icon" onClick={() => setIsMobileOpen(true)} className="rounded-lg">
@@ -246,7 +247,6 @@ export function PortalSidebar({ navigation, isCollapsed, onToggle }: PortalSideb
         </AnimatePresence>
       </div>
 
-      {/* Desktop Sidebar */}
       <aside className={cn(
         "hidden lg:block fixed left-0 top-0 h-screen border-r bg-white dark:bg-zinc-950 dark:border-zinc-800 transition-[width] duration-300 ease-in-out",
         isCollapsed ? "w-20" : "w-72"

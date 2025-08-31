@@ -1,7 +1,7 @@
 "use client"
 
 import type { Table } from "@tanstack/react-table"
-import { ChevronDown, Download, Import, Trash2, RefreshCw } from "lucide-react"
+import { ChevronDown, Download, Trash2, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -133,10 +133,6 @@ export function DataTableToolbar<TData>({
         </Button>
       </div>
       <div className="flex items-center space-x-2">
-        <Button variant="outline" size="sm" className="h-9 hidden sm:flex">
-            <Import className="mr-2 h-4 w-4" />
-            Import
-        </Button>
          <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" className="h-9">

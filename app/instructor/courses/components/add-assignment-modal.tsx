@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { useForm } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 
@@ -25,71 +25,74 @@ import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 type Student = { id: string; name: string }
-type AttendanceStatus = "Present" | "Absent" | "Tardy"
-const ATTENDANCE_STATUSES: AttendanceStatus[] = ["Present", "Absent", "Tardy"]
+type AssignmentStatus = "Done" | "Partially Done" | "Not Done"
+const ASSIGNMENT_STATUSES: AssignmentStatus[] = ["Done", "Partially Done", "Not Done"]
 
-type AttendanceRecord = {
+type AssignmentRecord = {
   studentId: string
   name: string
-  status: AttendanceStatus
+  status: AssignmentStatus
   comment: string
 }
 
-export type AttendanceEntry = {
+export type AssignmentEntry = {
   id: number | null
+  title: string
   item_date: string
-  statuses: AttendanceRecord[]
+  statuses: AssignmentRecord[]
 }
 
-const attendanceSchema = z.object({
+const assignmentSchema = z.object({
+  title: z.string().min(1, "Title is required."),
   item_date: z.string().min(1, "Date is required."),
 })
 
-interface AddAttendanceModalProps {
+interface AddAssignmentModalProps {
   isOpen: boolean
   setIsOpen: (isOpen: boolean) => void
   onSave: () => void
   groupId: string
   students: Student[]
-  editingEntry: AttendanceEntry | null
+  editingEntry: AssignmentEntry | null
 }
 
-export default function AddAttendanceModal({
+export default function AddAssignmentModal({
   isOpen,
   setIsOpen,
   onSave,
   groupId,
   students,
   editingEntry,
-}: AddAttendanceModalProps) {
+}: AddAssignmentModalProps) {
   const supabase = createClient()
   const [isSaving, setIsSaving] = useState(false)
   const isEditing = !!editingEntry
 
-  const [studentStatuses, setStudentStatuses] = useState<AttendanceRecord[]>([])
+  const [studentStatuses, setStudentStatuses] = useState<AssignmentRecord[]>([])
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<z.infer<typeof attendanceSchema>>({
-    resolver: zodResolver(attendanceSchema),
+  } = useForm<z.infer<typeof assignmentSchema>>({
+    resolver: zodResolver(assignmentSchema),
   })
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
+
     if (isOpen) {
       if (isEditing) {
-        reset({ item_date: editingEntry.item_date })
+        reset({ title: editingEntry.title, item_date: editingEntry.item_date })
         setStudentStatuses(editingEntry.statuses)
       } else {
-        reset({ item_date: today })
+        reset({ title: "", item_date: today })
         setStudentStatuses(
           students.map(s => ({
             studentId: s.id,
             name: s.name,
-            status: "Present",
+            status: "Done",
             comment: "",
           })),
         )
@@ -99,11 +102,13 @@ export default function AddAttendanceModal({
 
   const todayDateString = useMemo(() => new Date().toISOString().split("T")[0], [])
 
-  const onSubmit = async (formData: z.infer<typeof attendanceSchema>) => {
+  const onSubmit = async (formData: z.infer<typeof assignmentSchema>) => {
     setIsSaving(true)
+
     const payload = {
       p_group_id: Number(groupId),
       p_item_id: isEditing ? editingEntry.id : null,
+      p_title: formData.title,
       p_item_date: formData.item_date,
       p_statuses: studentStatuses.map(({ studentId, status, comment }) => ({
         studentId,
@@ -112,12 +117,12 @@ export default function AddAttendanceModal({
       })),
     }
 
-    const { error } = await supabase.rpc("upsert_attendance_session_with_statuses", payload)
+    const { error } = await supabase.rpc("upsert_assignment_with_statuses", payload)
 
     if (error) {
-      toast.error(`Failed to save attendance: ${error.message}`)
+      toast.error(`Failed to save assignment: ${error.message}`)
     } else {
-      toast.success(`Attendance for ${formData.item_date} saved successfully!`)
+      toast.success(`Assignment "${formData.title}" saved successfully!`)
       onSave()
       setIsOpen(false)
     }
@@ -128,21 +133,25 @@ export default function AddAttendanceModal({
     setStudentStatuses(prev =>
       prev.map(s => {
         if (s.studentId === studentId) {
-          const currentIndex = ATTENDANCE_STATUSES.indexOf(s.status)
-          const nextIndex = (currentIndex + 1) % ATTENDANCE_STATUSES.length
-          return { ...s, status: ATTENDANCE_STATUSES[nextIndex] }
+          const currentIndex = ASSIGNMENT_STATUSES.indexOf(s.status)
+          const nextIndex = (currentIndex + 1) % ASSIGNMENT_STATUSES.length
+          return { ...s, status: ASSIGNMENT_STATUSES[nextIndex] }
         }
         return s
       }),
     )
   }
 
-  const getStatusBadgeClass = (status: AttendanceStatus) => {
+  const getStatusBadgeClass = (status: AssignmentStatus) => {
     switch (status) {
-      case "Present": return "bg-green-100 text-green-800 border-green-200"
-      case "Tardy": return "bg-yellow-100 text-yellow-800 border-yellow-200"
-      case "Absent": return "bg-red-100 text-red-800 border-red-200"
-      default: return "bg-gray-100 text-gray-800"
+      case "Done":
+        return "bg-green-100 text-green-800 border-green-200"
+      case "Partially Done":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200"
+      case "Not Done":
+        return "bg-red-100 text-red-800 border-red-200"
+      default:
+        return "bg-gray-100 text-gray-800"
     }
   }
 
@@ -150,14 +159,20 @@ export default function AddAttendanceModal({
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Edit Attendance Session" : "Add Attendance Session"}</DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Assignment" : "Add New Assignment"}</DialogTitle>
           <DialogDescription>
-            {isEditing ? "Update the attendance for this session." : "Select a date and mark student attendance."}
+            {isEditing ? "Update the details and student statuses for this assignment." : "Enter assignment details and mark student completion status."}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="grid md:grid-cols-2 gap-8">
+          {/* Left Column: Details */}
           <div className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="title">Title</Label>
+              <Input id="title" {...register("title")} />
+              {errors.title && <p className="text-sm text-red-500">{errors.title.message}</p>}
+            </div>
             <div className="space-y-2">
               <Label htmlFor="item_date">Date</Label>
               <Input
@@ -166,10 +181,13 @@ export default function AddAttendanceModal({
                 max={todayDateString}
                 {...register("item_date")}
               />
-              {errors.item_date && <p className="text-sm text-red-500">{errors.item_date.message}</p>}
+              {errors.item_date && (
+                <p className="text-sm text-red-500">{errors.item_date.message}</p>
+              )}
             </div>
           </div>
 
+          {/* Right Column: Student Statuses */}
           <div className="space-y-3">
             <Label>Student Statuses</Label>
             <ScrollArea className="h-96 w-full rounded-md border p-2">
@@ -206,10 +224,12 @@ export default function AddAttendanceModal({
         </form>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+            Cancel
+          </Button>
           <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {isSaving ? "Saving..." : "Save Attendance"}
+            {isSaving ? "Saving..." : "Save Assignment"}
           </Button>
         </DialogFooter>
       </DialogContent>

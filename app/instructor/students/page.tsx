@@ -36,6 +36,8 @@ export default async function StudentManagementPage() {
     joinedAt: s.created_at,
     guardianName: s.guardian_name,
     groups: s.groups || [],
+    grade: s.grade,
+    school: s.school_name,
   }));
 
   return (

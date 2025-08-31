@@ -1,4 +1,3 @@
-// START OF hooks/use-auth.tsx
 "use client"
 
 import { useState, useEffect, createContext, useContext, type ReactNode } from "react"
@@ -6,7 +5,6 @@ import { useRouter, usePathname } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { UserRole, LoginCredentials } from "@/types/user"
 
-// The user object we'll use in the context
 type ClientUser = {
   id: string;
   email: string | undefined;
@@ -43,51 +41,46 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = createClient()
 
   useEffect(() => {
-    // --- THE DEFINITIVE FIX ---
-    // If we are on the reset-password page, we do NOT want this global listener to run.
-    // The reset-password page handles its own auth flow manually to protect the
-    // one-time-use recovery token from being cleared by this listener.
+    // Skip global listener on reset-password page, handled manually there.
     if (pathname === '/reset-password') {
-      console.log("DEBUG: On /reset-password page. Skipping global AuthProvider listener.");
-      setIsLoading(false); // Set loading to false so the rest of the app doesn't hang.
-      return; // Exit the effect entirely.
+      setIsLoading(false);
+      return;
     }
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        if (session) {
-          supabase
-              .rpc('get_my_profile') // CHANGE: Use the correct RPC function
-              .then(({ data: profile, error: profileError }) => {
-                if (profileError || !profile || !profile.role) {
-                  // Logic remains the same, but the call is different
-                  console.error("Critical: User has session but no profile. Signing out.", profileError);
-                  supabase.auth.signOut();
-                } else {
-                  setUser({
-                    id: session.user.id,
-                    email: session.user.email,
-                    name: `${profile.first_name} ${profile.last_name}`,
-                    role: profile.role as UserRole,
-                  });
-                }
-              });
-
-        } else {
+    const fetchUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session && user?.id !== session.user.id) {
+        const { data: profile, error } = await supabase.rpc('get_my_profile');
+        
+        if (error || !profile) {
+          console.error("Auth Error: Profile fetch failed. Signing out.", error);
+          await supabase.auth.signOut();
           setUser(null);
-          const isPublic = PUBLIC_PATHS.some(path => pathname === path || (path !== '/' && pathname.startsWith(path)));
-          if (!isPublic) {
-            router.push('/login');
-          }
+        } else {
+          setUser({
+            id: session.user.id,
+            email: session.user.email,
+            name: `${profile.first_name} ${profile.last_name}`,
+            role: profile.role as UserRole,
+          });
         }
-        setIsLoading(false);
+      } else if (!session) {
+        setUser(null);
       }
-    );
+      setIsLoading(false);
+    };
+
+    fetchUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      fetchUser();
+    });
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, router, pathname]);
+  }, [user?.id, supabase, pathname]); // Added user?.id and pathname to dependencies for robustness
 
   const login = async (credentials: Omit<LoginCredentials, 'userType'>): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true)
@@ -114,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { success: true };
     } catch (e) {
+      console.error("Login network error:", e);
       return { success: false, error: "An unexpected network error occurred." }
     } finally {
       setIsLoading(false)
@@ -123,6 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     setIsLoading(true)
     await supabase.auth.signOut()
+    setIsLoading(false) // Set loading to false after logout
   }
 
   return (
@@ -143,10 +138,9 @@ export function useAuth() {
 export function useRequireAuth(allowedRoles?: UserRole[]) {
   const { user, isLoading } = useAuth()
   const router = useRouter()
-  const pathname = usePathname(); // Get pathname to check if we're on the reset page
+  const pathname = usePathname();
 
   useEffect(() => {
-    // Also skip this hook's logic on the reset page
     if (pathname === '/reset-password') {
         return;
     }
@@ -166,4 +160,3 @@ export function useRequireAuth(allowedRoles?: UserRole[]) {
 
   return { user, isLoading }
 }
-// END OF hooks/use-auth.tsx
