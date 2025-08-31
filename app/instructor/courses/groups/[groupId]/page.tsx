@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import Link from "next/link"
-import { ArrowLeft, Loader2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Loader2, AlertCircle, MessageSquareShare } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button"
 import GradedItemsTab from "../../components/graded-items-tab"
 import AssignmentsTab from "../../components/assignments-tab"
 import AttendanceTab from "../../components/attendance-tab"
+import ParentOutreachTab from "../../components/parent-outreach-tab"
 
 type GroupDetails = {
   id: number
@@ -48,7 +49,6 @@ export default function GroupDetailPage({ params }: { params: { groupId: string 
     if (groupId) {
       fetchGroupDetails()
     }
-    // FIX: Removed `supabase` from the dependency array to prevent re-running the effect.
   }, [groupId])
 
   if (isLoading) {
@@ -99,10 +99,14 @@ export default function GroupDetailPage({ params }: { params: { groupId: string 
       </div>
 
       <Tabs defaultValue="graded-items" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 sm:w-auto sm:inline-flex">
+        <TabsList className="grid w-full grid-cols-4 sm:w-auto sm:inline-flex">
           <TabsTrigger value="graded-items">Graded Items</TabsTrigger>
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
+          <TabsTrigger value="parent-outreach">
+            <MessageSquareShare className="mr-2 h-4 w-4" />
+            Parent Outreach
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="graded-items" className="mt-6">
@@ -113,6 +117,9 @@ export default function GroupDetailPage({ params }: { params: { groupId: string 
         </TabsContent>
         <TabsContent value="attendance" className="mt-6">
           <AttendanceTab groupId={groupId} students={groupDetails.students} />
+        </TabsContent>
+        <TabsContent value="parent-outreach" className="mt-6">
+          <ParentOutreachTab groupId={groupId} />
         </TabsContent>
       </Tabs>
     </div>
