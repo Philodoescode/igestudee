@@ -25,6 +25,13 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Search, Trash2 } from "lucide-react";
 import type { Group } from "@/types/course";
 import { cn } from "@/lib/utils";
@@ -61,6 +68,8 @@ export default function SelectStudentsModal({
   groupName,
 }: SelectStudentsModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  // Initialize selectedGrade to "all" (the new value for "All Grades" item)
+  const [selectedGrade, setSelectedGrade] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   // Create a map of students already in other groups within the same session
@@ -86,14 +95,30 @@ export default function SelectStudentsModal({
           .map(s => s.id)
       );
       setSelectedIds(initialIds);
+      // Reset filters when modal opens
+      setSearchTerm("");
+      setSelectedGrade("all"); // Reset to "all" grades
     }
   }, [isOpen, initiallySelectedNames, allStudents]);
 
+  const uniqueGrades = useMemo(() => {
+    const grades = new Set<number>();
+    allStudents.forEach(student => {
+      if (student.grade !== null && student.grade !== undefined) {
+        grades.add(student.grade);
+      }
+    });
+    return Array.from(grades).sort((a, b) => a - b);
+  }, [allStudents]);
+
   const filteredStudents = useMemo(() => {
-    return allStudents.filter(student =>
-      student.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [allStudents, searchTerm]);
+    return allStudents.filter(student => {
+      const nameMatch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
+      // Check if selectedGrade is "all" or if the student's grade matches the selected grade
+      const gradeMatch = selectedGrade === "all" || String(student.grade) === selectedGrade;
+      return nameMatch && gradeMatch;
+    });
+  }, [allStudents, searchTerm, selectedGrade]);
 
   const availableStudents = useMemo(() => {
     return filteredStudents.filter(s => !studentToGroupMap.has(s.id));
@@ -136,14 +161,30 @@ export default function SelectStudentsModal({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col gap-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="Search students..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
+          <div className="flex flex-col sm:flex-row gap-2">
+            <div className="relative flex-grow">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <Input
+                placeholder="Search students..."
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Select value={selectedGrade} onValueChange={setSelectedGrade}>
+              <SelectTrigger className="w-full sm:w-[140px] shrink-0">
+                <SelectValue placeholder="All Grades" />
+              </SelectTrigger>
+              <SelectContent>
+                {/* Changed value from "" to "all" */}
+                <SelectItem value="all">All Grades</SelectItem>
+                {uniqueGrades.map(grade => (
+                  <SelectItem key={grade} value={String(grade)}>
+                    Grade {grade}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex items-center justify-between">
@@ -189,6 +230,9 @@ export default function SelectStudentsModal({
                         )}
                       >
                         {student.name}
+                        {student.grade !== null && student.grade !== undefined && (
+                          <span className="text-xs text-muted-foreground ml-2">(Grade {student.grade})</span>
+                        )}
                       </label>
                       {isDisabled && (
                         <Badge variant="outline" className="font-normal">{existingGroup}</Badge>
