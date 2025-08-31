@@ -29,7 +29,7 @@ export default function InstructorProfilePage() {
   const [emailChanged, setEmailChanged] = useState(false);
   
   const [formData, setFormData] = useState({ first_name: "", last_name: "", email: "", phone_number: "" });
-  const [passwordData, setPasswordData] = useState({ new: "", confirm: "" });
+  const [passwordData, setPasswordData] = useState({ current: "", new: "", confirm: "" });
   const [showPassword, setShowPassword] = useState(false);
   const supabase = createClient();
 
@@ -86,13 +86,37 @@ export default function InstructorProfilePage() {
   };
   
   const handlePasswordChange = async () => {
-    if (passwordData.new !== passwordData.confirm) { toast.error("New passwords do not match."); return; }
-    if (passwordData.new.length < 8) { toast.error("New password must be at least 8 characters long."); return; }
+    if (!passwordData.current) {
+      toast.error("Please enter your current password.");
+      return;
+    }
+    if (passwordData.new !== passwordData.confirm) {
+      toast.error("New passwords do not match.");
+      return;
+    }
+    if (passwordData.new.length < 8) {
+      toast.error("New password must be at least 8 characters long.");
+      return;
+    }
+
+    // Verify current password by attempting to sign in. This refreshes the session.
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: profileData!.email,
+      password: passwordData.current,
+    });
+
+    if (signInError) {
+      toast.error("Incorrect current password. Please try again.");
+      return;
+    }
+    
+    // If sign in is successful, proceed to update the password.
     const { error } = await supabase.auth.updateUser({ password: passwordData.new });
-    if (error) { toast.error(`Failed to update password: ${error.message}`); } 
-    else {
+    if (error) {
+      toast.error(`Failed to update password: ${error.message}`);
+    } else {
       toast.success("Password changed successfully!");
-      setPasswordData({ new: "", confirm: "" });
+      setPasswordData({ current: "", new: "", confirm: "" });
     }
   };
   
@@ -133,7 +157,30 @@ export default function InstructorProfilePage() {
             </TabsContent>
             <TabsContent value="security" className="mt-6">
               <div><h3 className="text-lg font-medium">Change Password</h3><p className="text-sm text-muted-foreground">Update your password for enhanced security.</p></div>
-              <div className="space-y-4 mt-6"><div className="space-y-1.5 relative"><Label htmlFor="new-password">New Password</Label><Input id="new-password" type={showPassword ? "text" : "password"} value={passwordData.new} onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}/><Button variant="ghost" size="icon" className="absolute right-1 top-1/2 h-7 w-7" style={{top: 'calc(50% + 10px)'}} onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button></div><div className="space-y-1.5"><Label htmlFor="confirm-password">Confirm New Password</Label><Input id="confirm-password" type={showPassword ? "text" : "password"} value={passwordData.confirm} onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}/></div><Button className="w-full sm:w-auto" onClick={handlePasswordChange}><Key className="mr-2 h-4 w-4"/> Update Password</Button></div>
+              <div className="space-y-4 mt-6">
+                <div className="space-y-1.5">
+                  <Label htmlFor="current-password">Current Password</Label>
+                  <div className="relative">
+                    <Input id="current-password" type={showPassword ? "text" : "password"} value={passwordData.current} onChange={(e) => setPasswordData({...passwordData, current: e.target.value})}/>
+                    <Button variant="ghost" size="icon" type="button" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="new-password">New Password</Label>
+                  <div className="relative">
+                    <Input id="new-password" type={showPassword ? "text" : "password"} value={passwordData.new} onChange={(e) => setPasswordData({...passwordData, new: e.target.value})}/>
+                    <Button variant="ghost" size="icon" type="button" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="confirm-password">Confirm New Password</Label>
+                  <div className="relative">
+                    <Input id="confirm-password" type={showPassword ? "text" : "password"} value={passwordData.confirm} onChange={(e) => setPasswordData({...passwordData, confirm: e.target.value})}/>
+                    <Button variant="ghost" size="icon" type="button" className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7" onClick={() => setShowPassword(!showPassword)}>{showPassword ? <EyeOff className="h-4 w-4"/> : <Eye className="h-4 w-4"/>}</Button>
+                  </div>
+                </div>
+                <Button className="w-full sm:w-auto" onClick={handlePasswordChange}><Key className="mr-2 h-4 w-4"/> Update Password</Button>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
