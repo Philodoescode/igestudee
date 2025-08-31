@@ -1,13 +1,13 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { useRequireAuth } from "@/hooks/use-auth"
 import { createClient } from "@/lib/supabase/client"
 import { Toaster, toast } from "sonner"
 import { motion, AnimatePresence } from "framer-motion"
 
 import CourseListView from "./components/course-list-view"
-import GroupDetailView from "./components/group-detail-view"
 import CourseFormModal from "./components/course-form-modal"
 import SessionFormModal from "./components/session-form-modal"
 import SelectStudentsModal from "./components/select-students-modal"
@@ -17,24 +17,17 @@ import type { Course, CourseSession, Group } from "@/types/course"
 
 // Type Definitions
 type CourseFromRPC = { id: number; title: string; instructorId: string; instructorName: string; sessions: { id: number; courseId: number; month: string; year: number; status: 'active' | 'inactive'; groups: { id: number; sessionId: number; groupName: string; students: { id: string, name: string }[] | null }[] | null }[] | null };
-type FullGroupDetail = Group & { courseName: string; courseId: string };
-// MODIFIED: Defined a local type for students that includes grade information
-type StudentWithGrade = {
-  id: string;
-  name: string;
-  grade?: number | null;
-};
+type StudentWithGrade = { id: string; name: string; grade?: number | null; };
 
 export default function CoursesPage() {
   const { user, isLoading: authLoading } = useRequireAuth(["instructor"])
   const supabase = createClient()
+  const router = useRouter()
   
   // State
   const [courses, setCourses] = useState<CourseFromRPC[]>([])
   const [allStudents, setAllStudents] = useState<StudentWithGrade[]>([])
   const [isDataLoading, setIsDataLoading] = useState(true)
-  const [view, setView] = useState<"list" | "detail">("list")
-  const [selectedGroup, setSelectedGroup] = useState<FullGroupDetail | null>(null)
 
   // Modal State
   const [isCourseModalOpen, setIsCourseModalOpen] = useState(false)
@@ -52,7 +45,6 @@ export default function CoursesPage() {
   const fetchData = async () => {
     setIsDataLoading(true)
 
-    // MODIFIED: Changed the RPC call to get the full student roster with grades
     const [portalData, studentsRosterData] = await Promise.all([
         supabase.rpc('get_instructor_portal_data'),
         supabase.rpc('get_all_students_roster')
@@ -65,7 +57,6 @@ export default function CoursesPage() {
         toast.error("Failed to load student list.");
         console.error("Students Error:", studentsRosterData.error)
     } else {
-        // MODIFIED: Mapped the roster data to the StudentWithGrade type
         const students: StudentWithGrade[] = (studentsRosterData.data || []).map((s: any) => ({
              id: s.id,
              name: s.full_name,
@@ -131,7 +122,7 @@ export default function CoursesPage() {
         toast.error(`Failed to delete ${operation}: ${error.message}`);
     } else {
         toast.error(`${operation.charAt(0).toUpperCase() + operation.slice(1)} deleted. Refreshing data.`);
-        await fetchData(); // This refresh is key to updating the UI
+        await fetchData(); 
     }
     setIsCourseModalOpen(false);
     setIsSessionModalOpen(false);
@@ -141,16 +132,8 @@ export default function CoursesPage() {
   if (authLoading || isDataLoading) { return <Loading /> }
 
   const handleSelectGroup = (group: Group) => {
-    const parentCourse = courses.find(c => c.sessions?.some(s => s.groups?.some(g => g.id === Number(group.id))));
-    const courseName = parentCourse?.title ?? "Unknown Course";
-    const courseId = parentCourse?.id.toString() ?? "-1";
-    setSelectedGroup({ ...group, courseName, courseId });
-    setView("detail");
-  }
-
-  const handleBackToList = () => {
-    setSelectedGroup(null);
-    setView("list");
+    // FIX: Changed the route to the new, more explicit path.
+    router.push(`/instructor/courses/groups/${group.id}`)
   }
 
   const handleOpenCourseModal = (course: Course | null) => {
@@ -175,22 +158,12 @@ export default function CoursesPage() {
 
   const groupsForSelectedSession = targetSessionId ? allGroups.filter(g => g.sessionId === targetSessionId) : [];
 
-
   return (
     <div>
       <Toaster position="top-center" richColors />
-      <AnimatePresence mode="wait">
-        {view === 'list' && (
-          <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-            <CourseListView courses={mappedCourses} sessions={allSessions} groups={allGroups} onSelectGroup={handleSelectGroup} onOpenCourseModal={handleOpenCourseModal} onOpenSessionModal={handleOpenSessionModal} onOpenGroupModal={handleOpenGroupModal} />
-          </motion.div>
-        )}
-        {view === 'detail' && selectedGroup && (
-          <motion.div key="detail-view" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} transition={{ duration: 0.3 }}>
-            <GroupDetailView group={selectedGroup} onBack={handleBackToList} />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
+        <CourseListView courses={mappedCourses} sessions={allSessions} groups={allGroups} onSelectGroup={handleSelectGroup} onOpenCourseModal={handleOpenCourseModal} onOpenSessionModal={handleOpenSessionModal} onOpenGroupModal={handleOpenGroupModal} />
+      </motion.div>
 
       <CourseFormModal
         isOpen={isCourseModalOpen}
