@@ -133,24 +133,23 @@ export default function CoursesPage() {
   if (authLoading || isDataLoading) { return <Loading /> }
 
   const handleSelectGroup = (group: Group) => {
-    // FIX: Changed the route to the new, more explicit path.
     router.push(`/instructor/courses/groups/${group.id}`)
   }
 
   const handleOpenCourseModal = (course: Course | null) => {
     setEditingCourse(course);
-    setIsCourseModalOpen(true);
+    setTimeout(() => setIsCourseModalOpen(true), 100);
   }
   const handleOpenSessionModal = (session: CourseSession | null, courseId: string) => {
     setEditingSession(session);
     setTargetCourseId(courseId);
-    setIsSessionModalOpen(true);
+    setTimeout(() => setIsSessionModalOpen(true), 100);
   }
 
   const handleOpenGroupModal = (group: Group | null, sessionId: string) => {
     setEditingGroup(group);
     setTargetSessionId(sessionId);
-    setIsGroupStudentsModalOpen(true);
+    setTimeout(() => setIsGroupStudentsModalOpen(true), 100);
   }
   
   const mappedCourses: Course[] = courses.map(c => ({ id: String(c.id), title: c.title, instructorId: c.instructorId, instructorName: c.instructorName }));
@@ -204,7 +203,6 @@ export default function CoursesPage() {
         currentGroupId={editingGroup ? editingGroup.id : null}
         isEditing={!!editingGroup}
         groupName={editingGroup?.groupName}
-        // onDelete is no longer passed to the modal
       />
     </div>
   )
