@@ -1,6 +1,7 @@
+// courses/components/select-students-modal.tsx
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -55,6 +56,14 @@ interface SelectStudentsModalProps {
   groupName?: string;
 }
 
+const areSetsEqual = (set1: Set<string>, set2: Set<string>): boolean => {
+    if (set1.size !== set2.size) return false;
+    for (const item of set1) {
+        if (!set2.has(item)) return false;
+    }
+    return true;
+}
+
 export default function SelectStudentsModal({
   isOpen,
   setIsOpen,
@@ -68,15 +77,17 @@ export default function SelectStudentsModal({
   groupName,
 }: SelectStudentsModalProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  // Initialize selectedGrade to "all" (the new value for "All Grades" item)
   const [selectedGrade, setSelectedGrade] = useState<string>("all");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
-  // Create a map of students already in other groups within the same session
+  const [initialSelectedIds, setInitialSelectedIds] = useState<Set<string>>(new Set());
+  const [isDirty, setIsDirty] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+
   const studentToGroupMap = useMemo(() => {
     const map = new Map<string, string>();
     groupsInSession.forEach(group => {
-      // Exclude students from the group currently being edited
       if (isEditing && group.id === currentGroupId) {
         return;
       }
@@ -95,11 +106,40 @@ export default function SelectStudentsModal({
           .map(s => s.id)
       );
       setSelectedIds(initialIds);
-      // Reset filters when modal opens
+      setInitialSelectedIds(initialIds);
+      
       setSearchTerm("");
-      setSelectedGrade("all"); // Reset to "all" grades
+      setSelectedGrade("all");
+      setIsDirty(false);
     }
   }, [isOpen, initiallySelectedNames, allStudents]);
+
+  useEffect(() => {
+      if (!isOpen) return;
+      setIsDirty(!areSetsEqual(selectedIds, initialSelectedIds));
+  }, [selectedIds, initialSelectedIds, isOpen])
+
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setShowWarning(false);
+  }, [setIsOpen]);
+
+  const handleAttemptClose = useCallback(() => {
+      if (isDirty) {
+          setShowWarning(true);
+      } else {
+          handleClose();
+      }
+  }, [isDirty, handleClose]);
+
+  const handleInteractOutside = useCallback((e: Event) => {
+      if (isDirty) {
+          e.preventDefault();
+          setShowWarning(true);
+      }
+  }, [isDirty]);
+
 
   const uniqueGrades = useMemo(() => {
     const grades = new Set<number>();
@@ -114,7 +154,6 @@ export default function SelectStudentsModal({
   const filteredStudents = useMemo(() => {
     return allStudents.filter(student => {
       const nameMatch = student.name.toLowerCase().includes(searchTerm.toLowerCase());
-      // Check if selectedGrade is "all" or if the student's grade matches the selected grade
       const gradeMatch = selectedGrade === "all" || String(student.grade) === selectedGrade;
       return nameMatch && gradeMatch;
     });
@@ -137,7 +176,6 @@ export default function SelectStudentsModal({
   };
 
   const handleSelectAll = () => {
-    // Only select students that are not disabled
     setSelectedIds(new Set(availableStudents.map(s => s.id)));
   };
 
@@ -148,12 +186,17 @@ export default function SelectStudentsModal({
   const handleConfirm = () => {
     const selectedStudents = allStudents.filter(s => selectedIds.has(s.id));
     onSelect(selectedStudents);
-    setIsOpen(false);
+    handleClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleAttemptClose()}>
+      <DialogContent 
+        className="sm:max-w-md"
+        onPointerDownOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
+        >
         <DialogHeader>
           <DialogTitle>{isEditing ? `Modify Group: ${groupName}` : "Create New Group"}</DialogTitle>
           <DialogDescription>
@@ -176,7 +219,6 @@ export default function SelectStudentsModal({
                 <SelectValue placeholder="All Grades" />
               </SelectTrigger>
               <SelectContent>
-                {/* Changed value from "" to "all" */}
                 <SelectItem value="all">All Grades</SelectItem>
                 {uniqueGrades.map(grade => (
                   <SelectItem key={grade} value={String(grade)}>
@@ -274,7 +316,7 @@ export default function SelectStudentsModal({
               )}
             </div>
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                <Button variant="outline" onClick={() => setIsOpen(false)}>
+                <Button variant="outline" onClick={handleAttemptClose}>
                     Cancel
                 </Button>
                 <Button onClick={handleConfirm}>{isEditing ? "Save Changes" : "Create Group"}</Button>
@@ -282,5 +324,20 @@ export default function SelectStudentsModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+     <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You have unsaved changes. Are you sure you want to discard them and close the dialog?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClose} className="bg-destructive hover:bg-destructive/90">Discard</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

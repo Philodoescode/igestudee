@@ -49,7 +49,7 @@ export default function GroupDetailPage({ params }: { params: { groupId: string 
     if (groupId) {
       fetchGroupDetails()
     }
-  }, [groupId])
+  }, [groupId, supabase])
 
   if (isLoading) {
     return (
@@ -104,8 +104,8 @@ export default function GroupDetailPage({ params }: { params: { groupId: string 
           <TabsTrigger value="assignments">Assignments</TabsTrigger>
           <TabsTrigger value="attendance">Attendance</TabsTrigger>
           <TabsTrigger value="parent-outreach">
-            <MessageSquareShare className="mr-2 h-4 w-4" />
-            Parent Outreach
+            <MessageSquareShare className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Parent Outreach</span>
           </TabsTrigger>
         </TabsList>
 

@@ -1,3 +1,4 @@
+// courses/components/course-list-view.tsx
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -146,20 +147,20 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
             <motion.div key={course.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <AccordionItem value={course.id} className="border rounded-lg bg-white dark:bg-zinc-900/50 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
                 <AccordionTrigger className="px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 data-[state=open]:border-b group">
-                  <div className='flex justify-between items-center w-full gap-4'>
+                  <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2 sm:gap-4'>
                     <div className="flex-1 min-w-0">
                       <h3 className='font-semibold text-lg text-slate-800 dark:text-slate-100 text-left truncate'>{course.title}</h3>
                       <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-xs text-slate-500 dark:text-slate-400">
                          <span>{course.sessionCount} Sessions</span> • <span>{course.activeGroupCount} Active Groups</span>
                       </div>
                     </div>
-                    <div className='flex items-center gap-2 sm:gap-4 flex-shrink-0'>
+                    <div className='flex items-center gap-2 sm:gap-4 flex-shrink-0 self-end sm:self-center'>
                       <div className='hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400'>
                           <User className='h-4 w-4'/> 
                           {/* FIX: Use instructorName directly from the course object */}
                           <span>{course.instructorName || 'Unknown'}</span>
                       </div>
-                      <div className='flex items-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                      <div className='flex items-center'>
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenCourseModal(course); }}><Edit className="h-4 w-4 mr-1"/> Modify</Button>
                         <Button variant="ghost" size="sm" className="text-emerald-600 dark:text-emerald-500" onClick={(e) => { e.stopPropagation(); onOpenSessionModal(null, course.id); }}><PlusCircle className="h-4 w-4 mr-1"/> Add Session</Button>
                       </div>
@@ -180,7 +181,7 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
                                               <Badge variant="outline">{session.totalStudents} Student{session.totalStudents !== 1 && 's'}</Badge>
                                           </div>
                                       </div>
-                                      <div className='flex items-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 self-end sm:self-center'>
+                                      <div className='flex items-center flex-shrink-0 self-end sm:self-center'>
                                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenSessionModal(session, course.id); }}><Edit className="h-4 w-4 mr-1"/> Modify</Button>
                                           <Button variant="ghost" size="sm" className="text-emerald-600 dark:text-emerald-500" onClick={(e) => { e.stopPropagation(); onOpenGroupModal(null, session.id); }}><PlusCircle className="h-4 w-4 mr-1"/> Add Group</Button>
                                       </div>
