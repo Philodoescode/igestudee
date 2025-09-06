@@ -712,7 +712,7 @@
   dependencies:
     "@radix-ui/react-compose-refs" "1.1.1"
 
-"@radix-ui/react-slot@1.2.3":
+"@radix-ui/react-slot@1.2.3", "@radix-ui/react-slot@^1.1.2":
   version "1.2.3"
   resolved "https://registry.yarnpkg.com/@radix-ui/react-slot/-/react-slot-1.2.3.tgz#502d6e354fc847d4169c3bc5f189de777f68cfe1"
   integrity sha512-aeNmHnBxbi2St0au6VBVC7JXFlhLlOnvIIlePNniyUNAClzmtAUEY8/pBiK3iHjufOlwA+c20/8jngo7xcrg8A==
@@ -890,6 +890,14 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@radix-ui/rect/-/rect-1.1.0.tgz#f817d1d3265ac5415dadc67edab30ae196696438"
   integrity sha512-A9+lCBZoaMJlVKcRBz2YByCG+Cp2t6nAnMnNba+XiWxnj6r4JUFqfsgwocMBZU9LPtdxC6wB56ySYpc7LQIoJg==
+
+"@squircle-js/react@^1.2.18":
+  version "1.2.18"
+  resolved "https://registry.yarnpkg.com/@squircle-js/react/-/react-1.2.18.tgz#452fbfffaa0bbfd8d8ca10107ec9094cbf8c792e"
+  integrity sha512-KM4d5cYCvn/5lrcVkxFIrc3Dn7IaSeVS0pWlY9YZc6OgFkEjoV6MLOvkVX9PvX6M1w83dHdOU09SzjHN78CVhQ==
+  dependencies:
+    "@radix-ui/react-slot" "^1.1.2"
+    figma-squircle "1.1.0"
 
 "@supabase/auth-js@2.71.1":
   version "2.71.1"
@@ -1523,6 +1531,11 @@ fetch-blob@^3.1.2, fetch-blob@^3.1.4:
   dependencies:
     node-domexception "^1.0.0"
     web-streams-polyfill "^3.0.3"
+
+figma-squircle@1.1.0:
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/figma-squircle/-/figma-squircle-1.1.0.tgz#c058b8aa65b72bdd32bc181f2e2b4e5f7670e9b6"
+  integrity sha512-3aa6bOurrsybsuYo1TMRuasBpXgVjgnmOUtZ40il6e1dJF2lhTRq89z7oy1uzKDspbH3630rLZD2UvJqXDiktA==
 
 fill-range@^7.1.1:
   version "7.1.1"
