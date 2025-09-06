@@ -47,7 +47,7 @@ interface SelectStudentsModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   onSelect: (selectedStudents: Student[]) => void;
-  onDelete?: () => void;
+  // onDelete is no longer passed to the modal
   allStudents: Student[];
   initiallySelectedNames: string[];
   groupsInSession: Group[];
@@ -68,7 +68,6 @@ export default function SelectStudentsModal({
   isOpen,
   setIsOpen,
   onSelect,
-  onDelete,
   allStudents,
   initiallySelectedNames,
   groupsInSession,
@@ -290,37 +289,11 @@ export default function SelectStudentsModal({
             </div>
           </ScrollArea>
         </div>
-        <DialogFooter className="flex-col-reverse gap-y-2 sm:flex-row sm:justify-between sm:space-x-2 pt-4 border-t">
-            <div>
-              {isEditing && onDelete && (
-                <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" type="button" className="w-full sm:w-auto">
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Group
-                        </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                        <AlertDialogHeader>
-                            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will permanently delete the group <span className="font-semibold">'{groupName}'</span> and all of its associated data.
-                            </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                        </AlertDialogFooter>
-                    </AlertDialogContent>
-                </AlertDialog>
-              )}
-            </div>
-            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                <Button variant="outline" onClick={handleAttemptClose}>
-                    Cancel
-                </Button>
-                <Button onClick={handleConfirm}>{isEditing ? "Save Changes" : "Create Group"}</Button>
-            </div>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={handleAttemptClose}>
+                Cancel
+            </Button>
+            <Button onClick={handleConfirm}>{isEditing ? "Save Changes" : "Create Group"}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

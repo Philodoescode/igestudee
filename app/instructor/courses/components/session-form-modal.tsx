@@ -1,6 +1,7 @@
+// courses/components/session-form-modal.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +38,7 @@ interface SessionFormModalProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   onSave: (session: Omit<CourseSession, 'id'> | CourseSession) => void;
-  onDelete: (sessionId: string) => void;
+  // onDelete is no longer passed to the modal
   sessionToEdit: CourseSession | null;
   courseId: string | null;
   allSessions: CourseSession[];
@@ -56,24 +57,53 @@ const getInitialFormData = () => ({
   status: 'active' as 'active' | 'inactive',
 });
 
-export default function SessionFormModal({ isOpen, setIsOpen, onSave, onDelete, sessionToEdit, courseId, allSessions }: SessionFormModalProps) {
+export default function SessionFormModal({ isOpen, setIsOpen, onSave, sessionToEdit, courseId, allSessions }: SessionFormModalProps) {
   const [formData, setFormData] = useState(getInitialFormData());
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
   const YEARS = getYears();
+  const [isDirty, setIsDirty] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [initialState, setInitialState] = useState(getInitialFormData());
+
 
   useEffect(() => {
-    if (sessionToEdit) {
-      setFormData({
-        month: sessionToEdit.month,
-        year: sessionToEdit.year,
-        status: sessionToEdit.status,
-      });
-    } else {
-      setFormData(getInitialFormData());
+    if(isOpen) {
+      const initialStateData = sessionToEdit 
+          ? { month: sessionToEdit.month, year: sessionToEdit.year, status: sessionToEdit.status } 
+          : getInitialFormData();
+      setFormData(initialStateData);
+      setInitialState(initialStateData);
+      setErrors({});
+      setIsDirty(false);
     }
-    setErrors({});
   }, [sessionToEdit, isOpen]);
+
+  useEffect(() => {
+    if(!isOpen) return;
+    setIsDirty(JSON.stringify(formData) !== JSON.stringify(initialState));
+  }, [formData, initialState, isOpen]);
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setShowWarning(false);
+  }, [setIsOpen]);
+
+  const handleAttemptClose = useCallback(() => {
+      if (isDirty) {
+          setShowWarning(true);
+      } else {
+          handleClose();
+      }
+  }, [isDirty, handleClose]);
+
+  const handleInteractOutside = useCallback((e: Event) => {
+      if (isDirty) {
+          e.preventDefault();
+          setShowWarning(true);
+      }
+  }, [isDirty]);
+
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -107,18 +137,20 @@ export default function SessionFormModal({ isOpen, setIsOpen, onSave, onDelete, 
     setTimeout(() => {
       onSave(dataToSave);
       setIsSaving(false);
+      handleClose();
     }, 1000);
   };
   
-  const handleDelete = () => {
-    if (sessionToEdit) {
-      onDelete(sessionToEdit.id);
-    }
-  }
+  // handleDelete is removed from here
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleAttemptClose()}>
+      <DialogContent 
+        className="sm:max-w-md"
+        onPointerDownOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
+        >
         <DialogHeader>
           <DialogTitle>{sessionToEdit ? "Modify Session" : "Create New Session"}</DialogTitle>
           <DialogDescription>
@@ -153,39 +185,29 @@ export default function SessionFormModal({ isOpen, setIsOpen, onSave, onDelete, 
             <Label htmlFor="status" className="cursor-pointer">Active Session</Label>
           </div>
         </div>
-        <DialogFooter className="flex-col-reverse gap-y-2 sm:flex-row sm:justify-between sm:space-x-2">
-          <div>
-          {sessionToEdit && (
-            <AlertDialog>
-                <AlertDialogTrigger asChild>
-                    <Button variant="destructive" type="button" className="w-full sm:w-auto">
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete Session
-                    </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This action will permanently delete this session and all of its groups. This action cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-           )}
-          </div>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>Cancel</Button>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={handleAttemptClose} disabled={isSaving}>Cancel</Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {sessionToEdit ? "Save Changes" : "Create Session"}
             </Button>
-          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+     <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You have unsaved changes. Are you sure you want to discard them and close the dialog?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClose} className="bg-destructive hover:bg-destructive/90">Discard</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }

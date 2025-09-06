@@ -1,3 +1,4 @@
+// courses/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -162,14 +163,24 @@ export default function CoursesPage() {
     <div>
       <Toaster position="top-center" richColors />
       <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-        <CourseListView courses={mappedCourses} sessions={allSessions} groups={allGroups} onSelectGroup={handleSelectGroup} onOpenCourseModal={handleOpenCourseModal} onOpenSessionModal={handleOpenSessionModal} onOpenGroupModal={handleOpenGroupModal} />
+        <CourseListView
+          courses={mappedCourses}
+          sessions={allSessions}
+          groups={allGroups}
+          onSelectGroup={handleSelectGroup}
+          onOpenCourseModal={handleOpenCourseModal}
+          onOpenSessionModal={handleOpenSessionModal}
+          onOpenGroupModal={handleOpenGroupModal}
+          onDeleteCourse={(courseId) => handleDelete("course", courseId)}
+          onDeleteSession={(sessionId) => handleDelete("session", sessionId)}
+          onDeleteGroup={(groupId) => handleDelete("group", groupId)}
+        />
       </motion.div>
 
       <CourseFormModal
         isOpen={isCourseModalOpen}
         setIsOpen={setIsCourseModalOpen}
         onSave={(data) => handleSave("course", data)}
-        onDelete={() => handleDelete("course", editingCourse!.id)}
         courseToEdit={editingCourse}
         allInstructors={[]}
       />
@@ -178,7 +189,6 @@ export default function CoursesPage() {
         isOpen={isSessionModalOpen}
         setIsOpen={setIsSessionModalOpen}
         onSave={(data) => handleSave("session", data)}
-        onDelete={() => handleDelete("session", editingSession!.id)}
         sessionToEdit={editingSession}
         allSessions={allSessions}
         courseId={targetCourseId}
@@ -194,7 +204,7 @@ export default function CoursesPage() {
         currentGroupId={editingGroup ? editingGroup.id : null}
         isEditing={!!editingGroup}
         groupName={editingGroup?.groupName}
-        onDelete={editingGroup ? () => handleDelete("group", editingGroup.id) : undefined}
+        // onDelete is no longer passed to the modal
       />
     </div>
   )
