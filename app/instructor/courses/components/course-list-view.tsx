@@ -1,8 +1,8 @@
+// courses/components/course-list-view.tsx
 "use client";
 
 import { useState, useMemo } from 'react';
 import { motion } from "framer-motion";
-// allInstructors is no longer needed here
 import type { Course, CourseSession, Group } from '@/types/course';
 import {
   Accordion,
@@ -15,7 +15,26 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
-import { PlusCircle, Search, User, Edit, FolderArchive } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuLabel,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { PlusCircle, Search, User, Edit, FolderArchive, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from '@/components/ui/badge';
 import { GroupCard } from './group-card';
@@ -31,9 +50,12 @@ interface CourseListViewProps {
     onOpenCourseModal: (course: Course | null) => void;
     onOpenSessionModal: (session: CourseSession | null, courseId: string) => void;
     onOpenGroupModal: (group: Group | null, sessionId: string) => void;
+    onDeleteCourse: (courseId: string) => void;
+    onDeleteSession: (sessionId: string) => void;
+    onDeleteGroup: (groupId: string) => void;
 }
 
-export default function CourseListView({ courses, sessions, groups, onSelectGroup, onOpenCourseModal, onOpenSessionModal, onOpenGroupModal }: CourseListViewProps) {
+export default function CourseListView({ courses, sessions, groups, onSelectGroup, onOpenCourseModal, onOpenSessionModal, onOpenGroupModal, onDeleteCourse, onDeleteSession, onDeleteGroup }: CourseListViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showInactive, setShowInactive] = useState(true);
@@ -145,58 +167,108 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
           {paginatedCourses.map(course => (
             <motion.div key={course.id} layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <AccordionItem value={course.id} className="border rounded-lg bg-white dark:bg-zinc-900/50 overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-300">
-                <AccordionTrigger className="px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 data-[state=open]:border-b group">
-                  <div className='flex justify-between items-center w-full gap-4'>
-                    <div className="flex-1 min-w-0">
-                      <h3 className='font-semibold text-lg text-slate-800 dark:text-slate-100 text-left truncate'>{course.title}</h3>
-                      <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-xs text-slate-500 dark:text-slate-400">
-                         <span>{course.sessionCount} Sessions</span> • <span>{course.activeGroupCount} Active Groups</span>
-                      </div>
-                    </div>
-                    <div className='flex items-center gap-2 sm:gap-4 flex-shrink-0'>
-                      <div className='hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400'>
+                <ContextMenu>
+                  <ContextMenuTrigger asChild>
+                    <AccordionTrigger className="px-4 py-3 hover:bg-slate-50/50 dark:hover:bg-zinc-800/50 data-[state=open]:border-b group">
+                      <div className='flex flex-col sm:flex-row items-start sm:items-center justify-between w-full gap-2 sm:gap-4'>
+                        <div className="flex-1 min-w-0">
+                          <h3 className='font-semibold text-lg text-slate-800 dark:text-slate-100 text-left truncate'>{course.title}</h3>
+                          <div className="flex items-center gap-x-4 gap-y-1 flex-wrap text-xs text-slate-500 dark:text-slate-400">
+                             <span>{course.sessionCount} Sessions</span> • <span>{course.activeGroupCount} Active Groups</span>
+                          </div>
+                        </div>
+                        <div className='hidden md:flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 self-center'>
                           <User className='h-4 w-4'/> 
-                          {/* FIX: Use instructorName directly from the course object */}
                           <span>{course.instructorName || 'Unknown'}</span>
+                        </div>
                       </div>
-                      <div className='flex items-center opacity-0 group-hover:opacity-100 transition-opacity'>
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenCourseModal(course); }}><Edit className="h-4 w-4 mr-1"/> Modify</Button>
-                        <Button variant="ghost" size="sm" className="text-emerald-600 dark:text-emerald-500" onClick={(e) => { e.stopPropagation(); onOpenSessionModal(null, course.id); }}><PlusCircle className="h-4 w-4 mr-1"/> Add Session</Button>
-                      </div>
-                    </div>
-                  </div>
-                </AccordionTrigger>
+                    </AccordionTrigger>
+                  </ContextMenuTrigger>
+                  <ContextMenuContent>
+                    <ContextMenuLabel className='truncate max-w-56'>{course.title}</ContextMenuLabel>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem onSelect={() => onOpenCourseModal(course)}><Edit className="h-4 w-4 mr-2" />Modify Course</ContextMenuItem>
+                    <ContextMenuItem onSelect={() => onOpenSessionModal(null, course.id)} className="text-emerald-600 dark:text-emerald-500"><PlusCircle className="h-4 w-4 mr-2" />Add New Session</ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <ContextMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-500">
+                          <Trash2 className="h-4 w-4 mr-2" />Delete Course
+                        </ContextMenuItem>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This will permanently delete the course <span className="font-semibold">'{course.title}'</span> and all of its associated sessions and groups. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDeleteCourse(course.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </ContextMenuContent>
+                </ContextMenu>
                 <AccordionContent className="p-0 border-t dark:border-zinc-800">
                    <Accordion type="multiple" className="w-full bg-slate-50/70 dark:bg-zinc-800/40" defaultValue={course.sessions.length > 0 ? [course.sessions[0].id] : []}>
                       {course.sessions.map(session => (
                           <AccordionItem key={session.id} value={session.id} className="border-b last:border-b-0 dark:border-zinc-700/50">
-                              <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:bg-slate-100/50 dark:hover:bg-zinc-700/50 data-[state=open]:border-b dark:data-[state=open]:border-zinc-700/50 group">
+                            <ContextMenu>
+                              <ContextMenuTrigger asChild>
+                                <AccordionTrigger className="px-4 py-3 text-sm font-medium hover:bg-slate-100/50 dark:hover:bg-zinc-700/50 data-[state=open]:border-b dark:data-[state=open]:border-zinc-700/50 group">
                                   <div className='flex flex-col sm:flex-row sm:justify-between sm:items-center w-full gap-2 text-left'>
-                                      <div className='flex-1 min-w-0'>
-                                          <span className='font-semibold'>{session.month} {session.year}</span>
-                                          <div className="flex flex-wrap items-center gap-2 mt-1 sm:mt-0 sm:inline-flex sm:ml-3">
-                                              <Badge variant={session.status === 'active' ? 'default' : 'secondary'} className={cn('font-medium', session.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/70' : 'bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300')}>{session.status}</Badge>
-                                              <Badge variant="outline">{session.groups.length} Group{session.groups.length !== 1 && 's'}</Badge>
-                                              <Badge variant="outline">{session.totalStudents} Student{session.totalStudents !== 1 && 's'}</Badge>
-                                          </div>
+                                    <div className='flex-1 min-w-0'>
+                                      <span className='font-semibold'>{session.month} {session.year}</span>
+                                      <div className="flex flex-wrap items-center gap-2 mt-1 sm:mt-0 sm:inline-flex sm:ml-3">
+                                        <Badge variant={session.status === 'active' ? 'default' : 'secondary'} className={cn('font-medium', session.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/70' : 'bg-gray-200 text-gray-700 dark:bg-zinc-700 dark:text-zinc-300')}>{session.status}</Badge>
+                                        <Badge variant="outline">{session.groups.length} Group{session.groups.length !== 1 && 's'}</Badge>
+                                        <Badge variant="outline">{session.totalStudents} Student{session.totalStudents !== 1 && 's'}</Badge>
                                       </div>
-                                      <div className='flex items-center opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 self-end sm:self-center'>
-                                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); onOpenSessionModal(session, course.id); }}><Edit className="h-4 w-4 mr-1"/> Modify</Button>
-                                          <Button variant="ghost" size="sm" className="text-emerald-600 dark:text-emerald-500" onClick={(e) => { e.stopPropagation(); onOpenGroupModal(null, session.id); }}><PlusCircle className="h-4 w-4 mr-1"/> Add Group</Button>
-                                      </div>
+                                    </div>
                                   </div>
-                              </AccordionTrigger>
-                              <AccordionContent className="p-4 md:p-6 bg-white dark:bg-zinc-900">
-                                  {session.groups.length > 0 ? (
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                                          {session.groups.map(group => (
-                                              <GroupCard key={group.id} group={group} onSelect={() => onSelectGroup(group)} onModify={(e) => {e.stopPropagation(); onOpenGroupModal(group, session.id);}}/>
-                                          ))}
-                                      </div>
-                                  ) : (
-                                      <div className='text-center py-4 text-sm text-slate-500 dark:text-slate-400'>No groups in this session yet.</div>
-                                  )}
-                              </AccordionContent>
+                                </AccordionTrigger>
+                              </ContextMenuTrigger>
+                              <ContextMenuContent>
+                                <ContextMenuLabel>Session: {session.month} {session.year}</ContextMenuLabel>
+                                <ContextMenuSeparator />
+                                <ContextMenuItem onSelect={() => onOpenSessionModal(session, course.id)}><Edit className="h-4 w-4 mr-2"/>Modify Session</ContextMenuItem>
+                                <ContextMenuItem onSelect={() => onOpenGroupModal(null, session.id)} className="text-emerald-600 dark:text-emerald-500"><PlusCircle className="h-4 w-4 mr-2"/>Add New Group</ContextMenuItem>
+                                <ContextMenuSeparator />
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <ContextMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600 dark:text-red-500">
+                                      <Trash2 className="h-4 w-4 mr-2" />Delete Session
+                                    </ContextMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        This action will permanently delete this session and all of its groups. This action cannot be undone.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => onDeleteSession(session.id)} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                              </ContextMenuContent>
+                            </ContextMenu>
+
+                            <AccordionContent className="p-4 md:p-6 bg-white dark:bg-zinc-900">
+                                {session.groups.length > 0 ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                        {session.groups.map(group => (
+                                            <GroupCard key={group.id} group={group} onSelect={() => onSelectGroup(group)} onModify={() => onOpenGroupModal(group, session.id)} onDelete={onDeleteGroup}/>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className='text-center py-4 text-sm text-slate-500 dark:text-slate-400'>No groups in this session yet.</div>
+                                )}
+                            </AccordionContent>
                           </AccordionItem>
                       ))}
                    </Accordion>

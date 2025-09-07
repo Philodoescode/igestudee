@@ -1,11 +1,21 @@
+// courses/components/add-assignment-modal.tsx
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -69,38 +79,75 @@ export default function AddAssignmentModal({
   const isEditing = !!editingEntry
 
   const [studentStatuses, setStudentStatuses] = useState<AssignmentRecord[]>([])
+  const [initialState, setInitialState] = useState<string | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
+  const [showWarning, setShowWarning] = useState(false)
 
   const {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<z.infer<typeof assignmentSchema>>({
     resolver: zodResolver(assignmentSchema),
   })
 
+  const formValues = watch()
+
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
 
     if (isOpen) {
+      let currentStatuses: AssignmentRecord[];
       if (isEditing) {
         reset({ title: editingEntry.title, item_date: editingEntry.item_date })
-        setStudentStatuses(editingEntry.statuses)
+        currentStatuses = editingEntry.statuses
+        setStudentStatuses(currentStatuses)
       } else {
         reset({ title: "", item_date: today })
-        setStudentStatuses(
-          students.map(s => ({
+        currentStatuses = students.map(s => ({
             studentId: s.id,
             name: s.name,
             status: "Done",
             comment: "",
-          })),
-        )
+          }))
+        setStudentStatuses(currentStatuses)
       }
+      setInitialState(JSON.stringify({ ...watch(), statuses: currentStatuses }))
+      setIsDirty(false)
     }
-  }, [isOpen, isEditing, editingEntry, students, reset])
+  }, [isOpen, isEditing, editingEntry, students, reset, watch])
+  
+  useEffect(() => {
+    if (!isOpen || !initialState) return;
+    const currentState = JSON.stringify({ ...formValues, statuses: studentStatuses });
+    setIsDirty(currentState !== initialState);
+  }, [formValues, studentStatuses, initialState, isOpen])
 
   const todayDateString = useMemo(() => new Date().toISOString().split("T")[0], [])
+  
+  const handleClose = useCallback(() => {
+      setIsOpen(false)
+      setShowWarning(false)
+      setIsDirty(false)
+  }, [setIsOpen]);
+
+  const handleAttemptClose = useCallback(() => {
+    if (isDirty) {
+      setShowWarning(true);
+    } else {
+      handleClose();
+    }
+  }, [isDirty, handleClose]);
+
+  const handleInteractOutside = useCallback((e: Event) => {
+    if (isDirty) {
+      e.preventDefault();
+      setShowWarning(true);
+    }
+  }, [isDirty]);
+
 
   const onSubmit = async (formData: z.infer<typeof assignmentSchema>) => {
     setIsSaving(true)
@@ -124,7 +171,7 @@ export default function AddAssignmentModal({
     } else {
       toast.success(`Assignment "${formData.title}" saved successfully!`)
       onSave()
-      setIsOpen(false)
+      handleClose()
     }
     setIsSaving(false)
   }
@@ -156,8 +203,13 @@ export default function AddAssignmentModal({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-3xl">
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleAttemptClose()}>
+      <DialogContent 
+          className="max-w-3xl"
+          onPointerDownOutside={handleInteractOutside}
+          onEscapeKeyDown={handleInteractOutside}
+      >
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Assignment" : "Add New Assignment"}</DialogTitle>
           <DialogDescription>
@@ -224,7 +276,7 @@ export default function AddAssignmentModal({
         </form>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>
+          <Button type="button" variant="outline" onClick={handleAttemptClose}>
             Cancel
           </Button>
           <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
@@ -234,5 +286,21 @@ export default function AddAssignmentModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You have unsaved changes. Are you sure you want to discard them and close the dialog?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClose} className="bg-destructive hover:bg-destructive/90">Discard</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

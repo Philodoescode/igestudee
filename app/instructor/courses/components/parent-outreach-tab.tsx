@@ -34,55 +34,86 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
     assignments, graded_items,
   } = student
 
+  // normalize student name (trim and collapse extra spaces) — names are in English per your note
+  const studentName = (student_first_name ?? "").replace(/\s+/g, " ").trim()
+  // also trim parent name in case you still use it elsewhere later
+  const parentName = (parent_first_name ?? "").replace(/\s+/g, " ").trim() || "ولي الأمر"
+
+  // Helpers to force WhatsApp formatting when mixing Arabic (RTL) and English (LTR).
+  // We insert LEFT-TO-RIGHT MARK (\u200E) inside the formatting markers so WhatsApp detects them.
+  const LRM = "\u200E"
+  const wrapBold = (s: string) => `*${LRM}${s}${LRM}*`
+  const wrapItalic = (s: string) => `_${LRM}${s}${LRM}_`
+
   if (lang === "ar") {
     const formattedDate = format(reportDate, "dd/MM/yyyy")
-    const parentName = parent_first_name || "ولي الأمر"
 
-    // Absent Template (Arabic)
-    if (attendance_status === "Absent" || !attendance_status) {
-      return `مرحبًا ${parentName}،\n\nكان ${student_first_name} غائبًا عن حصة اليوم، ${formattedDate}.\n\nمع أطيب التحيات،\n${instructor_full_name}`
+    // Time-aware greeting (uses client's current local time)
+    const now = new Date()
+    const hour = now.getHours()
+    const greeting = hour < 12 ? "صباح الخير،" : "مساء الخير،"
+
+    // mapping for statuses
+    type TKey = "Done" | "Partially Done" | "Not Done" | "Present" | "Tardy"
+    const t = (key: TKey) => {
+      return {
+        "Done": "تم إنجازه",
+        "Partially Done": "تم إنجازه جزئيًا",
+        "Not Done": "لم يتم إنجازه",
+        "Present": "حاضر في الوقت المحدد",
+        "Tardy": "تأخر قليلًا"
+      }[key]
     }
 
-    // Present/Tardy Template (Arabic)
-    const t = (key: "Done" | "Partially Done" | "Not Done" | "Present" | "Tardy") => {
-      return { "Done": "تم", "Partially Done": "تم جزئيًا", "Not Done": "لم يتم", "Present": "حاضرًا في الوقت المحدد", "Tardy": "متأخرًا" }[key]
+    // Absent Template (Arabic) — no parent name inserted after greeting to avoid duplication
+    if (attendance_status === "Absent" || !attendance_status) {
+      return `${greeting}\n\nأردت إبلاغك أن ${wrapBold(studentName)} لم يحضر حصة اليوم (${wrapItalic(formattedDate)}).\n\nمع خالص التحية،\n${instructor_full_name}`
     }
 
     const hasAssignments = assignments && assignments.length > 0
     const hasGradedItems = graded_items && graded_items.length > 0
 
-    let attendanceSection = `الحضور:\nكان ${student_first_name} ${t(attendance_status)} في الحصة اليوم.`
-    if (attendance_comment) attendanceSection += `\n${attendance_comment}`
+    // attendance section — attendance_status is either "Present" or "Tardy" here
+    const attendanceKey = (attendance_status as ("Present" | "Tardy")) as TKey
+    let attendanceSection = `*الحضور:*\n${wrapBold(studentName)} كان ${t(attendanceKey)} في الحصة اليوم.`
+    if (attendance_comment) attendanceSection += `\n_ملاحظة:_ ${attendance_comment}`
 
+    // Assignments section
     const assignmentsSection = hasAssignments
-      ? `الواجبات:\n` + assignments.map(a => `    ${a.title}: ${t(a.status)}` + (a.comment ? `\n    ${a.comment}` : "")).join("\n")
+      ? `*الواجبات:*\n` + assignments.map(a =>
+          ` - ${a.title}: ${wrapBold(t(a.status as TKey))}` + (a.comment ? `\n   _ملاحظة:_ ${a.comment}` : "")
+        ).join("\n")
       : ""
+
+    // Graded items section
     const gradedItemsSection = hasGradedItems
-      ? `التقييمات:\n` + graded_items.map(gi => `    ${gi.title}: ${gi.score ?? "N/A"} / ${gi.max_mark}` + (gi.comment ? `\n    ${gi.comment}` : "")).join("\n")
+      ? `*التقييمات:*\n` + graded_items.map(gi =>
+          ` - ${gi.title}: ${wrapBold(gi.score ?? "N/A")} / ${wrapItalic(String(gi.max_mark))}` + (gi.comment ? `\n   _ملاحظة:_ ${gi.comment}` : "")
+        ).join("\n")
       : ""
 
-    let middleSection
+    let middleSection: string
     if (hasAssignments && hasGradedItems) middleSection = `${assignmentsSection}\n\n${gradedItemsSection}`
-    else if (hasAssignments) middleSection = `${assignmentsSection}\n\nلم تكن هناك تقييمات لجلسة اليوم.`
-    else if (hasGradedItems) middleSection = `لم تكن هناك واجبات مستحقة في جلسة اليوم.\n\n${gradedItemsSection}`
-    else middleSection = `لم تكن هناك واجبات مستحقة أو تقييمات لجلسة اليوم.`
+    else if (hasAssignments) middleSection = `${assignmentsSection}\n\nلم يكن هناك تقييمات لهذا اليوم.`
+    else if (hasGradedItems) middleSection = `لم يكن هناك واجبات مطلوبة لهذا اليوم.\n\n${gradedItemsSection}`
+    else middleSection = `لم يكن هناك واجبات أو تقييمات لهذا اليوم.`
 
-    return `مرحبًا ${parentName}،\n\nإليك ملخص تقدم ${student_first_name} في حصة اليوم:\n\nالحصة رقم: ${present_class_count}\nالتاريخ: ${formattedDate}\n\n${attendanceSection}\n\n${middleSection}\n\nنتطلع لرؤية ${student_first_name} في الحصة القادمة!\n\nمع أطيب التحيات،\n${instructor_full_name}`
-
-  } else { // English
+    // Short headline as requested; use wrapBold on the student name so WhatsApp bold works
+    return `${greeting}\n\nملخص ${wrapBold(studentName)} في حصة اليوم:\n\n_رقم الحصة:_ ${wrapBold(String(present_class_count))}\n_التاريخ:_ ${wrapItalic(formattedDate)}\n\n${attendanceSection}\n\n${middleSection}\n\nنتمنى لـ${wrapBold(studentName)} دوام التوفيق ونلقاه في الحصة القادمة بإذن الله.\n\nخالص التحية،\n${instructor_full_name}`
+  } else { // English (unchanged)
     const formattedDate = format(reportDate, "MMMM d, yyyy")
-    const parentName = parent_first_name || "Guardian"
+    const parentDisplay = parent_first_name || "Guardian"
     
     // Absent Template (English)
     if (attendance_status === "Absent" || !attendance_status) {
-      return `Hello ${parentName},\n\n${student_first_name} was absent for today's class, ${formattedDate}.\n\nBest regards,\n${instructor_full_name}`
+      return `Hello ${parentDisplay},\n\n${studentName} was absent for today's class, ${formattedDate}.\n\nBest regards,\n${instructor_full_name}`
     }
 
     // Present/Tardy Template (English)
     const hasAssignments = assignments && assignments.length > 0
     const hasGradedItems = graded_items && graded_items.length > 0
 
-    let attendanceSection = `Attendance:\n${student_first_name} was ${attendance_status === "Tardy" ? "tardy" : "present and on time"} for class today.`
+    let attendanceSection = `Attendance:\n${studentName} was ${attendance_status === "Tardy" ? "tardy" : "present and on time"} for class today.`
     if (attendance_comment) attendanceSection += `\n${attendance_comment}`
     
     const assignmentsSection = hasAssignments
@@ -98,7 +129,7 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
     else if (hasGradedItems) middleSection = `There were no assignments due today's session.\n\n${gradedItemsSection}`
     else middleSection = `There were no assignments due or graded items for today's session.`
 
-    return `Hello ${parentName},\n\nHere is a summary of ${student_first_name}'s progress in today's class:\n\nClass: ${present_class_count}\nDate: ${formattedDate}\n\n${attendanceSection}\n\n${middleSection}\n\nWe look forward to seeing ${student_first_name} in the next class!\n\nBest regards,\n${instructor_full_name}`
+    return `Hello ${parentDisplay},\n\nHere is a summary of ${studentName}'s progress in today's class:\n\nClass: ${present_class_count}\nDate: ${formattedDate}\n\n${attendanceSection}\n\n${middleSection}\n\nWe look forward to seeing ${studentName} in the next class!\n\nBest regards,\n${instructor_full_name}`
   }
 }
 

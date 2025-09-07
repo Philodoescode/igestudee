@@ -1,11 +1,21 @@
+// courses/components/add-graded-item-modal.tsx
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -69,7 +79,10 @@ export default function AddGradedItemModal({
   const isEditing = !!editingEntry
 
   const [studentScores, setStudentScores] = useState<StudentScoreRecord[]>([])
-
+  const [initialState, setInitialState] = useState<string | null>(null);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  
   const {
     register,
     handleSubmit,
@@ -81,27 +94,62 @@ export default function AddGradedItemModal({
     mode: "onChange",
   })
 
-  const maxMark = watch("max_score")
-
+  const formValues = watch();
+  const maxMark = watch("max_score");
+  
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
 
     if (isOpen) {
-      if (isEditing) {
-        reset({
-          title: editingEntry.title,
-          max_score: editingEntry.max_score,
-          item_date: editingEntry.item_date,
-        })
-        setStudentScores(editingEntry.scores)
-      } else {
-        reset({ title: "", max_score: 100, item_date: today })
-        setStudentScores(students.map(s => ({ studentId: s.id, name: s.name, score: "", comment: "" })))
-      }
+        let currentScores: StudentScoreRecord[];
+        if (isEditing) {
+            reset({
+              title: editingEntry.title,
+              max_score: editingEntry.max_score,
+              item_date: editingEntry.item_date,
+            })
+            currentScores = editingEntry.scores;
+            setStudentScores(currentScores);
+        } else {
+            reset({ title: "", max_score: 100, item_date: today })
+            currentScores = students.map(s => ({ studentId: s.id, name: s.name, score: "", comment: "" }))
+            setStudentScores(currentScores);
+        }
+        setInitialState(JSON.stringify({ ...watch(), scores: currentScores }))
+        setIsDirty(false)
     }
-  }, [isOpen, isEditing, editingEntry, students, reset])
+  }, [isOpen, isEditing, editingEntry, students, reset, watch])
+
+  useEffect(() => {
+    if(!isOpen || !initialState) return;
+    const currentState = JSON.stringify({ ...formValues, scores: studentScores });
+    setIsDirty(currentState !== initialState);
+  }, [formValues, studentScores, initialState, isOpen]);
+
 
   const todayDateString = useMemo(() => new Date().toISOString().split("T")[0], [])
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false);
+    setShowWarning(false);
+    setIsDirty(false);
+  }, [setIsOpen]);
+
+  const handleAttemptClose = useCallback(() => {
+    if (isDirty) {
+      setShowWarning(true);
+    } else {
+      handleClose();
+    }
+  }, [isDirty, handleClose]);
+
+  const handleInteractOutside = useCallback((e: Event) => {
+    if (isDirty) {
+      e.preventDefault();
+      setShowWarning(true);
+    }
+  }, [isDirty]);
+
 
   const handleScoreChange = (index: number, value: string) => {
     const newScores = [...studentScores]
@@ -162,14 +210,19 @@ export default function AddGradedItemModal({
     } else {
       toast.success(`"${formData.title}" saved successfully!`)
       onSave()
-      setIsOpen(false)
+      handleClose();
     }
     setIsSaving(false)
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="max-w-4xl">
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleAttemptClose()}>
+      <DialogContent 
+        className="max-w-4xl"
+        onPointerDownOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
+        >
         <DialogHeader>
           <DialogTitle>{isEditing ? "Edit Graded Item" : "Add New Graded Item"}</DialogTitle>
           <DialogDescription>
@@ -241,7 +294,7 @@ export default function AddGradedItemModal({
         </form>
 
         <DialogFooter>
-          <Button type="button" variant="outline" onClick={() => setIsOpen(false)}>Cancel</Button>
+          <Button type="button" variant="outline" onClick={handleAttemptClose}>Cancel</Button>
           <Button type="submit" onClick={handleSubmit(onSubmit)} disabled={isSaveDisabled}>
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? "Saving..." : "Save Item"}
@@ -249,5 +302,20 @@ export default function AddGradedItemModal({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+     <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You have unsaved changes. Are you sure you want to discard them and close the dialog?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClose} className="bg-destructive hover:bg-destructive/90">Discard</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   )
 }

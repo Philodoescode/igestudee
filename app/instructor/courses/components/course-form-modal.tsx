@@ -1,7 +1,8 @@
+// courses/components/course-form-modal.tsx
 // app/ta/courses/components/course-form-modal.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,7 @@ interface CourseFormModalProps {
   setIsOpen: (isOpen: boolean) => void;
   // FIX: onSave now passes a simpler object
   onSave: (courseData: { title: string }) => void;
-  onDelete: (courseId: string) => void;
+  // onDelete is no longer passed to the modal
   courseToEdit: Course | null;
   // allInstructors is no longer needed but kept in props for consistency if you need it for editing
   allInstructors: Instructor[];
@@ -43,21 +44,51 @@ const getInitialFormData = () => ({
   title: "",
 });
 
-export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, courseToEdit }: CourseFormModalProps) {
+export default function CourseFormModal({ isOpen, setIsOpen, onSave, courseToEdit }: CourseFormModalProps) {
   const [formData, setFormData] = useState(getInitialFormData());
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [isSaving, setIsSaving] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
   useEffect(() => {
-    if (courseToEdit) {
-      setFormData({
-        title: courseToEdit.title,
-      });
-    } else {
-      setFormData(getInitialFormData());
+    if (isOpen) {
+        if (courseToEdit) {
+            setFormData({ title: courseToEdit.title });
+        } else {
+            setFormData(getInitialFormData());
+        }
+        setErrors({});
+        setIsDirty(false);
     }
-    setErrors({});
   }, [courseToEdit, isOpen]);
+
+  useEffect(() => {
+      if (!isOpen) return;
+      const initialTitle = courseToEdit?.title || "";
+      setIsDirty(formData.title !== initialTitle);
+  }, [formData, courseToEdit, isOpen]);
+
+  const handleClose = useCallback(() => {
+      setIsOpen(false);
+      setShowWarning(false);
+  }, [setIsOpen]);
+
+  const handleAttemptClose = useCallback(() => {
+      if (isDirty) {
+          setShowWarning(true);
+      } else {
+          handleClose();
+      }
+  }, [isDirty, handleClose]);
+
+  const handleInteractOutside = useCallback((e: Event) => {
+      if (isDirty) {
+          e.preventDefault();
+          setShowWarning(true);
+      }
+  }, [isDirty]);
+
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
@@ -77,18 +108,20 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
     setTimeout(() => {
       onSave(dataToSave);
       setIsSaving(false);
+      handleClose(); // Close after save
     }, 1000);
   };
 
-  const handleDelete = () => {
-    if (courseToEdit) {
-      onDelete(courseToEdit.id);
-    }
-  };
+  // handleDelete is removed from here
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent className="sm:max-w-md">
+    <>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleAttemptClose()}>
+      <DialogContent 
+        className="sm:max-w-md"
+        onPointerDownOutside={handleInteractOutside}
+        onEscapeKeyDown={handleInteractOutside}
+        >
         <DialogHeader>
           <DialogTitle>{courseToEdit ? "Modify Course" : "Create New Course"}</DialogTitle>
           <DialogDescription>
@@ -108,39 +141,29 @@ export default function CourseFormModal({ isOpen, setIsOpen, onSave, onDelete, c
           </div>
           {/* FIX: Instructor dropdown is completely removed */}
         </div>
-        <DialogFooter className="flex-col-reverse gap-y-2 sm:flex-row sm:justify-between sm:space-x-2">
-          <div>
-            {courseToEdit && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" type="button" className="w-full sm:w-auto">
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete Course
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      This will permanently delete the course <span className="font-semibold">'{courseToEdit.title}'</span> and all of its associated sessions and groups. This action cannot be undone.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDelete} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <Button variant="outline" onClick={() => setIsOpen(false)} disabled={isSaving}>Cancel</Button>
+        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button variant="outline" onClick={handleAttemptClose} disabled={isSaving}>Cancel</Button>
             <Button onClick={handleSave} disabled={isSaving}>
               {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {courseToEdit ? "Save Changes" : "Create Course"}
             </Button>
-          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
+    <AlertDialog open={showWarning} onOpenChange={setShowWarning}>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle>Discard changes?</AlertDialogTitle>
+                <AlertDialogDescription>
+                    You have unsaved changes. Are you sure you want to discard them and close the dialog?
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction onClick={handleClose} className="bg-destructive hover:bg-destructive/90">Discard</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
