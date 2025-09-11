@@ -1,4 +1,3 @@
-// courses/components/add-assignment-modal.tsx
 "use client"
 
 import { useState, useEffect, useMemo, useCallback } from "react"
@@ -26,12 +25,19 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import {
+  Command, // Import Command components
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Search, ArrowUpAZ, ArrowDownZA, MessageSquarePlus, ArrowLeft, ArrowRight } from "lucide-react"
+import { Loader2, ArrowUpAZ, ArrowDownZA, MessageSquarePlus, ArrowLeft, ArrowRight } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -104,13 +110,14 @@ export default function AddAssignmentModal({
   })
 
   const formValues = watch()
+  const title = watch("title") // Watch for dynamic description
 
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0]
 
     if (isOpen) {
       let currentStatuses: AssignmentRecord[]
-      if (isEditing) {
+      if (isEditing && editingEntry) {
         reset({ title: editingEntry.title, item_date: editingEntry.item_date })
         currentStatuses = editingEntry.statuses
       } else {
@@ -123,6 +130,7 @@ export default function AddAssignmentModal({
         }))
       }
       setStudentStatuses(currentStatuses)
+      // Only set comments visible if they actually exist, otherwise hide by default
       setVisibleComments(new Set(currentStatuses.filter(s => s.comment).map(s => s.studentId)))
       setInitialState(JSON.stringify({ ...watch(), statuses: currentStatuses }))
       setIsDirty(false)
@@ -182,7 +190,7 @@ export default function AddAssignmentModal({
     setIsSaving(true)
     const payload = {
       p_group_id: Number(groupId),
-      p_item_id: isEditing ? editingEntry.id : null,
+      p_item_id: isEditing && editingEntry ? editingEntry.id : null,
       p_title: formData.title,
       p_item_date: formData.item_date,
       p_statuses: studentStatuses.map(({ studentId, status, comment }) => ({
@@ -272,14 +280,18 @@ export default function AddAssignmentModal({
                   <DialogTitle className="text-lg md:text-xl">{isEditing ? "Edit Assignment" : "Add New Assignment"}</DialogTitle>
                   <DialogDescription className="text-sm text-muted-foreground flex items-center justify-between">
                     <span>
-                      {step === 1 ? "Enter assignment details." : "Mark student completion status."}
+                      {step === 1 
+                        ? "Enter assignment details." 
+                        : `Mark student completion status for "${title || 'this assignment'}".`
+                      }
                     </span>
                     <span className="font-medium text-xs bg-muted py-1 px-2 rounded-md">Step {step} of 2</span>
                   </DialogDescription>
                 </DialogHeader>
               </div>
 
-              <div className="flex-1 overflow-auto px-4 sm:px-6 py-4">
+              {/* Removed padding here to allow Command to be modal-wide */}
+              <div className="flex-1 overflow-auto min-h-0">
                  <AnimatePresence mode="wait">
                     <motion.div
                         key={step}
@@ -288,9 +300,11 @@ export default function AddAssignmentModal({
                         exit="exit"
                         variants={variants}
                         transition={{ duration: 0.2 }}
+                        className="h-full" // Ensure motion div takes full height
                     >
                         {step === 1 && (
-                            <div className="space-y-6">
+                            // Added padding here for Step 1 content
+                            <div className="space-y-6 p-4 sm:p-6">
                                 <div className="space-y-2">
                                     <Label htmlFor="title">Title</Label>
                                     <Input id="title" {...register("title")} />
@@ -305,39 +319,71 @@ export default function AddAssignmentModal({
                         )}
                         
                         {step === 2 && (
-                             <div className="flex flex-col space-y-3">
-                                <div className="flex flex-col sm:flex-row gap-2">
-                                <div className="relative flex-grow">
-                                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                                    <Input placeholder="Search students..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="pl-10 w-full" />
-                                </div>
+                             <div className="flex flex-col h-full"> {/* h-full ensures command list takes remaining height */}
+                                {/* Top actions with padding */}
+                                <div className="flex flex-col sm:flex-row justify-end items-center gap-2 flex-shrink-0 px-4 sm:px-6 pt-4 pb-4">
                                 <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => setSortOrder(prev => (prev === "asc" ? "desc" : "asc"))}>
                                     {sortOrder === "asc" ? <ArrowUpAZ className="mr-2 h-4 w-4" /> : <ArrowDownZA className="mr-2 h-4 w-4" />}
                                     Sort
                                 </Button>
                                 </div>
-                                <ScrollArea className="w-full rounded-md border p-2 flex-grow overflow-auto max-h-[50vh] md:max-h-96">
-                                <div className="space-y-3">
-                                    {displayedStudents.map(record => (
-                                    <div key={record.studentId} className="space-y-2 rounded-md border p-3">
-                                        <div className="flex items-start justify-between gap-3">
-                                        <div className="flex-1 min-w-0"><span className="font-medium text-sm block truncate">{record.name}</span></div>
-                                        <Badge variant="outline" onClick={() => cycleStatus(record.studentId)} className={cn("cursor-pointer select-none text-xs py-1 px-2", getStatusBadgeClass(record.status))}>
-                                            {record.status}
-                                        </Badge>
-                                        </div>
-                                        {visibleComments.has(record.studentId) ? (
-                                        <Textarea placeholder="Optional comment..." className="text-sm mt-2" value={record.comment} onChange={e => handleCommentChange(record.studentId, e.target.value)} rows={3} />
-                                        ) : (
-                                        <Button type="button" variant="ghost" size="sm" className="mt-1 text-muted-foreground w-full justify-start px-2 h-8" onClick={() => toggleCommentVisibility(record.studentId)}>
-                                            <MessageSquarePlus className="mr-2 h-4 w-4" />
-                                            {record.comment ? "Edit Comment" : "Add Comment"}
-                                        </Button>
-                                        )}
-                                    </div>
-                                    ))}
-                                </div>
-                                </ScrollArea>
+                                
+                                {/* Command component for modal-wide list */}
+                                <Command className="flex-1 min-h-0 rounded-none border-t bg-transparent">
+                                  <CommandInput placeholder="Search students..." value={searchTerm} onValueChange={setSearchTerm}/>
+                                  <CommandList>
+                                    <CommandEmpty>No students found matching your search.</CommandEmpty>
+                                    <CommandGroup>
+                                        {displayedStudents.map(record => (
+                                            <div key={record.studentId} className="border-b last:border-b-0">
+                                                <CommandItem
+                                                    className="flex items-center justify-between gap-4 !bg-transparent px-3 py-2"
+                                                    onSelect={() => { /* This can be used for other actions if needed */ }}
+                                                    value={record.name} // for Command's internal filtering, though we use our own
+                                                >
+                                                    <p className="font-medium truncate flex-1">{record.name}</p>
+                                                    <div className="flex items-start gap-2">
+                                                        <Badge 
+                                                            variant="outline" 
+                                                            onClick={(e) => { e.stopPropagation(); cycleStatus(record.studentId); }} 
+                                                            className={cn("cursor-pointer select-none text-xs py-1 px-2 h-8 flex items-center", getStatusBadgeClass(record.status))}
+                                                        >
+                                                            {record.status}
+                                                        </Badge>
+                                                        <Button 
+                                                          type="button" size="icon" 
+                                                          variant={record.comment ? "secondary" : "ghost"}
+                                                          onClick={(e) => { e.stopPropagation(); toggleCommentVisibility(record.studentId); }} 
+                                                          title={record.comment ? "Edit Comment" : "Add Comment"}
+                                                          className="h-8 w-8 flex-shrink-0"
+                                                        >
+                                                            <MessageSquarePlus className="h-4 w-4"/>
+                                                        </Button>
+                                                    </div>
+                                                </CommandItem>
+                                                <AnimatePresence>
+                                                    {visibleComments.has(record.studentId) && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: "auto", opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            transition={{ duration: 0.2 }}
+                                                            className="overflow-hidden"
+                                                        >
+                                                            <div className="px-3 pb-3 pt-1">
+                                                                <Textarea
+                                                                    placeholder="Optional comment..." value={record.comment}
+                                                                    onChange={e => handleCommentChange(record.studentId, e.target.value)}
+                                                                />
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+                                            </div>
+                                        ))}
+                                    </CommandGroup>
+                                  </CommandList>
+                                </Command>
                             </div>
                         )}
                     </motion.div>
@@ -345,28 +391,30 @@ export default function AddAssignmentModal({
               </div>
 
               <div className="sticky bottom-0 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-t">
-                 <DialogFooter>
-                    <div className="w-full flex flex-col sm:flex-row items-stretch sm:justify-between gap-3 p-4">
-                        <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={handleAttemptClose}>Cancel</Button>
-                        
-                        {step === 1 && (
-                            <Button type="button" className="w-full sm:w-auto" onClick={handleNext}>
-                                Next <ArrowRight className="ml-2 h-4 w-4" />
+                 <DialogFooter className="w-full flex flex-col sm:flex-row items-stretch sm:justify-between gap-3 p-4">
+                    {/* Back button visible only on step 2 */}
+                    {step === 2 ? (
+                        <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleBack}>
+                            <ArrowLeft className="mr-2 h-4 w-4" /> Back
+                        </Button>
+                    ) : (
+                        // Empty div to keep the right button aligned to the right on step 1
+                        <div className="hidden sm:block" /> 
+                    )}
+                    
+                    {step === 1 ? (
+                        <Button type="button" className="w-full sm:w-auto" onClick={handleNext}>
+                            Next <ArrowRight className="ml-2 h-4 w-4" />
+                        </Button>
+                    ) : (
+                        // Submit form wraps only the save button
+                        <form onSubmit={handleSubmit(onSubmit)} className="w-full sm:w-auto">
+                            <Button type="submit" className="w-full sm:w-auto" disabled={isSaving}>
+                                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                {isSaving ? "Saving..." : "Save Assignment"}
                             </Button>
-                        )}
-                        
-                        {step === 2 && (
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={handleBack}>
-                                    <ArrowLeft className="mr-2 h-4 w-4" /> Back
-                                </Button>
-                                <Button type="submit" className="w-full sm:w-auto" onClick={handleSubmit(onSubmit)} disabled={isSaving}>
-                                    {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                    {isSaving ? "Saving..." : "Save Assignment"}
-                                </Button>
-                            </div>
-                        )}
-                    </div>
+                        </form>
+                    )}
                 </DialogFooter>
               </div>
             </div>
