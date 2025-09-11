@@ -98,8 +98,11 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
     else if (hasGradedItems) middleSection = `لم يكن هناك واجبات مطلوبة لهذا اليوم.\n\n${gradedItemsSection}`
     else middleSection = `لم يكن هناك واجبات أو تقييمات لهذا اليوم.`
 
+    // --- MODIFICATION IS ON THE LINE BELOW ---
+    const closingMessage = `نتمنى لـ ${wrapBold(studentName)} دوام التوفيق، ونتطلع لرؤيته في الحصة القادمة.`
+
     // Short headline as requested; use wrapBold on the student name so WhatsApp bold works
-    return `${greeting}\n\nملخص ${wrapBold(studentName)} في حصة اليوم:\n\n_رقم الحصة:_ ${wrapBold(String(present_class_count))}\n_التاريخ:_ ${wrapItalic(formattedDate)}\n\n${attendanceSection}\n\n${middleSection}\n\nنتمنى لـ${wrapBold(studentName)} دوام التوفيق ونلقاه في الحصة القادمة بإذن الله.\n\nخالص التحية،\n${instructor_full_name}`
+    return `${greeting}\n\nملخص ${wrapBold(studentName)} في حصة اليوم:\n\n_رقم الحصة:_ ${wrapBold(String(present_class_count))}\n_التاريخ:_ ${wrapItalic(formattedDate)}\n\n${attendanceSection}\n\n${middleSection}\n\n${closingMessage}\n\nخالص التحية،\n${instructor_full_name}`
   } else { // English (unchanged)
     const formattedDate = format(reportDate, "MMMM d, yyyy")
     const parentDisplay = parent_first_name || "Guardian"
