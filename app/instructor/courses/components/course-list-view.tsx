@@ -1,4 +1,3 @@
-// courses/components/course-list-view.tsx
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -38,6 +37,7 @@ import { PlusCircle, Search, User, Edit, FolderArchive, Trash2 } from "lucide-re
 import { cn } from "@/lib/utils";
 import { Badge } from '@/components/ui/badge';
 import { GroupCard } from './group-card';
+import { GroupInfoModal } from "./group-info-modal"; // Import if not already (it is now used in GroupCard)
 
 const ITEMS_PER_PAGE = 5;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -262,7 +262,15 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
                                 {session.groups.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         {session.groups.map(group => (
-                                            <GroupCard key={group.id} group={group} onSelect={() => onSelectGroup(group)} onModify={() => onOpenGroupModal(group, session.id)} onDelete={onDeleteGroup}/>
+                                            <GroupCard 
+                                                key={group.id} 
+                                                group={group} 
+                                                onSelect={() => onSelectGroup(group)} 
+                                                onModify={() => onOpenGroupModal(group, session.id)} 
+                                                onDelete={onDeleteGroup}
+                                                sessionName={`${session.month} ${session.year}`} // Pass sessionName here
+                                                courseTitle={course.title} // Pass courseTitle here
+                                            />
                                         ))}
                                     </div>
                                 ) : (

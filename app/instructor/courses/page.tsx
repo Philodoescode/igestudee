@@ -1,4 +1,3 @@
-// courses/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -138,18 +137,18 @@ export default function CoursesPage() {
 
   const handleOpenCourseModal = (course: Course | null) => {
     setEditingCourse(course);
-    setTimeout(() => setIsCourseModalOpen(true), 100);
+    setTimeout(() => setIsCourseModalOpen(true), 100); // Added setTimeout
   }
   const handleOpenSessionModal = (session: CourseSession | null, courseId: string) => {
     setEditingSession(session);
     setTargetCourseId(courseId);
-    setTimeout(() => setIsSessionModalOpen(true), 100);
+    setTimeout(() => setIsSessionModalOpen(true), 100); // Added setTimeout
   }
 
   const handleOpenGroupModal = (group: Group | null, sessionId: string) => {
     setEditingGroup(group);
     setTargetSessionId(sessionId);
-    setTimeout(() => setIsGroupStudentsModalOpen(true), 100);
+    setTimeout(() => setIsGroupStudentsModalOpen(true), 100); // Added setTimeout
   }
   
   const mappedCourses: Course[] = courses.map(c => ({ id: String(c.id), title: c.title, instructorId: c.instructorId, instructorName: c.instructorName }));
