@@ -28,3 +28,6 @@ next-env.d.ts
 
 copierv1.py
 compiled_code.txt
+
+.prettierrc
+/.yarn/
