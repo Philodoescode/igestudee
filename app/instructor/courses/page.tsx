@@ -1,4 +1,3 @@
-// courses/page.tsx
 "use client"
 
 import { useState, useEffect } from "react"
@@ -12,6 +11,7 @@ import CourseListView from "./components/course-list-view"
 import CourseFormModal from "./components/course-form-modal"
 import SessionFormModal from "./components/session-form-modal"
 import SelectStudentsModal from "./components/select-students-modal"
+import BulkInputWizard from "./components/bulk-input-wizard" // New import
 import Loading from "./loading"
 
 import type { Course, CourseSession, Group } from "@/types/course"
@@ -41,6 +41,10 @@ export default function CoursesPage() {
   const [isGroupStudentsModalOpen, setIsGroupStudentsModalOpen] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [targetSessionId, setTargetSessionId] = useState<string | null>(null)
+
+  // New state for Bulk Input Wizard
+  const [isBulkInputWizardOpen, setIsBulkInputWizardOpen] = useState(false)
+  const [bulkInputGroup, setBulkInputGroup] = useState<Group | null>(null)
 
   // Data Fetching
   const fetchData = async () => {
@@ -138,18 +142,23 @@ export default function CoursesPage() {
 
   const handleOpenCourseModal = (course: Course | null) => {
     setEditingCourse(course);
-    setTimeout(() => setIsCourseModalOpen(true), 100);
+    setTimeout(() => setIsCourseModalOpen(true), 150);
   }
   const handleOpenSessionModal = (session: CourseSession | null, courseId: string) => {
     setEditingSession(session);
     setTargetCourseId(courseId);
-    setTimeout(() => setIsSessionModalOpen(true), 100);
+    setTimeout(() => setIsSessionModalOpen(true), 150);
   }
 
   const handleOpenGroupModal = (group: Group | null, sessionId: string) => {
     setEditingGroup(group);
     setTargetSessionId(sessionId);
-    setTimeout(() => setIsGroupStudentsModalOpen(true), 100);
+    setTimeout(() => setIsGroupStudentsModalOpen(true), 150);
+  }
+
+  const handleOpenBulkInputWizard = (group: Group) => {
+    setBulkInputGroup(group)
+    setTimeout(() => setIsBulkInputWizardOpen(true), 150);
   }
   
   const mappedCourses: Course[] = courses.map(c => ({ id: String(c.id), title: c.title, instructorId: c.instructorId, instructorName: c.instructorName }));
@@ -170,6 +179,7 @@ export default function CoursesPage() {
           onOpenCourseModal={handleOpenCourseModal}
           onOpenSessionModal={handleOpenSessionModal}
           onOpenGroupModal={handleOpenGroupModal}
+          onBulkInput={handleOpenBulkInputWizard}
           onDeleteCourse={(courseId) => handleDelete("course", courseId)}
           onDeleteSession={(sessionId) => handleDelete("session", sessionId)}
           onDeleteGroup={(groupId) => handleDelete("group", groupId)}
@@ -204,6 +214,17 @@ export default function CoursesPage() {
         isEditing={!!editingGroup}
         groupName={editingGroup?.groupName}
       />
+      
+      <AnimatePresence>
+        {isBulkInputWizardOpen && bulkInputGroup && (
+          <BulkInputWizard
+            isOpen={isBulkInputWizardOpen}
+            setIsOpen={setIsBulkInputWizardOpen}
+            group={bulkInputGroup}
+            onSave={fetchData}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

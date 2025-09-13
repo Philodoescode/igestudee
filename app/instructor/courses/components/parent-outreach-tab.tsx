@@ -14,9 +14,13 @@ import { Download, Loader2 } from "lucide-react"
 
 type Language = "ar" | "en"
 
+// NOTE: This type definition now includes `student_gender`.
+// Your backend RPC function `get_parent_outreach_data` must be updated to return this field
+// by joining with the `student_details` table.
 type OutreachData = {
   student_id: string
   student_first_name: string
+  student_gender: "Male" | "Female" | null // Added for gender-specific messages
   parent_first_name: string | null
   parent_phone: string | null
   present_class_count: number
@@ -31,61 +35,76 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
   const {
     parent_first_name, student_first_name, instructor_full_name,
     attendance_status, attendance_comment, present_class_count,
-    assignments, graded_items,
+    assignments, graded_items, student_gender
   } = student
 
-  // normalize student name (trim and collapse extra spaces) — names are in English per your note
   const studentName = (student_first_name ?? "").replace(/\s+/g, " ").trim()
-  // also trim parent name in case you still use it elsewhere later
   const parentName = (parent_first_name ?? "").replace(/\s+/g, " ").trim() || "ولي الأمر"
 
-  // Helpers to force WhatsApp formatting when mixing Arabic (RTL) and English (LTR).
-  // We insert LEFT-TO-RIGHT MARK (\u200E) inside the formatting markers so WhatsApp detects them.
   const LRM = "\u200E"
   const wrapBold = (s: string) => `*${LRM}${s}${LRM}*`
   const wrapItalic = (s: string) => `_${LRM}${s}${LRM}_`
 
   if (lang === "ar") {
     const formattedDate = format(reportDate, "dd/MM/yyyy")
-
-    // Time-aware greeting (uses client's current local time)
     const now = new Date()
     const hour = now.getHours()
     const greeting = hour < 12 ? "صباح الخير،" : "مساء الخير،"
+    
+    // --- GENDER LOGIC REWORKED ---
+    // Default to male if gender is not specified to avoid errors.
+    const isMale = student_gender !== "Female"
 
-    // mapping for statuses
-    type TKey = "Done" | "Partially Done" | "Not Done" | "Present" | "Tardy"
-    const t = (key: TKey) => {
+    // Create a map of complete, correct phrases for each gender.
+    const genderMap = {
+      // For absence message
+      didNotAttend: isMale ? "لم يحضر" : "لم تحضر",
+      
+      // For the attendance section
+      wasPresentPhrase: isMale ? "كان حاضرًا في الوقت المحدد" : "كانت حاضرة في الوقت المحدد",
+      wasTardyPhrase: isMale ? "تأخر قليلًا" : "تأخرت قليلًا",
+
+      // For closing message
+      seeingHimHer: isMale ? "رؤيته" : "رؤيتها",
+    }
+    // --- END GENDER LOGIC REWORKED ---
+
+    // mapping for assignment statuses (gender-neutral)
+    type AssignmentStatusKey = "Done" | "Partially Done" | "Not Done"
+    const t = (key: AssignmentStatusKey) => {
       return {
         "Done": "تم إنجازه",
         "Partially Done": "تم إنجازه جزئيًا",
         "Not Done": "لم يتم إنجازه",
-        "Present": "حاضر في الوقت المحدد",
-        "Tardy": "تأخر قليلًا"
       }[key]
     }
 
-    // Absent Template (Arabic) — no parent name inserted after greeting to avoid duplication
+    // Absent Template (Arabic) - now gender-specific
     if (attendance_status === "Absent" || !attendance_status) {
-      return `${greeting}\n\nأردت إبلاغك أن ${wrapBold(studentName)} لم يحضر حصة اليوم (${wrapItalic(formattedDate)}).\n\nمع خالص التحية،\n${instructor_full_name}`
+      return `${greeting}\n\nأردت إبلاغك أن ${wrapBold(studentName)} ${genderMap.didNotAttend} حصة اليوم (${wrapItalic(formattedDate)}).\n\nمع خالص التحية،\n${instructor_full_name}`
     }
 
     const hasAssignments = assignments && assignments.length > 0
     const hasGradedItems = graded_items && graded_items.length > 0
 
-    // attendance section — attendance_status is either "Present" or "Tardy" here
-    const attendanceKey = (attendance_status as ("Present" | "Tardy")) as TKey
-    let attendanceSection = `*الحضور:*\n${wrapBold(studentName)} كان ${t(attendanceKey)} في الحصة اليوم.`
+    // --- ATTENDANCE SECTION REWORKED ---
+    // Determine the correct full phrase based on attendance status.
+    const attendanceDescription = attendance_status === "Present" 
+        ? genderMap.wasPresentPhrase 
+        : genderMap.wasTardyPhrase;
+        
+    let attendanceSection = `*الحضور:*\n${wrapBold(studentName)} ${attendanceDescription} في الحصة اليوم.`
     if (attendance_comment) attendanceSection += `\n_ملاحظة:_ ${attendance_comment}`
+    // --- END ATTENDANCE SECTION REWORKED ---
 
-    // Assignments section
+    // Assignments section (no change needed)
     const assignmentsSection = hasAssignments
       ? `*الواجبات:*\n` + assignments.map(a =>
-          ` - ${a.title}: ${wrapBold(t(a.status as TKey))}` + (a.comment ? `\n   _ملاحظة:_ ${a.comment}` : "")
+          ` - ${a.title}: ${wrapBold(t(a.status as AssignmentStatusKey))}` + (a.comment ? `\n   _ملاحظة:_ ${a.comment}` : "")
         ).join("\n")
       : ""
 
-    // Graded items section
+    // Graded items section (no change needed)
     const gradedItemsSection = hasGradedItems
       ? `*التقييمات:*\n` + graded_items.map(gi =>
           ` - ${gi.title}: ${wrapBold(gi.score ?? "N/A")} / ${wrapItalic(String(gi.max_mark))}` + (gi.comment ? `\n   _ملاحظة:_ ${gi.comment}` : "")
@@ -97,19 +116,21 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
     else if (hasAssignments) middleSection = `${assignmentsSection}\n\nلم يكن هناك تقييمات لهذا اليوم.`
     else if (hasGradedItems) middleSection = `لم يكن هناك واجبات مطلوبة لهذا اليوم.\n\n${gradedItemsSection}`
     else middleSection = `لم يكن هناك واجبات أو تقييمات لهذا اليوم.`
+    
+    // --- CLOSING MESSAGE REWORKED ---
+    const closingMessage = `نتمنى لـ${wrapBold(studentName)} دوام التوفيق، ونتطلع لـ${genderMap.seeingHimHer} في الحصة القادمة.`
+    // --- END CLOSING MESSAGE REWORKED ---
 
-    // Short headline as requested; use wrapBold on the student name so WhatsApp bold works
-    return `${greeting}\n\nملخص ${wrapBold(studentName)} في حصة اليوم:\n\n_رقم الحصة:_ ${wrapBold(String(present_class_count))}\n_التاريخ:_ ${wrapItalic(formattedDate)}\n\n${attendanceSection}\n\n${middleSection}\n\nنتمنى لـ${wrapBold(studentName)} دوام التوفيق ونلقاه في الحصة القادمة بإذن الله.\n\nخالص التحية،\n${instructor_full_name}`
+    return `${greeting}\n\nملخص أداء ${wrapBold(studentName)} في حصة اليوم:\n\n_رقم الحصة:_ ${wrapBold(String(present_class_count))}\n_التاريخ:_ ${wrapItalic(formattedDate)}\n\n${attendanceSection}\n\n${middleSection}\n\n${closingMessage}\n\nخالص التحية،\n${instructor_full_name}`
+  
   } else { // English (unchanged)
     const formattedDate = format(reportDate, "MMMM d, yyyy")
     const parentDisplay = parent_first_name || "Guardian"
     
-    // Absent Template (English)
     if (attendance_status === "Absent" || !attendance_status) {
       return `Hello ${parentDisplay},\n\n${studentName} was absent for today's class, ${formattedDate}.\n\nBest regards,\n${instructor_full_name}`
     }
 
-    // Present/Tardy Template (English)
     const hasAssignments = assignments && assignments.length > 0
     const hasGradedItems = graded_items && graded_items.length > 0
 
@@ -135,12 +156,14 @@ const buildMessage = (student: OutreachData, reportDate: Date, lang: Language): 
 
 export default function ParentOutreachTab({ groupId }: { groupId: string }) {
   const [reportDate, setReportDate] = useState(new Date().toISOString().split("T")[0])
-  const [language, setLanguage] = useState<Language>("ar") // Default to Arabic
+  const [language, setLanguage] = useState<Language>("ar")
   const [isLoading, setIsLoading] = useState(false)
   const supabase = createClient()
 
   const handleGenerate = async () => {
     setIsLoading(true)
+    // IMPORTANT: Make sure your `get_parent_outreach_data` RPC function is updated
+    // to join `student_details` and return the `gender` column as `student_gender`.
     const { data, error } = await supabase.rpc("get_parent_outreach_data", {
       p_group_id: Number(groupId),
       p_report_date: reportDate,

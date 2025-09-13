@@ -1,4 +1,3 @@
-// courses/components/course-list-view.tsx
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -38,6 +37,7 @@ import { PlusCircle, Search, User, Edit, FolderArchive, Trash2 } from "lucide-re
 import { cn } from "@/lib/utils";
 import { Badge } from '@/components/ui/badge';
 import { GroupCard } from './group-card';
+import { GroupInfoModal } from "./group-info-modal";
 
 const ITEMS_PER_PAGE = 5;
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -50,12 +50,13 @@ interface CourseListViewProps {
     onOpenCourseModal: (course: Course | null) => void;
     onOpenSessionModal: (session: CourseSession | null, courseId: string) => void;
     onOpenGroupModal: (group: Group | null, sessionId: string) => void;
+    onBulkInput: (group: Group) => void; // New prop
     onDeleteCourse: (courseId: string) => void;
     onDeleteSession: (sessionId: string) => void;
     onDeleteGroup: (groupId: string) => void;
 }
 
-export default function CourseListView({ courses, sessions, groups, onSelectGroup, onOpenCourseModal, onOpenSessionModal, onOpenGroupModal, onDeleteCourse, onDeleteSession, onDeleteGroup }: CourseListViewProps) {
+export default function CourseListView({ courses, sessions, groups, onSelectGroup, onOpenCourseModal, onOpenSessionModal, onOpenGroupModal, onBulkInput, onDeleteCourse, onDeleteSession, onDeleteGroup }: CourseListViewProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [showInactive, setShowInactive] = useState(true);
@@ -262,7 +263,16 @@ export default function CourseListView({ courses, sessions, groups, onSelectGrou
                                 {session.groups.length > 0 ? (
                                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         {session.groups.map(group => (
-                                            <GroupCard key={group.id} group={group} onSelect={() => onSelectGroup(group)} onModify={() => onOpenGroupModal(group, session.id)} onDelete={onDeleteGroup}/>
+                                            <GroupCard 
+                                                key={group.id} 
+                                                group={group} 
+                                                onSelect={() => onSelectGroup(group)} 
+                                                onModify={() => onOpenGroupModal(group, session.id)}
+                                                onBulkInput={() => onBulkInput(group)}
+                                                onDelete={onDeleteGroup}
+                                                sessionName={`${session.month} ${session.year}`}
+                                                courseTitle={course.title}
+                                            />
                                         ))}
                                     </div>
                                 ) : (
