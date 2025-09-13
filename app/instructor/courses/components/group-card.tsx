@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
-import { Users, Edit, ChevronsRight, Trash2, Info } from "lucide-react"
+import { Users, Edit, ChevronsRight, Trash2, Info, ClipboardPaste } from "lucide-react"
 import {
   ContextMenu,
   ContextMenuContent,
@@ -20,18 +20,19 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import type { Group } from "@/types/course"
-import { GroupInfoModal } from "./group-info-modal" // Import the new modal
+import { GroupInfoModal } from "./group-info-modal"
 
 interface GroupCardProps {
   group: Group
   onSelect: () => void
   onModify: () => void
   onDelete: (groupId: string) => void
-  sessionName: string // Keep sessionName in props
-  courseTitle: string // Add courseTitle to props
+  onBulkInput: () => void // New prop
+  sessionName: string
+  courseTitle: string
 }
 
-export function GroupCard({ group, onSelect, onModify, onDelete, sessionName, courseTitle }: GroupCardProps) {
+export function GroupCard({ group, onSelect, onModify, onDelete, onBulkInput, sessionName, courseTitle }: GroupCardProps) {
   const [isInfoModalOpen, setIsInfoModalOpen] = useState(false)
 
   return (
@@ -54,7 +55,11 @@ export function GroupCard({ group, onSelect, onModify, onDelete, sessionName, co
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
-          <ContextMenuItem onSelect={() => setTimeout(() => setIsInfoModalOpen(true), 100)}> {/* Added setTimeout */}
+          <ContextMenuItem onSelect={onBulkInput}>
+            <ClipboardPaste className="h-4 w-4 mr-2" />
+            Bulk Input
+          </ContextMenuItem>
+          <ContextMenuItem onSelect={() => setTimeout(() => setIsInfoModalOpen(true), 100)}>
             <Info className="h-4 w-4 mr-2" />
             Info
           </ContextMenuItem>
@@ -93,7 +98,7 @@ export function GroupCard({ group, onSelect, onModify, onDelete, sessionName, co
         setIsOpen={setIsInfoModalOpen}
         group={group}
         sessionName={sessionName}
-        courseTitle={courseTitle} // Pass courseTitle to the modal
+        courseTitle={courseTitle}
       />
     </>
   )
