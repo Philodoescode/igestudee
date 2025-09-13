@@ -59,7 +59,7 @@ export function GroupCard({ group, onSelect, onModify, onDelete, onBulkInput, se
             <ClipboardPaste className="h-4 w-4 mr-2" />
             Bulk Input
           </ContextMenuItem>
-          <ContextMenuItem onSelect={() => setTimeout(() => setIsInfoModalOpen(true), 100)}>
+          <ContextMenuItem onSelect={() => setTimeout(() => setIsInfoModalOpen(true), 150)}>
             <Info className="h-4 w-4 mr-2" />
             Info
           </ContextMenuItem>

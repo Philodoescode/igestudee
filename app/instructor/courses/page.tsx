@@ -142,23 +142,23 @@ export default function CoursesPage() {
 
   const handleOpenCourseModal = (course: Course | null) => {
     setEditingCourse(course);
-    setTimeout(() => setIsCourseModalOpen(true), 100);
+    setTimeout(() => setIsCourseModalOpen(true), 150);
   }
   const handleOpenSessionModal = (session: CourseSession | null, courseId: string) => {
     setEditingSession(session);
     setTargetCourseId(courseId);
-    setTimeout(() => setIsSessionModalOpen(true), 100);
+    setTimeout(() => setIsSessionModalOpen(true), 150);
   }
 
   const handleOpenGroupModal = (group: Group | null, sessionId: string) => {
     setEditingGroup(group);
     setTargetSessionId(sessionId);
-    setTimeout(() => setIsGroupStudentsModalOpen(true), 100);
+    setTimeout(() => setIsGroupStudentsModalOpen(true), 150);
   }
 
   const handleOpenBulkInputWizard = (group: Group) => {
     setBulkInputGroup(group)
-    setIsBulkInputWizardOpen(true)
+    setTimeout(() => setIsBulkInputWizardOpen(true), 150);
   }
   
   const mappedCourses: Course[] = courses.map(c => ({ id: String(c.id), title: c.title, instructorId: c.instructorId, instructorName: c.instructorName }));
